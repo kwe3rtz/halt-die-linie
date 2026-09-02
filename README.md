@@ -1,34 +1,48 @@
 # Halt die Linie
 
-Ein kleines, spielbares TD-Prototyp-Skelett im Stil eines Grabenkriegs-Defensespiels. Der Kern fokussiert sich auf eine horizontale Grabenlinie mit mehreren Abschnitten, die die Angreifer direkt durchbrechen wollen.
+Koop-Wave-Survival-Shooter im Grabenkrieg des Ersten Weltkriegs. Top-Down,
+Browsergame. Solo dauerhaft spielbar, Koop ist das Fernziel.
 
-## Spielidee
+> Du führst einen Soldaten deiner Kompanie in einen prozedural erzeugten
+> Frontabschnitt und überstehst Wellen — tagsüber gegen die feindliche Armee,
+> nachts gegen die Toten des Niemandslands. Zwischen den Einsätzen baust du das
+> Kompanie-Quartier aus.
 
-- Gegner laufen aus mehreren Ausstiegspunkten direkt auf die Grabenabschnitte zu.
-- Die Linie ist in einzelne Segmente unterteilt, die unabhängig beschädigt werden.
-- Türme richten sich an WW1-ähnlichen Verteidigungsanlagen aus: MG-Nest, Artillerie, Scharfschütze, Stacheldraht, Scheinwerfer und Flak.
-- Flieger sind nur mit Flak zu treffen, Kavallerie wird durch Stacheldraht hart gebremst.
+Perspektive: First-Person. 3D von Anfang an (Babylon.js). Dreistufiger Sektor —
+Frontlinie, Verbindungsgraben, Home-Line —, fechtender Rückzug nach hinten.
 
-## Ausführen
+## Status
 
-Im Projektordner:
+**Konzeptphase.** Der Konzeptkern ist beschlossen und in **[`KONZEPT.md`](KONZEPT.md)**
+festgehalten, Tech-Stack & Architektur in **[`TECHNIK.md`](TECHNIK.md)**. Als
+Nächstes: die Detailsysteme aus `KONZEPT.md` §9 (Waffen, Klassen, Gegner-Roster).
+
+Es gibt noch keinen Code für das eigentliche Spiel. Das frühere
+Tower-Defense-Skelett liegt archiviert unter [`prototyp-td/`](prototyp-td/) und
+entspricht nicht mehr dem Konzept.
+
+## Struktur
+
+| Pfad | Inhalt |
+|---|---|
+| `KONZEPT.md` | Maßgebliches Konzeptdokument — was das Spiel ist, was beschlossen/offen/verworfen ist |
+| `TECHNIK.md` | Tech-Stack, Architektur-Prinzipien |
+| `WAFFEN.md` | Waffenmodell, v1-Arsenal, WW1-Rohrecherche |
+| `AUFGABEN.md` | Aufgabenboard für die VS Code KI — Arbeitspakete, Tickets, Konventionen |
+| `BACKLOG.md` | Bewusst zurückgestellte Ideen für später |
+| `prototyp-td/` | Archivierter TD-Prototyp, nur noch Referenz |
+
+## Änderungen am Konzept
+
+Nur im Gespräch. `KONZEPT.md` ist die einzige gültige Fassung.
+
+## Entwicklung
 
 ```bash
-python3 -m http.server 8000
+npm install
+npm run dev
+npm run build
+npm run typecheck
+npm run lint
+npm run test
 ```
-
-Danach in einem Browser öffnen:
-
-```text
-http://localhost:8000
-```
-
-## Steuerung
-
-- Gewählte Verteidigungsanlage anklicken, dann auf dem Schlachtfeld platzieren.
-- Welle starten über den Button in der Seitenleiste.
-- Pause zwischen Wellen oder im Spiel mit dem Pause-Button.
-
-## Hinweis
-
-Das Projekt ist bewusst ein kompaktes, funktionales Prototyp-Gerüst und kein fertig ausgebautes Vollspiel. Es zeigt die Kernmechanik der "Halt-die-Linie"-Idee mit klarer WW1-Gefechtslogik.
