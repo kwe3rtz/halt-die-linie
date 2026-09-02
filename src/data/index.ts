@@ -1,2 +1,4 @@
-// Data definitions and schema stubs for weapons, classes, and level configuration.
-export const dataModuleMarker = "data";
+// Datengetriebene Definitionen + Schema. Barrel-Modul.
+export * from "./schema";
+export * from "./beispiele";
+export * from "./testlevel";

@@ -136,7 +136,7 @@ Branch: `arbeitspaket-1`.
 | 1.4 | Projekt-Hygiene, CI & Preview-Deploy | ✅ erledigt (`arbeitspaket-1`) |
 | 1.5 | Input-Layer | ✅ erledigt (`arbeitspaket-1`) |
 | 1.6 | First-Person-Controller + Kamera + Test-Level | ✅ erledigt (`arbeitspaket-1`) |
-| 1.7 | Datenschema-Stubs | ⬜ offen |
+| 1.7 | Datenschema-Stubs | ✅ erledigt (`arbeitspaket-1`) |
 | 1.8 | Debug-Overlay (HTML/CSS) | ⬜ offen |
 
 > Hinweis: Die VS-Code-KI hat 1.2/1.3 mit einer älteren Nummerierung committet
