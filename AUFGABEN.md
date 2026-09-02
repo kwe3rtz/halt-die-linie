@@ -556,9 +556,37 @@ Kommt nach Arbeitspaket 1, wenn Code da ist, der davon profitiert:
 - **ADRs** (`docs/adr/NNNN-*.md`) — leichte Architektur-Entscheidungs-Notizen,
   falls `KONZEPT.md` §10 / `TECHNIK.md` nicht mehr reichen.
 
-## Arbeitspaket 2 und folgende
+## Arbeitspaket 2 — Erster Kampf-Loop
 
-Wird nachgetragen, sobald Arbeitspaket 1 steht und die offenen Design-Punkte
-(prozedurale Erzeugung, Nachschub-Ökonomie) geklärt sind. Voraussichtliche
-Richtung: Waffen-Feuerlogik + Munitionshandling, dann ein erster Gegnertyp mit
-simplem Verhalten, dann der Wave-Director.
+**Ziel:** Aus „durch den Boxen-Graben laufen" wird „Gegner in Wellen abwehren".
+Der erste echte Gameplay-Loop, auf dem bestehenden Test-Graben. Alle Zahlen sind
+Platzhalter — Balancing kommt später.
+
+Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket-1`).
+
+**Ticket-Dateien liegen in [`tickets/`](tickets/).** Jede Datei hat eine
+`Status:`-Zeile — die KI aktualisiert sie beim Abschluss (im selben Commit).
+
+| Nr | Ticket | Datei | Status |
+|---|---|---|---|
+| AP2-01 | Waffen-Feuerlogik & Munition | `tickets/AP2-01-waffen-feuerlogik.md` | offen |
+| AP2-02 | Spieler-HP, Schaden, Tod/Respawn | `tickets/AP2-02-spieler-hp.md` | offen |
+| AP2-03 | Erster Gegner: Linieninfanterie | `tickets/AP2-03-gegner-linieninfanterie.md` | offen |
+| AP2-04 | Wave-Director | `tickets/AP2-04-wave-director.md` | offen |
+| AP2-05 | Nachschub-Zähler & minimales HUD | `tickets/AP2-05-nachschub-hud.md` | offen |
+
+**Reihenfolge einhalten.** Commit-Message beginnt mit der Ticketnummer
+(`AP2-01 …`). Ein Commit pro Ticket, danach pushen (CI muss grün bleiben),
+STOPP und Bericht.
+
+**Ausdrücklich NICHT in Arbeitspaket 2:** mehrere Waffen/Gegnertypen ·
+Gegner-Fernkampf (Linieninfanterie ist in AP2 Nahkampf-only) · KI-Trupps ·
+Platzierungen/Bauen · prozedurale Erzeugung · Rückzugs-/Home-Line-Logik ·
+Zeit-Finale · Klassen-Fähigkeiten · Tag/Nacht · Sound · Art über Boxen/Kapseln
+hinaus · Netcode.
+
+## Arbeitspaket 3+ (Skizze)
+
+Nach AP2 und der Design-Runde „prozedurale Sektor-Erzeugung": mehrere Gegner des
+Tag-Rosters + Gegner-Fernkampf, dann der dreistufige Sektor (Frontlinie /
+Verbindungsgraben / Home-Line) mit Rückzugslogik, dann Klassen + Fähigkeiten.
