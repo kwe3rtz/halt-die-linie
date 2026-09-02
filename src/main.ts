@@ -1,4 +1,4 @@
-import { Engine, Scene, Color4, HemisphericLight, Vector3 } from 'babylonjs';
+import { Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
 
 const canvas = document.getElementById('gameCanvas');
 

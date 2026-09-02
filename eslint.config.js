@@ -38,6 +38,7 @@ export default tseslint.config(
             '../input/*',
             '../ui',
             '../ui/*',
+            '@babylonjs/*',
             'babylonjs',
           ],
         },
@@ -54,6 +55,13 @@ export default tseslint.config(
         { object: 'Date', property: 'now' },
         { object: 'Math', property: 'random' },
         { object: 'performance', property: 'now' },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='Date'][arguments.length=0]",
+          message: 'Date() is not allowed in src/sim; pass dt and seed instead.',
+        },
       ],
     },
   },
