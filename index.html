@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halt die Linie</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="game-shell">
+      <aside class="hud">
+        <div class="brand-block">
+          <p class="kicker">Frontlinie</p>
+          <h1>Halt die Linie</h1>
+        </div>
+
+        <div class="panel stats-panel">
+          <div class="stat-row"><span>Ressourcen</span><strong id="resourceValue">180</strong></div>
+          <div class="stat-row"><span>Welle</span><strong id="waveValue">0</strong></div>
+          <div class="stat-row"><span>Linie</span><strong id="lineValue">100%</strong></div>
+          <div class="stat-row"><span>Score</span><strong id="scoreValue">0</strong></div>
+        </div>
+
+        <div class="panel tower-panel">
+          <h2>Verteidigungsanlagen</h2>
+          <div class="tower-grid">
+            <button class="tower-button active" data-tower="mg"><span>MG-Nest</span><small>45</small></button>
+            <button class="tower-button" data-tower="artillery"><span>Artillerie</span><small>75</small></button>
+            <button class="tower-button" data-tower="sniper"><span>Scharfschütze</span><small>90</small></button>
+            <button class="tower-button" data-tower="barbed"><span>Stacheldraht</span><small>35</small></button>
+            <button class="tower-button" data-tower="searchlight"><span>Scheinwerfer</span><small>60</small></button>
+            <button class="tower-button" data-tower="flak"><span>Flak</span><small>85</small></button>
+          </div>
+        </div>
+
+        <div class="panel mission-panel">
+          <h2>Mission</h2>
+          <p>Halte die Grabenabschnitte und wehre die Wellen ab, bevor sie durchbrechen.</p>
+        </div>
+
+        <div class="panel controls-panel">
+          <button id="waveButton" class="primary-button">Welle starten</button>
+          <button id="pauseButton" class="secondary-button">Pause</button>
+        </div>
+      </aside>
+
+      <main class="battlefield-wrap">
+        <canvas id="gameCanvas" width="1100" height="620"></canvas>
+      </main>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
