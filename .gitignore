@@ -1,4 +1,23 @@
+node_modules
+dist
+.vite
 .DS_Store
 *.log
+
+# Test & coverage output
+coverage/
+playwright-report/
+test-results/
+
+# Local overrides & secrets
+*.local
+.env
+.env.*
+
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
 __pycache__/
 .venv/

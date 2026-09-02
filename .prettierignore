@@ -1,0 +1,11 @@
+dist
+coverage
+package-lock.json
+prototyp-td
+
+# Handschriftlich gepflegte Referenzdokumente — nicht von Prettier umbrechen lassen.
+KONZEPT.md
+TECHNIK.md
+WAFFEN.md
+BACKLOG.md
+AUFGABEN.md
