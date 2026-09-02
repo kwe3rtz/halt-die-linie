@@ -1,31 +1,40 @@
-import { Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
+import {
+  Color4,
+  Engine,
+  HemisphericLight,
+  Scene,
+  Vector3,
+} from "@babylonjs/core";
 
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById("gameCanvas");
 
 if (!(canvas instanceof HTMLCanvasElement)) {
-  throw new Error('Canvas element not found.');
+  throw new Error("Canvas element not found.");
 }
 
-const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+const engine = new Engine(canvas, true, {
+  preserveDrawingBuffer: true,
+  stencil: true,
+});
 const scene = new Scene(engine);
 scene.clearColor = new Color4(0.12, 0.14, 0.18, 1);
 
-new HemisphericLight('ambientLight', new Vector3(0, 1, 0), scene);
+new HemisphericLight("ambientLight", new Vector3(0, 1, 0), scene);
 
 const resize = () => {
   engine.resize();
 };
 
-window.addEventListener('resize', resize);
+window.addEventListener("resize", resize);
 engine.runRenderLoop(() => {
   scene.render();
 });
 
 resize();
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener("beforeunload", () => {
   engine.stopRenderLoop();
   scene.dispose();
   engine.dispose();
-  window.removeEventListener('resize', resize);
+  window.removeEventListener("resize", resize);
 });

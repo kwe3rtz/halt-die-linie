@@ -1,6 +1,6 @@
-import type { Vec3 } from './math';
+import type { Vec3 } from "./math";
 
-export type { Vec3 } from './math';
+export type { Vec3 } from "./math";
 
 export interface SimState {
   tick: number;

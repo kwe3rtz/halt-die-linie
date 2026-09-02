@@ -1,5 +1,5 @@
-describe('project scaffold', () => {
-  it('initializes with a valid test harness', () => {
+describe("project scaffold", () => {
+  it("initializes with a valid test harness", () => {
     expect(true).toBe(true);
   });
 });

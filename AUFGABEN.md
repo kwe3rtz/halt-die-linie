@@ -133,7 +133,7 @@ Branch: `arbeitspaket-1`.
 | 1.1 | Projekt-Scaffolding | ✅ erledigt (`8aea89e`) |
 | 1.2 | Fester-Timestep-Loop | ✅ erledigt (`f623974`) |
 | 1.3 | Sim-Skelett & State-Grenze | ✅ erledigt (`4e2076f`) |
-| 1.4 | Projekt-Hygiene, CI & Preview-Deploy | ⬜ offen (Teile schon in `f623974`: `@babylonjs/core`, `format:check`, `test:coverage`, Lint `@babylonjs/*`) |
+| 1.4 | Projekt-Hygiene, CI & Preview-Deploy | ✅ erledigt (`arbeitspaket-1`) |
 | 1.5 | Input-Layer | ⬜ offen |
 | 1.6 | First-Person-Controller + Kamera + Test-Level | ⬜ offen |
 | 1.7 | Datenschema-Stubs | ⬜ offen |
