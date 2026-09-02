@@ -73,14 +73,14 @@ gewinnen**, Widerspruch als `// TODO(Rückfrage)` vermerken.
   (Seed + Kommandosequenz → State-Snapshot) als Regressionsschutz.
 
 ### Commit-Konvention
-- Arbeitspaket-Tickets: Message beginnt mit der Ticket-Nummer — `1.3 Timestep-Loop`.
+- Arbeitspaket-Tickets: Message beginnt mit der Ticket-Nummer — `1.5 Input-Layer`.
 - Sonstiges: Conventional-Commits-leicht — `feat:`, `fix:`, `chore:`, `docs:`,
   `refactor:`, `test:`.
 - Ein Commit pro Ticket. `main` bleibt jederzeit grün; Arbeit auf
   `arbeitspaket-*` bzw. `feat/*` / `fix/*`.
 
 ### CI
-- Ab Ticket 1.2 prüft `.github/workflows/ci.yml` bei jedem Push/PR:
+- Ab Ticket 1.4 prüft `.github/workflows/ci.yml` bei jedem Push/PR:
   typecheck → lint → format:check → test:coverage → build. Rot = nicht mergen.
 
 ### Die goldene Regel: die Sim-Grenze
@@ -96,7 +96,7 @@ Aus `TECHNIK.md` — **das wichtigste Prinzip im ganzen Projekt:**
 > Seed, `dt`. Der Renderer liest den Sim-State und zeichnet — er fasst
 > Spiellogik nie an.
 
-Diese Grenze wird per ESLint-Regel erzwungen (Ticket 1.1, geschärft in 1.2).
+Diese Grenze wird per ESLint-Regel erzwungen (Ticket 1.1, fertig geschärft in 1.4).
 Verstöße sind ein Fehler, kein Stilproblem.
 
 ### Loop & Zeit
@@ -126,9 +126,23 @@ Menüs, **keine** prozedurale Erzeugung, **kein** Netcode, **keine** Art.
 
 Branch: `arbeitspaket-1`.
 
-**Ticket-Übersicht:** 1.1 Scaffolding · **1.2 Projekt-Hygiene, CI & Preview** ·
-1.3 Timestep-Loop · 1.4 Sim-Skelett · 1.5 Input-Layer · 1.6 FP-Controller +
-Test-Level · 1.7 Datenschema-Stubs · 1.8 Debug-Overlay.
+### Stand / Fortschritt (maßgeblich — Tickets unten stehen ggf. nicht in dieser Reihenfolge)
+
+| Nr | Ticket | Status |
+|---|---|---|
+| 1.1 | Projekt-Scaffolding | ✅ erledigt (`8aea89e`) |
+| 1.2 | Fester-Timestep-Loop | ✅ erledigt (`f623974`) |
+| 1.3 | Sim-Skelett & State-Grenze | ✅ erledigt (`4e2076f`) |
+| 1.4 | Projekt-Hygiene, CI & Preview-Deploy | ⬜ offen (Teile schon in `f623974`: `@babylonjs/core`, `format:check`, `test:coverage`, Lint `@babylonjs/*`) |
+| 1.5 | Input-Layer | ⬜ offen |
+| 1.6 | First-Person-Controller + Kamera + Test-Level | ⬜ offen |
+| 1.7 | Datenschema-Stubs | ⬜ offen |
+| 1.8 | Debug-Overlay (HTML/CSS) | ⬜ offen |
+
+> Hinweis: Die VS-Code-KI hat 1.2/1.3 mit einer älteren Nummerierung committet
+> („1.2 Fester-Timestep-Loop", „1.3 Sim-Skelett"). Die Commits sind inhaltlich
+> ok; die Nummern oben sind jetzt die gültigen. Das Hygiene-Ticket ist dadurch
+> von 1.2 auf **1.4** gerückt und teils schon angefangen.
 
 ---
 
@@ -177,23 +191,24 @@ Lint/Format/Test-Setup und der erzwungenen Sim-Grenze.
 
 ---
 
-### Ticket 1.2 — Projekt-Hygiene, CI & Preview-Deploy
+### Ticket 1.4 — Projekt-Hygiene, CI & Preview-Deploy
 
-**Ziel:** Das Fundament aus 1.1 auf „ordentlich" bringen — reproduzierbare
-Umgebung, automatische Prüfung bei jedem Push, ein spielbarer Link pro Branch,
-und ein paar Nachbesserungen an 1.1.
+**Ziel:** Das Fundament auf „ordentlich" bringen — reproduzierbare Umgebung,
+automatische Prüfung bei jedem Push, ein spielbarer Link pro Branch.
 
-**Nachbesserungen an Ticket 1.1:**
-- **`babylonjs` → `@babylonjs/core`** wechseln (tree-shakebar, deutlich kleineres
-  Bundle). Nur die tatsächlich genutzten Module importieren. Version exakt
-  gepinnt, in `src/ARCHITEKTUR.md` festhalten.
-- **Sim-Grenze-Lint schärfen:** die `no-restricted-imports`-Pattern greifen nur
-  bei `../render` (eine Ebene). Auf `**/render/**`, `**/input/**`, `**/ui/**`,
-  `@babylonjs/*`, `babylonjs` erweitern, damit auch tief verschachtelte Dateien
-  unter `src/sim/` erfasst werden. Gegentest (absichtlicher Verstoß in
-  `src/sim/tief/x.ts`) muss failen.
-- **Vitest-Coverage:** Provider `v8`, Coverage einsammeln; weiche Schwelle **nur
-  auf `src/sim/**`** (z.B. 60 % lines), nicht auf das Gesamtprojekt.
+**Schon erledigt (in Commit `f623974`), nur prüfen:**
+- ✅ `babylonjs` → `@babylonjs/core` (Version in `src/ARCHITEKTUR.md` festhalten,
+  falls noch nicht).
+- ✅ Scripts `format:check`, `test:coverage`; `@vitest/coverage-v8`; Coverage
+  `include: ['src/sim/**']`.
+- ✅ Lint: `@babylonjs/*` in den Sim-`no-restricted-imports`.
+
+**Noch zu tun — Sim-Grenze-Lint fertig schärfen:**
+- Die `no-restricted-imports`-Pattern greifen nur bei `../render` (eine Ebene).
+  Auf `**/render/**`, `**/input/**`, `**/ui/**` erweitern, damit auch tief
+  verschachtelte Dateien unter `src/sim/` erfasst werden. Gegentest
+  (absichtlicher Verstoß in `src/sim/tief/x.ts`) muss failen, danach entfernen.
+- Weiche Coverage-Schwelle ergänzen (z.B. `lines: 60` auf `src/sim/**`).
 
 **Liefergegenstände:**
 
@@ -244,7 +259,7 @@ und ein paar Nachbesserungen an 1.1.
   ökosystem ebenfalls.
 
 **Commit-Konvention (in `CONTRIBUTING.md` festhalten):**
-- Arbeitspaket-Tickets: Message beginnt mit der Ticket-Nummer — `1.3 Timestep-Loop`.
+- Arbeitspaket-Tickets: Message beginnt mit der Ticket-Nummer — `1.5 Input-Layer`.
 - Sonstiges: Conventional-Commits-leicht — `feat: …`, `fix: …`, `chore: …`,
   `docs: …`, `refactor: …`, `test: …`.
 
@@ -262,9 +277,13 @@ Bundle-Budget-Gate, Tauri-Build, Release-Workflow — siehe Infrastruktur-Backlo
 
 ---
 
-### Ticket 1.3 — Fester-Timestep-Loop
+### Ticket 1.2 — Fester-Timestep-Loop  ✅ erledigt (`f623974`)
 
-**Ziel:** Ein Loop, der die Sim mit 60 Hz tickt und den Renderer pro
+Für Referenz / Nacharbeit. `src/loop.ts` + `src/loop.test.ts` sind da.
+Bekannte Restpunkte: `SimLike`/`RendererLike`/`InputLike` nutzen `unknown` statt
+der echten Typen aus `src/sim` — bei 1.6 anziehen.
+
+**Ziel (Original):** Ein Loop, der die Sim mit 60 Hz tickt und den Renderer pro
 Animationsframe synchronisiert, mit Interpolation.
 
 **Liefergegenstände:**
@@ -287,10 +306,17 @@ Animationsframe synchronisiert, mit Interpolation.
 
 ---
 
-### Ticket 1.4 — Sim-Skelett & State-Grenze
+### Ticket 1.3 — Sim-Skelett & State-Grenze  ✅ erledigt (`4e2076f`)
 
-**Ziel:** Die Simulation als eigenständiges Modul mit klarer öffentlicher
-Schnittstelle und einem minimalen State (nur ein steuerbarer Spieler).
+Für Referenz / Nacharbeit. `src/sim/index.ts` (mit `InputCommand`-Typ),
+`src/sim/math.ts`, `src/sim/rng.ts`, `src/sim/sim.test.ts` sind da.
+Bekannte Restpunkte: `createSim(seed)` nimmt den Seed entgegen, nutzt `rng.ts`
+aber noch nicht (`void safeSeed`) — ok solange keine Zufälligkeit in der Sim ist,
+bei 1.6 sauber verdrahten. Bewegung ist Platzhalter (x/y statt x/z-Bodenebene).
+
+**Ziel (Original):** Die Simulation als eigenständiges Modul mit klarer
+öffentlicher Schnittstelle und einem minimalen State (nur ein steuerbarer
+Spieler).
 
 **Liefergegenstände:**
 - `src/sim/index.ts`:

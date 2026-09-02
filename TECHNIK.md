@@ -9,8 +9,8 @@ Konzeptarbeit §1 (Tech-Stack).
 2. **Standalone-Desktop-App (später)** — `.exe` / `.app` via Wrapper.
    Tauri (leicht, OS-WebView) oder Electron (konsistenteres GPU-Verhalten bei
    3D/WebGPU). Entscheidung später.
-3. **3D ist „ziemlich sicher"** — die 2D-artige Draufsicht ist *kein*
-   Zwischenprodukt. Es wird von Anfang an in 3D gebaut.
+3. **3D von Anfang an** — keine 2D-Zwischenstufe, keine spätere „2D → 3D"-
+   Migration. First Person, Babylon.js, Platzhalter-Boxen jetzt / Art später.
 
 ## Stack — `BESCHLOSSEN`
 
@@ -26,6 +26,59 @@ Konzeptarbeit §1 (Tech-Stack).
 
 Gameplay, Simulation, Netcode und UI werden **einmal** gebaut; Art (Modelle,
 Texturen, Animationen) kommt schrittweise dazu.
+
+## Was gebaut wird — in einem Absatz
+
+Eine **Browser-Anwendung in TypeScript**, gerendert mit **Babylon.js in 3D**,
+First Person, ab Tag eins (Platzhalter-Boxen, Art später). Kein C/C++, kein
+Unity/Unreal/Godot, kein natives Projekt. Für die Standalone-Desktop-Version
+später wird **dieselbe** Web-App mit Tauri/Electron in eine `.exe`/`.app`
+gehüllt — kein Rewrite. Es gibt **keine** ausstehende „2D → 3D"-Migration; 3D
+ist der Ausgangszustand.
+
+## Warum dieser Stack — nicht Unity, Godot, C++
+
+„Engine" meint zwei verschiedene Dinge:
+
+1. **Renderer-Bibliothek**, die du aus eigenem Code aufrufst (Babylon.js,
+   Three.js). Du schreibst das Spiel, sie macht Rendering, Szenengraph, Mathe,
+   Asset-Loading.
+2. **Editor-Engine**, eine eigene Anwendung mit Szenen-Editor und eigener
+   Skript-Runtime (Unity, Unreal, Godot). Du baust im Editor.
+
+**Wir nutzen (1): Babylon.js.** Das ist *kein* Overkill — 3D im Browser ohne so
+eine Bibliothek hieße Monate an eigenem WebGL-Renderer, glTF-Loader, Culling und
+Shadern, bevor eine beleuchtete Box auf dem Schirm ist. Babylon liefert das plus
+Physik-Anbindung, Animation, Inspector. TS-nativ.
+
+**Eine Editor-Engine (2) wäre der falsche Schnitt**, weil sie gegen unsere
+Anforderungen arbeitet:
+
+- **Browser-first + Koop:** Unity/Unreal-Web-Export ist schwer (zig MB, lange
+  Ladezeit), die Netcode-Stacks passen nicht zum „autoritativer Node-Server"-
+  Modell. Godot-Web ist leichter, aber die High-Level-Multiplayer-Schicht ist
+  eigenwillig.
+- **Unsere headless Sim** (reines TS-Modul, wandert unverändert Client → Server)
+  baut sich in TypeScript sauberer als gegen die eingebaute Game-Loop und den
+  Node-Lebenszyklus einer Engine.
+- **KI-Zusammenarbeit:** VS Code KI und Claude Code arbeiten natürlich in einer
+  TS-Codebasis. Unity = C# + Editor + `.meta`-Dateien + Szenen-YAML, das in git
+  schlecht merged.
+- Man würde die Engine lernen statt das Spiel zu bauen.
+
+**Preis unserer Wahl:** kein visueller Level-Editor (Level als Daten/Code, evtl.
+später ein kleines eigenes Tool), ein paar Systeme (Input, Kamera, Game-Loop)
+bauen wir selbst — ist in `AUFGABEN.md` eingeplant.
+
+**C/C++ / nativ / Unreal** wären sinnvoll bei: grafisch anspruchsvoll
+(realistisch, große Sichtweiten, schwere Zerstörungsphysik), Konsolen-Ziel, kein
+Browser-/Koop-Fokus. Nichts davon trifft auf einen schematischen
+WW1-Grabenshooter im Browser zu.
+
+**Restrisiken:** Babylon-Bundle ist groß (→ `@babylonjs/core` Tree-Shaking, Ticket
+1.2); ein Web-Renderer hat eine Grafik-Obergrenze (aber Tauri/Electron-Spiele
+shippen auf Steam); WebGPU ist noch jung — WebGL2 ist der sichere Default,
+Babylon kann beides.
 
 ## Architektur-Prinzipien — `BESCHLOSSEN`
 
