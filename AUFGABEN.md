@@ -38,7 +38,7 @@ hat Akzeptanzkriterien.
 |---|---|
 | `KONZEPT.md` | Das komplette Spielkonzept. Für dieses Arbeitspaket besonders **§1** (Kern), **§2** (Genre/Plattform), **§4** (Datenmodell Klassen/Waffen — die Schema-Stubs), **§5** (Gegner — Schema-Stubs), **§6** (Einsatzstruktur). |
 | `TECHNIK.md` | **Komplett lesen.** Stack, die Architektur-Prinzipien (headless Sim!), die Physik-Aufteilung, der Projektstruktur-Vorschlag, und die Liste „Aufgaben für die VS Code KI" — dieses Dokument setzt sie um. |
-| `WAFFEN.md` | Waffenmodell + v1-Arsenal. Für Ticket 1.6 (Datenschema-Stubs): Kategorien, Feuerarten, Nachlade-Arten, die zwei Bonus-Ebenen. |
+| `WAFFEN.md` | Waffenmodell + v1-Arsenal. Für Ticket 1.7 (Datenschema-Stubs): Kategorien, Feuerarten, Nachlade-Arten, die zwei Bonus-Ebenen. |
 | `README.md` | Kurzüberblick + Verweise. |
 
 Wenn `KONZEPT.md` / `TECHNIK.md` und ein Ticket sich widersprechen: **die Doks
@@ -54,11 +54,34 @@ gewinnen**, Widerspruch als `// TODO(Rückfrage)` vermerken.
 - **Babylon.js** als Renderer/Engine. **Aktuelle stabile Version, exakt pinnen**
   (keine `^`-Range) und die Versionsnummer in einem Kommentar in `package.json`
   oder `src/ARCHITEKTUR.md` festhalten.
+- **Renderer-Paket:** `@babylonjs/core` (nicht `babylonjs` — tree-shakebar).
 - **Tests:** Vitest.
-- **Lint/Format:** ESLint (+ `typescript-eslint`) und Prettier.
+- **Lint/Format:** ESLint (Flat Config, `eslint.config.js`) + `typescript-eslint`
+  + Prettier.
 - **Paketmanager:** npm.
 - **Keine weiteren Runtime-Abhängigkeiten** ohne Rückfrage. `zod` ist erlaubt,
   falls für Schema-Validierung gewünscht — sonst handgeschrieben.
+
+### Tests
+- Test-Dateien **neben der Quelle**: `foo.ts` → `foo.test.ts`.
+- `src/sim/**`-Tests laufen in `environment: 'node'` (rein, schnell). UI-Tests
+  später mit `jsdom` (Vitest-Projects/Workspace, wenn der erste UI-Test kommt).
+- **Nicht** unit-testen: Babylon-Rendering (flaky) — dafür kommt später ein
+  Playwright-Smoke-Test.
+- Coverage: Provider `v8`, weiche Schwelle **nur auf `src/sim/**`**.
+- Sobald der FP-Controller steht: **Golden-/Replay-Test** fürs Sim etablieren
+  (Seed + Kommandosequenz → State-Snapshot) als Regressionsschutz.
+
+### Commit-Konvention
+- Arbeitspaket-Tickets: Message beginnt mit der Ticket-Nummer — `1.3 Timestep-Loop`.
+- Sonstiges: Conventional-Commits-leicht — `feat:`, `fix:`, `chore:`, `docs:`,
+  `refactor:`, `test:`.
+- Ein Commit pro Ticket. `main` bleibt jederzeit grün; Arbeit auf
+  `arbeitspaket-*` bzw. `feat/*` / `fix/*`.
+
+### CI
+- Ab Ticket 1.2 prüft `.github/workflows/ci.yml` bei jedem Push/PR:
+  typecheck → lint → format:check → test:coverage → build. Rot = nicht mergen.
 
 ### Die goldene Regel: die Sim-Grenze
 Aus `TECHNIK.md` — **das wichtigste Prinzip im ganzen Projekt:**
@@ -73,8 +96,8 @@ Aus `TECHNIK.md` — **das wichtigste Prinzip im ganzen Projekt:**
 > Seed, `dt`. Der Renderer liest den Sim-State und zeichnet — er fasst
 > Spiellogik nie an.
 
-Diese Grenze wird per ESLint-Regel erzwungen (Ticket 1.1). Verstöße sind ein
-Fehler, kein Stilproblem.
+Diese Grenze wird per ESLint-Regel erzwungen (Ticket 1.1, geschärft in 1.2).
+Verstöße sind ein Fehler, kein Stilproblem.
 
 ### Loop & Zeit
 - Die Sim tickt mit **festem Timestep (60 Hz)**, entkoppelt von der Render-Rate,
@@ -97,11 +120,15 @@ Fehler, kein Stilproblem.
 
 **Ziel:** Am Ende kann man in **First Person durch einen Test-Graben laufen**
 (Boxen-Geometrie), mit einer sauberen Sim/Render-Trennung, festem Timestep,
-Input-Layer und den Datenschema-Stubs. **Kein** Schießen, **keine** Gegner,
-**keine** Menüs, **keine** prozedurale Erzeugung, **kein** Netcode, **keine**
-Art.
+Input-Layer und den Datenschema-Stubs — dazu ein ordentliches Projekt-Fundament
+(CI, Hygiene, Preview-Deploy). **Kein** Schießen, **keine** Gegner, **keine**
+Menüs, **keine** prozedurale Erzeugung, **kein** Netcode, **keine** Art.
 
 Branch: `arbeitspaket-1`.
+
+**Ticket-Übersicht:** 1.1 Scaffolding · **1.2 Projekt-Hygiene, CI & Preview** ·
+1.3 Timestep-Loop · 1.4 Sim-Skelett · 1.5 Input-Layer · 1.6 FP-Controller +
+Test-Level · 1.7 Datenschema-Stubs · 1.8 Debug-Overlay.
 
 ---
 
@@ -150,7 +177,92 @@ Lint/Format/Test-Setup und der erzwungenen Sim-Grenze.
 
 ---
 
-### Ticket 1.2 — Fester-Timestep-Loop
+### Ticket 1.2 — Projekt-Hygiene, CI & Preview-Deploy
+
+**Ziel:** Das Fundament aus 1.1 auf „ordentlich" bringen — reproduzierbare
+Umgebung, automatische Prüfung bei jedem Push, ein spielbarer Link pro Branch,
+und ein paar Nachbesserungen an 1.1.
+
+**Nachbesserungen an Ticket 1.1:**
+- **`babylonjs` → `@babylonjs/core`** wechseln (tree-shakebar, deutlich kleineres
+  Bundle). Nur die tatsächlich genutzten Module importieren. Version exakt
+  gepinnt, in `src/ARCHITEKTUR.md` festhalten.
+- **Sim-Grenze-Lint schärfen:** die `no-restricted-imports`-Pattern greifen nur
+  bei `../render` (eine Ebene). Auf `**/render/**`, `**/input/**`, `**/ui/**`,
+  `@babylonjs/*`, `babylonjs` erweitern, damit auch tief verschachtelte Dateien
+  unter `src/sim/` erfasst werden. Gegentest (absichtlicher Verstoß in
+  `src/sim/tief/x.ts`) muss failen.
+- **Vitest-Coverage:** Provider `v8`, Coverage einsammeln; weiche Schwelle **nur
+  auf `src/sim/**`** (z.B. 60 % lines), nicht auf das Gesamtprojekt.
+
+**Liefergegenstände:**
+
+*Reproduzierbarkeit*
+- `package.json`: `engines.node` (aktuelle LTS-Major), `packageManager`
+  (npm-Version, für Corepack), `"type": "module"` (ist schon da).
+- `.nvmrc` mit der Node-Major.
+- `package-lock.json` committen (ist schon da — sicherstellen).
+
+*Repo-Hygiene*
+- `.editorconfig` — UTF-8, LF, finale Leerzeile, 2 Spaces (TS/JS/JSON/MD),
+  `trim_trailing_whitespace` (außer `*.md`).
+- `.gitattributes` — `* text=auto eol=lf`; künftige Binärformate (`*.png`,
+  `*.glb`, `*.ktx2`, `*.ogg`, …) als `binary` markieren.
+- `.gitignore` erweitern: `coverage/`, `*.local`, `.env*`, `.idea/`, `.vscode/*`
+  (mit Ausnahme `!.vscode/extensions.json`), `playwright-report/`, `test-results/`.
+- `.prettierignore` (dist, coverage, package-lock, prototyp-td).
+- `.vscode/extensions.json` — empfohlene Extensions (ESLint, Prettier, EditorConfig).
+- `LICENSE` — **proprietär / „All rights reserved"** (kurzer Standardtext,
+  Copyright-Zeile). Falls du etwas anderes willst: `// TODO(Rückfrage)`.
+- `CONTRIBUTING.md` (kurz) — verweist auf `AUFGABEN.md` für die Arbeitsweise,
+  hält die **Commit-Konvention** fest (siehe unten) und die Branch-Regel
+  (`main` bleibt grün, Arbeit auf `arbeitspaket-*` / `feat/*` / `fix/*`).
+
+*Scripts*
+- `package.json`: `format:check` (`prettier --check .`), `test:coverage`
+  (`vitest run --coverage`). `lint` bleibt, `build` bleibt.
+
+*CI — `.github/workflows/ci.yml`*
+- Trigger: `push` und `pull_request`.
+- Ein Job, Node aus `.nvmrc`, `npm ci`, dann nacheinander:
+  `npm run typecheck` → `npm run lint` → `npm run format:check` →
+  `npm run test:coverage` → `npm run build`.
+- npm-Cache aktivieren (`actions/setup-node` mit `cache: npm`).
+- Coverage als Artifact hochladen.
+
+*Preview-Deploy — `.github/workflows/pages.yml`*
+- Auf `push` (jeder Branch): `npm ci && npm run build`, `dist/` per
+  `actions/upload-pages-artifact` + `actions/deploy-pages` auf **GitHub Pages**.
+- Vite `base` korrekt setzen (Repo-Subpfad) — per Env in der CI, lokal `'/'`.
+- README-Abschnitt „Entwicklung" um die Preview-URL ergänzen (Platzhalter, bis
+  das Repo auf GitHub liegt).
+
+*PR-/Dependency-Hygiene*
+- `.github/pull_request_template.md` — kurze Checkliste (Ticket-Bezug,
+  Akzeptanzkriterien geprüft, CI grün, keine `TODO(Rückfrage)` offen ohne Notiz).
+- `.github/dependabot.yml` — `npm`, wöchentlich, Updates gruppiert; `github-actions`
+  ökosystem ebenfalls.
+
+**Commit-Konvention (in `CONTRIBUTING.md` festhalten):**
+- Arbeitspaket-Tickets: Message beginnt mit der Ticket-Nummer — `1.3 Timestep-Loop`.
+- Sonstiges: Conventional-Commits-leicht — `feat: …`, `fix: …`, `chore: …`,
+  `docs: …`, `refactor: …`, `test: …`.
+
+**Akzeptanzkriterien:**
+- `npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run build` läuft lokal komplett grün durch.
+- Das Bundle ist durch `@babylonjs/core` spürbar kleiner als vorher (Größe im
+  Commit oder in `ARCHITEKTUR.md` notieren).
+- Gegentest der geschärften Sim-Grenze-Regel failt wie erwartet.
+- CI-Workflow ist syntaktisch valide (z.B. `actionlint` oder Review) und würde
+  dieselben Schritte fahren.
+- Alle neuen Dateien vorhanden, `CONTRIBUTING.md` und `LICENSE` ausgefüllt.
+
+**NICHT in diesem Ticket:** Pre-commit-Hooks (husky/lint-staged), Playwright,
+Bundle-Budget-Gate, Tauri-Build, Release-Workflow — siehe Infrastruktur-Backlog.
+
+---
+
+### Ticket 1.3 — Fester-Timestep-Loop
 
 **Ziel:** Ein Loop, der die Sim mit 60 Hz tickt und den Renderer pro
 Animationsframe synchronisiert, mit Interpolation.
@@ -175,7 +287,7 @@ Animationsframe synchronisiert, mit Interpolation.
 
 ---
 
-### Ticket 1.3 — Sim-Skelett & State-Grenze
+### Ticket 1.4 — Sim-Skelett & State-Grenze
 
 **Ziel:** Die Simulation als eigenständiges Modul mit klarer öffentlicher
 Schnittstelle und einem minimalen State (nur ein steuerbarer Spieler).
@@ -197,8 +309,8 @@ Schnittstelle und einem minimalen State (nur ein steuerbarer Spieler).
   }
   export function createSim(seed: number): Sim;
   ```
-  (`InputCommand`-Typ wird in 1.4 final definiert; hier ein importierbarer
-  Platzhalter-Typ, den 1.4 ersetzt/erweitert.)
+  (`InputCommand`-Typ wird in 1.5 final definiert; hier ein importierbarer
+  Platzhalter-Typ, den 1.5 ersetzt/erweitert.)
 - `src/sim/math.ts`: `Vec3` als `{ x, y, z }` + reine Helfer (`add`, `sub`,
   `scale`, `length`, `normalize`, `dot`, …). **Keine** Babylon-Typen. Handgeschrieben,
   keine Abhängigkeit.
@@ -217,7 +329,7 @@ Schnittstelle und einem minimalen State (nur ein steuerbarer Spieler).
 
 ---
 
-### Ticket 1.4 — Input-Layer
+### Ticket 1.5 — Input-Layer
 
 **Ziel:** Tastatur + Maus → ein serialisierbares Kommando-Objekt pro Frame.
 
@@ -253,7 +365,7 @@ Schnittstelle und einem minimalen State (nur ein steuerbarer Spieler).
 
 ---
 
-### Ticket 1.5 — First-Person-Controller (Sim) + Kamera (Render) + Test-Level
+### Ticket 1.6 — First-Person-Controller (Sim) + Kamera (Render) + Test-Level
 
 **Ziel:** In First Person durch einen Test-Graben laufen. Bewegung und
 Kollision in der Sim, Kamera und Meshes im Renderer, beides aus **einer**
@@ -297,7 +409,7 @@ Level-Datenquelle.
 
 ---
 
-### Ticket 1.6 — Datenschema-Stubs
+### Ticket 1.7 — Datenschema-Stubs
 
 **Ziel:** Die TypeScript-Typen für die Gameplay-Definitionen anlegen, passend zu
 `KONZEPT.md` §4/§5 und `WAFFEN.md` — **nur Typen + je ein Platzhalter-Beispiel**,
@@ -342,7 +454,7 @@ keine echten Inhalte, keine Logik.
 
 ---
 
-### Ticket 1.7 — Debug-Overlay (HTML/CSS)
+### Ticket 1.8 — Debug-Overlay (HTML/CSS)
 
 **Ziel:** Das HTML-Overlay-Muster etablieren (UI ist DOM, nicht Babylon-GUI) und
 ein Entwickler-Overlay bereitstellen.
@@ -365,12 +477,16 @@ ein Entwickler-Overlay bereitstellen.
 
 ## Definition of Done — Arbeitspaket 1
 
-- Alle Tickets 1.1–1.7 committet auf `arbeitspaket-1`, ein Commit pro Ticket.
+- Alle Tickets 1.1–1.8 committet auf `arbeitspaket-1`, ein Commit pro Ticket.
 - `npm run dev` → man läuft in First Person durch den Test-Graben, Kollision
   funktioniert, Debug-Overlay per F3.
-- `npm run typecheck`, `npm run lint`, `npm run test` grün.
-- Die goldene Regel ist per Lint erzwungen und wird eingehalten.
+- `npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run build` grün.
+- CI läuft dieselben Schritte bei jedem Push; Preview-Deploy liefert einen
+  spielbaren Link.
+- Die goldene Regel ist per (geschärfter) Lint-Regel erzwungen und wird eingehalten.
 - `src/ARCHITEKTUR.md` beschreibt Struktur, Grenze und Loop.
+- `LICENSE`, `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`, `.nvmrc`,
+  `.github/` vorhanden und ausgefüllt.
 - Offene Rückfragen als `// TODO(Rückfrage): …` im Code, gesammelt am Ende in
   einem kurzen Kommentar in `src/ARCHITEKTUR.md` unter „Offene Rückfragen".
 
@@ -382,6 +498,37 @@ Netcode / Server · Persistenz · Havok / Physik-Engine · Sound · jegliche Art
 (Modelle, Texturen, Animationen — Boxen genügen) · Balancing.
 
 ---
+
+## Infrastruktur-Backlog (später, eigene kleine Tickets)
+
+Kommt nach Arbeitspaket 1, wenn Code da ist, der davon profitiert:
+
+- **Pre-commit-Hooks** — husky + lint-staged (oder `simple-git-hooks`): prettier
+  + eslint + `tsc --noEmit` auf staged Dateien. Hält die Historie sauber,
+  gerade bei KI-Commits.
+- **Playwright-Smoke-Test** in CI — App bootet, Canvas rendert, keine
+  Konsolenfehler. Ein Test, hoher Wert, fängt Integrationsbrüche.
+- **zod-Validierung** für die Daten-Defs — beim Laden im Dev laut scheitern
+  (kommt mit dem „Daten-Loader"-Ticket).
+- **Save-Data-Versionierung** — `schemaVersion` im localStorage, Migration beim
+  Laden, damit Playtester-Stände nicht brechen (kommt mit dem Persistenz-Ticket).
+- **`assets/ATTRIBUTIONS.md`** + Asset-Namens-/Format-Konventionen (glTF, ktx2,
+  ogg) — bevor der erste Fremd-Asset reinkommt.
+- **Bundle-Size-Budget** als CI-Gate — Babylon ist groß, Regression früh fangen.
+- **Babylon Inspector** hinter Dev-Flag (`scene.debugLayer`).
+- **`src/config.ts`** — Dev-Flags über `import.meta.env` (godmode, skip-to-wave,
+  Collider sichtbar).
+- **Globaler Error-Handler** (`window.onerror` + `unhandledrejection`) — im Dev
+  sichtbar melden, später Prod-Reporting.
+- **Struktur-Logger** (`src/debug/log.ts`) mit Leveln/Kategorien statt roher
+  `console.log` (sim nutzt ihn nicht — Grenze).
+- **Determinismus-/Replay-Harness** — aufgezeichnete Inputs + Seed → State
+  vergleichen. Regressionsschutz *und* Netcode-Grundstein.
+- **Tauri-Build in CI** (Desktop), **Release-Workflow** (Tag → Prod-Deploy) —
+  wenn es Richtung Veröffentlichung geht.
+- **Performance-Budget-Tests** — Frame-Zeit unter N ms bei X Entities.
+- **ADRs** (`docs/adr/NNNN-*.md`) — leichte Architektur-Entscheidungs-Notizen,
+  falls `KONZEPT.md` §10 / `TECHNIK.md` nicht mehr reichen.
 
 ## Arbeitspaket 2 und folgende
 

@@ -16,9 +16,10 @@ Konzeptarbeit §1 (Tech-Stack).
 
 | | |
 |---|---|
-| Sprache | **TypeScript** |
+| Sprache | **TypeScript** (strict) |
 | Build | **Vite** |
-| Engine / Renderer | **Babylon.js** — volle 3D-Web-Engine, TS-nativ, Havok-Physik, Inspector, WebGPU-Pfad |
+| Engine / Renderer | **Babylon.js** (`@babylonjs/core`, tree-shakebar) — volle 3D-Web-Engine, TS-nativ, Havok-Physik, Inspector, WebGPU-Pfad |
+| Qualität | ESLint (Flat Config) + Prettier + Vitest; CI (GitHub Actions) prüft typecheck/lint/format/test/build bei jedem Push; Preview-Deploy auf GitHub Pages |
 | Dimensionalität | **3D von Tag eins**, Platzhalter-Geometrie (Boxen / Kapseln / Ebenen) |
 | Kamera | **First Person** |
 | UI | **HTML/CSS-Overlay** über dem Canvas (HUD, Menüs, Lobby, Quartier) — nicht in der Engine gezeichnet |
