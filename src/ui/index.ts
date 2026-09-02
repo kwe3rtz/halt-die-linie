@@ -1,2 +1,2 @@
-// UI layer: HTML/CSS overlays and HUD presentation state.
-export const uiModuleMarker = "ui";
+// UI-Schicht: HTML/CSS-Overlays über dem Canvas (kein Babylon-GUI).
+export * from "./debug";

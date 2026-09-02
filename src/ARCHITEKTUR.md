@@ -35,7 +35,18 @@ bekommt State + `alpha` (Rest im Akkumulator) und interpoliert.
 
 `performance.now()` / `requestAnimationFrame` leben in `loop.ts` — außerhalb der
 Sim-Grenze. `loop.ts` hängt nur an den Sim-Typen (`InputCommand`, `SimState`),
-nicht an den `render`/`input`-Modulen.
+nicht an den `render`/`input`-Modulen. Ein optionaler `onFrame`-Haken liefert je
+Frame `{ simTick, fps, alpha, command }` — daran hängt `main.ts` das Debug-Overlay.
+
+## UI / Overlays
+
+HUD und Menüs sind **DOM + CSS über dem Canvas**, nicht Babylon-GUI (`TECHNIK.md`).
+`src/ui/debug.ts` (`createDebugOverlay`) ist das erste Beispiel: ein `position:
+fixed`-`<div>` mit `pointer-events: none` (Canvas-Klick für Pointer-Lock bleibt
+möglich) und maximalem `z-index`, Umschalten mit **F3**. Es bekommt seine Werte
+pro Frame übergeben (`update()`), pollt nichts selbst. Bei aktivem Pointer-Lock
+bleibt es sichtbar und lesbar — Pointer-Lock betrifft nur den Cursor und die
+Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
 
 ## First-Person-Controller, Kollision, Test-Level
 

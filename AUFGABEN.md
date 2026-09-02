@@ -137,7 +137,7 @@ Branch: `arbeitspaket-1`.
 | 1.5 | Input-Layer | ✅ erledigt (`arbeitspaket-1`) |
 | 1.6 | First-Person-Controller + Kamera + Test-Level | ✅ erledigt (`arbeitspaket-1`) |
 | 1.7 | Datenschema-Stubs | ✅ erledigt (`arbeitspaket-1`) |
-| 1.8 | Debug-Overlay (HTML/CSS) | ⬜ offen |
+| 1.8 | Debug-Overlay (HTML/CSS) | ✅ erledigt (`arbeitspaket-1`) |
 
 > Hinweis: Die VS-Code-KI hat 1.2/1.3 mit einer älteren Nummerierung committet
 > („1.2 Fester-Timestep-Loop", „1.3 Sim-Skelett"). Die Commits sind inhaltlich

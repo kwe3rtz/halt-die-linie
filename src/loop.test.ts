@@ -137,4 +137,33 @@ describe("game loop", () => {
     }
     loop.stop();
   });
+
+  it("reports per-frame info to onFrame (for the debug overlay)", () => {
+    const frames: Array<{ simTick: number; fps: number; alpha: number }> = [];
+    const loop = createLoop({
+      sim: createSim(1),
+      renderer: { sync: () => undefined },
+      input: { poll: () => NEUTRAL },
+      onFrame: (info) => {
+        frames.push({
+          simTick: info.simTick,
+          fps: info.fps,
+          alpha: info.alpha,
+        });
+        expect(info.command).toEqual(NEUTRAL);
+      },
+    });
+    loop.start();
+    for (let i = 0; i < 20; i += 1) {
+      frame(1000 / 60);
+    }
+    expect(frames.length).toBe(20);
+    const last = frames.at(-1);
+    expect(last?.simTick).toBeGreaterThan(0);
+    expect(last?.fps).toBeGreaterThan(30);
+    expect(last?.fps).toBeLessThan(90);
+    expect(last?.alpha).toBeGreaterThanOrEqual(0);
+    expect(last?.alpha).toBeLessThan(1);
+    loop.stop();
+  });
 });
