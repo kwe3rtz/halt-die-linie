@@ -99,7 +99,10 @@ export function createInput(target: HTMLElement): Input {
   };
   const onClick = () => {
     if (!isLocked()) {
-      target.requestPointerLock();
+      // In modernen Browsern liefert requestPointerLock ein Promise, das
+      // abgelehnt werden kann (keine User-Geste, iframe, headless). Abfangen,
+      // sonst gibt es eine unhandled rejection.
+      void Promise.resolve(target.requestPointerLock()).catch(() => undefined);
     }
   };
   const onPointerLockChange = () => {
