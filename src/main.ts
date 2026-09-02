@@ -1,10 +1,10 @@
-import {
-  Color4,
-  Engine,
-  HemisphericLight,
-  Scene,
-  Vector3,
-} from "@babylonjs/core";
+// Einstiegspunkt: verdrahtet Input -> Loop -> Sim -> Renderer.
+// Die Level-Daten sind die eine Quelle für Sim-Collider und Render-Meshes.
+import { testLevel } from "./data/testlevel";
+import { createInput } from "./input";
+import { createLoop } from "./loop";
+import { createRenderer } from "./render";
+import { createSim } from "./sim";
 
 const canvas = document.getElementById("gameCanvas");
 
@@ -12,29 +12,17 @@ if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error("Canvas element not found.");
 }
 
-const engine = new Engine(canvas, true, {
-  preserveDrawingBuffer: true,
-  stencil: true,
-});
-const scene = new Scene(engine);
-scene.clearColor = new Color4(0.12, 0.14, 0.18, 1);
+const SEED = 1;
 
-new HemisphericLight("ambientLight", new Vector3(0, 1, 0), scene);
+const sim = createSim(SEED, testLevel);
+const renderer = createRenderer(canvas, testLevel);
+const input = createInput(canvas);
+const loop = createLoop({ sim, renderer, input });
 
-const resize = () => {
-  engine.resize();
-};
-
-window.addEventListener("resize", resize);
-engine.runRenderLoop(() => {
-  scene.render();
-});
-
-resize();
+loop.start();
 
 window.addEventListener("beforeunload", () => {
-  engine.stopRenderLoop();
-  scene.dispose();
-  engine.dispose();
-  window.removeEventListener("resize", resize);
+  loop.stop();
+  input.dispose();
+  renderer.dispose();
 });

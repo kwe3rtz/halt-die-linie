@@ -1,16 +1,19 @@
+import type { InputCommand, SimState } from "./sim";
+
 export const FIXED_DT = 1 / 60;
 
+// Der Loop hängt nur an den Sim-Typen — nicht an den render/input-Modulen.
 export interface SimLike {
-  tick: (cmd: unknown, dt: number) => void;
-  getState: () => unknown;
+  tick: (cmd: InputCommand, dt: number) => void;
+  getState: () => Readonly<SimState>;
 }
 
 export interface RendererLike {
-  sync: (state: unknown, alpha: number) => void;
+  sync: (state: Readonly<SimState>, alpha: number) => void;
 }
 
 export interface InputLike {
-  poll: () => unknown;
+  poll: () => InputCommand;
 }
 
 export interface LoopOptions {

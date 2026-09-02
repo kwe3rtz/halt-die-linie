@@ -34,7 +34,28 @@ gegeben und je `FIXED_DT` ein `sim.tick(cmd, FIXED_DT)` ausgeführt. Der Rendere
 bekommt State + `alpha` (Rest im Akkumulator) und interpoliert.
 
 `performance.now()` / `requestAnimationFrame` leben in `loop.ts` — außerhalb der
-Sim-Grenze.
+Sim-Grenze. `loop.ts` hängt nur an den Sim-Typen (`InputCommand`, `SimState`),
+nicht an den `render`/`input`-Modulen.
+
+## First-Person-Controller, Kollision, Test-Level
+
+- `src/data/testlevel.ts` beschreibt ein Grabenstück als reine Quader-Liste
+  (`{ center, size }`, Vec3) plus Spawn-Punkte. **Eine Quelle** für Render-Meshes
+  (`src/render`) und Sim-Collider (`src/sim/collision`). Keine Babylon-Typen.
+- `src/sim/collision.ts`: statische AABBs, `moveCapsule()` löst die Bewegung
+  achsenweise auf (X, Z, dann Schwerkraft-Y), mit Stufen-Hochsteigen bis
+  `STEP_HEIGHT` und Bodenkontakt. Reine Funktion.
+- `src/sim/index.ts`: `createSim(seed, level?)`. Der Seed speist `rng.ts` und
+  wählt daraus deterministisch einen Spawn-Punkt. `tick()` dreht `yaw`/`pitch`
+  aus dem Maus-Delta (Pitch geklemmt ±89°), bewegt den Spieler yaw-relativ auf
+  der x/z-Bodenebene, wendet Sprint/Sprung an und kollidiert gegen die
+  `CollisionWorld`.
+- `src/render/index.ts`: `createRenderer(canvas, level)`. Baut die Boxen einmalig,
+  `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
+  Spielerposition (+ Augenhöhe) und Rotation aus `yaw`/`pitch` — kein
+  `attachControl`, die Sim ist die Wahrheit.
+- Regressionsschutz: Golden-/Replay-Test in `src/sim/sim.test.ts`
+  (Seed + Kommandosequenz → identischer End-State).
 
 ## Bundle-Größe
 
@@ -55,9 +76,18 @@ Bundle-Budget-Gate kommt später (Infrastruktur-Backlog).
 - **Node-LTS-Major**: `.nvmrc`/`engines` auf `24` (aktuelle LTS zum Zeitpunkt
   1.4). Bei Bedarf anheben.
 - **Pages-Preview pro Branch**: Der offizielle GitHub-Pages-Deploy kennt nur eine
-  Live-Seite; jeder Push überschreibt den Preview. Echte Branch-Previews
-  bräuchten einen anderen Mechanismus — siehe `TODO(Rückfrage)` in
+  Live-Seite; jeder Push (egal welcher Branch) überschreibt den Preview unter
+  <https://kwe3rtz.github.io/halt-die-linie/>. Für echte Branch-Previews
+  bräuchte es einen anderen Mechanismus — siehe `TODO(Rückfrage)` in
   `.github/workflows/pages.yml`.
 - **Dev-Dependency-Audit**: `npm audit` meldet Advisories in `esbuild`/`vite`/
   `vitest` (nur Dev-Server, kein Prod-Code). Fix = Vite 5→8 / Vitest 2→3, ein
   größerer Breaking-Change — bewusst nicht in 1.4.
+- **Kamera-Pitch-Vorzeichen**: `src/render` invertiert `pitch` für Babylons
+  `FreeCamera` (`rotation.x` positiv = nach unten). Logisch geprüft und per
+  Screenshot grob bestätigt; beim ersten manuellen Spielen kurz gegenchecken,
+  ob „Maus hoch = Blick hoch" stimmt.
+- **`jsdom`** ist als Dev-Dependency dazugekommen (Tests für `src/input` und
+  `src/loop`, jeweils per `// @vitest-environment jsdom` pro Datei). Eine
+  Vitest-Workspace-Aufteilung (node vs. jsdom) kann später folgen, wenn es mehr
+  UI-Tests gibt.

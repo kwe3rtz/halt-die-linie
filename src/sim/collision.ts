@@ -1,0 +1,162 @@
+// Gameplay-Kollision: statische, achsenparallele Quader (AABB) und die
+// Auflösung einer Spieler-„Kapsel" (senkrechter Zylinder) dagegen.
+//
+// Bewusst simpel gehalten (TECHNIK.md: portabler Kollisionscode in der Sim,
+// keine Physik-Engine). Achsenweise Auflösung: erst X, dann Z, dann die
+// Schwerkraft-Achse Y — das ist stabil genug für Boxen-Geometrie und liefert
+// nebenbei den Bodenkontakt.
+import type { Vec3 } from "./math";
+
+/** Ein Level-Baustein als reine Daten — kein Babylon-Typ. */
+export interface LevelBox {
+  /** Mittelpunkt in Weltkoordinaten. */
+  center: Vec3;
+  /** Volle Kantenlänge je Achse. */
+  size: Vec3;
+}
+
+export interface LevelData {
+  /** Statische Kollisions- und Render-Geometrie. */
+  boxes: readonly LevelBox[];
+  /** Mögliche Startpositionen (Fußpunkt des Spielers). */
+  spawnPoints: readonly Vec3[];
+}
+
+/** Achsenparalleler Kasten über Min/Max-Ecken. */
+export interface Aabb {
+  minX: number;
+  minY: number;
+  minZ: number;
+  maxX: number;
+  maxY: number;
+  maxZ: number;
+}
+
+export interface CollisionWorld {
+  readonly boxes: readonly Aabb[];
+}
+
+/** Wie hoch eine Kante sein darf, damit der Spieler sie hochsteigt statt anzustoßen. */
+export const STEP_HEIGHT = 0.5;
+
+const GRAVITY = -22;
+
+export function aabbFromBox(box: LevelBox): Aabb {
+  const hx = box.size.x / 2;
+  const hy = box.size.y / 2;
+  const hz = box.size.z / 2;
+  return {
+    minX: box.center.x - hx,
+    minY: box.center.y - hy,
+    minZ: box.center.z - hz,
+    maxX: box.center.x + hx,
+    maxY: box.center.y + hy,
+    maxZ: box.center.z + hz,
+  };
+}
+
+export function createCollisionWorld(level: LevelData): CollisionWorld {
+  return { boxes: level.boxes.map(aabbFromBox) };
+}
+
+function capsuleAabb(pos: Vec3, radius: number, height: number): Aabb {
+  return {
+    minX: pos.x - radius,
+    minY: pos.y,
+    minZ: pos.z - radius,
+    maxX: pos.x + radius,
+    maxY: pos.y + height,
+    maxZ: pos.z + radius,
+  };
+}
+
+function overlaps(a: Aabb, b: Aabb): boolean {
+  return (
+    a.minX < b.maxX &&
+    a.maxX > b.minX &&
+    a.minY < b.maxY &&
+    a.maxY > b.minY &&
+    a.minZ < b.maxZ &&
+    a.maxZ > b.minZ
+  );
+}
+
+export interface MoveResult {
+  pos: Vec3;
+  vel: Vec3;
+  onGround: boolean;
+}
+
+/**
+ * Bewegt eine Kapsel (Fußpunkt `pos`, `radius`, `height`) um `vel * dt`,
+ * wendet Schwerkraft an und löst die Durchdringung statischer Boxen auf.
+ * Reine Funktion: Eingaben werden nicht mutiert.
+ */
+export function moveCapsule(
+  world: CollisionWorld,
+  pos: Vec3,
+  vel: Vec3,
+  radius: number,
+  height: number,
+  dt: number,
+): MoveResult {
+  const next: Vec3 = { x: pos.x, y: pos.y, z: pos.z };
+  const v: Vec3 = { x: vel.x, y: vel.y, z: vel.z };
+
+  // --- X-Achse ---
+  next.x += v.x * dt;
+  for (const box of world.boxes) {
+    if (!overlaps(capsuleAabb(next, radius, height), box)) {
+      continue;
+    }
+    const ledge = box.maxY - next.y;
+    if (ledge <= 0) {
+      continue; // Boden / Stufe abwärts — kein horizontales Hindernis
+    }
+    if (ledge <= STEP_HEIGHT) {
+      next.y = box.maxY; // kleine Stufe: hochsteigen statt blockieren
+      continue;
+    }
+    const center = (box.minX + box.maxX) / 2;
+    next.x = next.x < center ? box.minX - radius : box.maxX + radius;
+    v.x = 0;
+  }
+
+  // --- Z-Achse ---
+  next.z += v.z * dt;
+  for (const box of world.boxes) {
+    if (!overlaps(capsuleAabb(next, radius, height), box)) {
+      continue;
+    }
+    const ledge = box.maxY - next.y;
+    if (ledge <= 0) {
+      continue;
+    }
+    if (ledge <= STEP_HEIGHT) {
+      next.y = box.maxY;
+      continue;
+    }
+    const center = (box.minZ + box.maxZ) / 2;
+    next.z = next.z < center ? box.minZ - radius : box.maxZ + radius;
+    v.z = 0;
+  }
+
+  // --- Y-Achse (Schwerkraft + Bodenkontakt) ---
+  v.y += GRAVITY * dt;
+  next.y += v.y * dt;
+  let onGround = false;
+  for (const box of world.boxes) {
+    if (!overlaps(capsuleAabb(next, radius, height), box)) {
+      continue;
+    }
+    if (v.y > 0 && box.minY > next.y) {
+      next.y = box.minY - height; // Kopf an einer echten Decke anstoßen
+    } else {
+      next.y = box.maxY; // auf der Oberseite landen
+      onGround = true;
+    }
+    v.y = 0;
+  }
+
+  return { pos: next, vel: v, onGround };
+}
