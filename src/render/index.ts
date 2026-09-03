@@ -26,6 +26,19 @@ const EYE_HEIGHT = 1.6;
 const ENEMY_RADIUS = 0.35;
 const ENEMY_HEIGHT = 1.8;
 
+// Gegner-HP-Balken: Maße in Weltmetern, Höhe über dem Kopf.
+const BAR_W = 0.9;
+const BAR_H = 0.12;
+const BAR_HOEHE = ENEMY_HEIGHT + 0.28;
+
+// Render-Reihenfolge (Babylon leert den Tiefenpuffer vor jeder Gruppe > 0):
+//  0 = Welt, Gegner, Tracer     — normale Tiefenprüfung
+//  1 = Viewmodel + Mündungsblitz — eigener Tiefenraum, liegt immer über der Welt
+//  2 = Bildschirm-Effekt (Schaden/Tod) — ganz oben, dimmt auch die Waffe
+const GROUP_WORLD = 0;
+const GROUP_VIEWMODEL = 1;
+const GROUP_SCREENFX = 2;
+
 export interface Renderer {
   sync(state: Readonly<SimState>, alpha: number): void;
   dispose(): void;
@@ -72,7 +85,12 @@ export function createRenderer(
   camera.minZ = 0.1;
   camera.fov = 1.15;
 
-  // Grobes Viewmodel + Mündungsblitz, als Kamera-Kinder positioniert.
+  // Tiefenpuffer vor Gruppe 1 (Viewmodel) und 2 (Screen-FX) leeren, damit das
+  // Viewmodel nie in Wänden steckt und der Screen-FX zuverlässig obenauf liegt.
+  scene.setRenderingAutoClearDepthStencil(GROUP_VIEWMODEL, true, true, true);
+  scene.setRenderingAutoClearDepthStencil(GROUP_SCREENFX, true, true, true);
+
+  // Grobes Viewmodel, als Kamera-Kind positioniert.
   const viewmodelMat = new StandardMaterial("viewmodel", scene);
   viewmodelMat.diffuseColor = new Color3(0.14, 0.14, 0.16);
   viewmodelMat.specularColor = new Color3(0, 0, 0);
@@ -85,16 +103,25 @@ export function createRenderer(
   viewmodel.parent = camera;
   viewmodel.position.set(0.17, -0.15, 0.95);
   viewmodel.isPickable = false;
+  viewmodel.renderingGroupId = GROUP_VIEWMODEL;
 
+  // Mündungsblitz: kurzlebiger Welt-Quader auf dem Schuss-Strahl, vor der Kamera
+  // platziert (keine Viewmodel-/Kamera-Kind-Geometrie — die war die Fehlerquelle).
   const muzzleMat = new StandardMaterial("muzzle", scene);
   muzzleMat.emissiveColor = new Color3(1, 0.86, 0.5);
   muzzleMat.disableLighting = true;
-  const muzzle = MeshBuilder.CreateBox("muzzleFlash", { size: 0.06 }, scene);
+  const muzzle = MeshBuilder.CreateBox("muzzleFlash", { size: 0.09 }, scene);
   muzzle.material = muzzleMat;
-  muzzle.parent = camera;
-  muzzle.position.set(0.17, -0.15, 1.15);
   muzzle.isPickable = false;
   muzzle.isVisible = false;
+  // Wie das Viewmodel über der Welt — sonst steckt der Blitz beim Schuss aus
+  // nächster Nähe in der Wand, in die man feuert.
+  muzzle.renderingGroupId = GROUP_VIEWMODEL;
+
+  // Abstand des Tracer-Starts / Mündungsblitzes vom Augpunkt entlang des Strahls.
+  // Groß genug, dass die Linie nie an der Near-Plane (minZ 0.1) beschnitten wird —
+  // genau der Bug „heller Strich quer über den Bildschirm".
+  const MUZZLE_ABSTAND = 0.6;
 
   let lastShotTick = -1;
   let effectUntil = 0;
@@ -120,7 +147,7 @@ export function createRenderer(
   screenFx.parent = camera;
   screenFx.position.set(0, 0, 0.25);
   screenFx.isPickable = false;
-  screenFx.renderingGroupId = 1;
+  screenFx.renderingGroupId = GROUP_SCREENFX;
 
   const DAMAGE_FLASH_MS = 320;
   let prevHp = -1;
@@ -154,17 +181,29 @@ export function createRenderer(
     body.material = bodyMat;
     body.isPickable = false;
 
-    const barBg = MeshBuilder.CreatePlane("enemyBarBg", { size: 1 }, scene);
-    barBg.scaling.set(0.9, 0.12, 1);
+    // Nur der Hintergrund ist ein Billboard. Die Füllung hängt als Kind daran
+    // und erbt dessen Ausrichtung — so laufen sie aus keinem Winkel auseinander.
+    const barBg = MeshBuilder.CreatePlane(
+      "enemyBarBg",
+      { width: BAR_W, height: BAR_H },
+      scene,
+    );
     barBg.material = enemyBarBgMat;
     barBg.billboardMode = BILLBOARD_ALL;
     barBg.isPickable = false;
 
     const barFillMat = new StandardMaterial("enemyBarFill", scene);
     barFillMat.disableLighting = true;
-    const barFill = MeshBuilder.CreatePlane("enemyBarFill", { size: 1 }, scene);
+    // Polygon-Offset: die Füllung gewinnt die Tiefenprüfung gegen den
+    // Hintergrund unabhängig vom Blickwinkel (kein Z-Fighting).
+    barFillMat.zOffset = -4;
+    const barFill = MeshBuilder.CreatePlane(
+      "enemyBarFill",
+      { width: BAR_W, height: BAR_H },
+      scene,
+    );
     barFill.material = barFillMat;
-    barFill.billboardMode = BILLBOARD_ALL;
+    barFill.parent = barBg;
     barFill.isPickable = false;
 
     return {
@@ -181,9 +220,9 @@ export function createRenderer(
   const disposeEnemyVisual = (v: EnemyVisual): void => {
     v.body.dispose();
     v.bodyMat.dispose();
-    v.barBg.dispose();
     v.barFill.dispose();
     v.barFillMat.dispose();
+    v.barBg.dispose(true); // Kind (barFill) ist schon weg -> nicht rekursiv
   };
 
   const syncEnemies = (list: readonly EnemyView[], now: number): void => {
@@ -205,13 +244,13 @@ export function createRenderer(
       }
 
       v.body.position.set(e.pos.x, e.pos.y + ENEMY_HEIGHT / 2, e.pos.z);
-      v.barBg.position.set(e.pos.x, e.pos.y + ENEMY_HEIGHT + 0.28, e.pos.z);
-      v.barFill.position.copyFrom(v.barBg.position);
+      v.barBg.position.set(e.pos.x, e.pos.y + BAR_HOEHE, e.pos.z);
 
       const ratio = e.maxHp > 0 ? Math.max(0, Math.min(1, e.hp / e.maxHp)) : 0;
-      v.barFill.scaling.set(0.9 * ratio, 0.12, 1);
-      // von der Mitte aus links ausrichten
-      v.barFill.position.x -= (0.9 * (1 - ratio)) / 2;
+      // Füllung im lokalen Raum des (billboardenden) Hintergrunds: um `ratio`
+      // schmaler, linke Kante bleibt bündig -> aus jedem Winkel „von links".
+      v.barFill.scaling.set(ratio, 1, 1);
+      v.barFill.position.set(-(BAR_W * (1 - ratio)) / 2, 0, 0);
       v.barFillMat.emissiveColor.set(1 - ratio, ratio, 0.15);
 
       if (e.letzterTreffer !== v.lastHitTick) {
@@ -255,6 +294,7 @@ export function createRenderer(
     );
     mesh.position.set(box.center.x, box.center.y, box.center.z);
     mesh.material = box.center.y > 0.25 ? parapetMat : groundMat;
+    mesh.renderingGroupId = GROUP_WORLD;
     return mesh;
   });
 
@@ -292,25 +332,45 @@ export function createRenderer(
       );
 
       // „Letzter Schuss"-Signal: Mündungsblitz + kurzlebige Tracer-Linie.
+      // Alles aus den belastbaren Sim-Werten (`von` = Augpunkt beim Schuss,
+      // `richtung` = Hitscan-Richtung, `nach` = Trefferpunkt/Reichweitenende) —
+      // der Renderer rechnet keine eigene Herkunft aus. Läuft nach dem
+      // Kamera-Update, die Weltmatrizen sind also aktuell.
       const shot = state.lastShot;
       const now = performance.now();
       if (shot && shot.tick !== lastShotTick) {
         lastShotTick = shot.tick;
         effectUntil = now + SHOT_EFFECT_MS;
-        muzzle.isVisible = true;
-        tracer?.dispose();
-        tracer = MeshBuilder.CreateLines(
-          "tracer",
-          {
-            points: [
-              new Vector3(shot.von.x, shot.von.y, shot.von.z),
-              new Vector3(shot.nach.x, shot.nach.y, shot.nach.z),
-            ],
-          },
-          scene,
+
+        const von = new Vector3(shot.von.x, shot.von.y, shot.von.z);
+        const dir = new Vector3(
+          shot.richtung.x,
+          shot.richtung.y,
+          shot.richtung.z,
         );
-        tracer.color = new Color3(1, 0.9, 0.65);
-        tracer.isPickable = false;
+        const nach = new Vector3(shot.nach.x, shot.nach.y, shot.nach.z);
+        const gesamt = Vector3.Distance(von, nach);
+        // Tracer beginnt ein Stück vor dem Auge auf dem Strahl (nie an der
+        // Near-Plane), endet exakt am Trefferpunkt.
+        const startAbstand = Math.min(MUZZLE_ABSTAND, gesamt * 0.5);
+        const start = von.add(dir.scale(startAbstand));
+
+        muzzle.position.copyFrom(von.add(dir.scale(MUZZLE_ABSTAND)));
+        muzzle.isVisible = gesamt > MUZZLE_ABSTAND * 0.5;
+
+        tracer?.dispose();
+        tracer =
+          gesamt > 0.2
+            ? MeshBuilder.CreateLines(
+                "tracer",
+                { points: [start, nach] },
+                scene,
+              )
+            : null;
+        if (tracer) {
+          tracer.color = new Color3(1, 0.9, 0.65);
+          tracer.isPickable = false;
+        }
       } else if (now > effectUntil) {
         clearShotEffect();
       }

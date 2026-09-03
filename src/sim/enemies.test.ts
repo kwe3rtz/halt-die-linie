@@ -106,6 +106,37 @@ describe("enemies — updateEnemies", () => {
     expect(list.length).toBe(0);
   });
 
+  it("Separation: zwei am selben Punkt gespawnte Gegner driften auseinander", () => {
+    let list = [enemyAt(0, 20, 1), enemyAt(0, 20, 2)];
+    const abstand0 = Math.hypot(
+      (list[0]?.pos.x ?? 0) - (list[1]?.pos.x ?? 0),
+      (list[0]?.pos.z ?? 0) - (list[1]?.pos.z ?? 0),
+    );
+    expect(abstand0).toBe(0);
+    for (let i = 0; i < 60; i += 1) {
+      list = updateEnemies(list, world, player, true, () => undefined, DT);
+    }
+    const abstand1 = Math.hypot(
+      (list[0]?.pos.x ?? 0) - (list[1]?.pos.x ?? 0),
+      (list[0]?.pos.z ?? 0) - (list[1]?.pos.z ?? 0),
+    );
+    // mindestens grob auf Körperbreite auseinander, nicht mehr im selben Punkt
+    expect(abstand1).toBeGreaterThan(2 * 0.35 * 0.8);
+  });
+
+  it("Separation: ein Gegner im Spieler wird auf Mindestabstand geschoben", () => {
+    let list = [enemyAt(0, 0, 1)]; // exakt auf dem Spieler
+    for (let i = 0; i < 30; i += 1) {
+      list = updateEnemies(list, world, player, true, () => undefined, DT);
+    }
+    const d = Math.hypot(list[0]?.pos.x ?? 0, list[0]?.pos.z ?? 0);
+    // ENEMY_RADIUS + PLAYER_RADIUS = 0.7; nicht mehr im Spieler steckend
+    expect(d).toBeGreaterThan(0.7 - 0.05);
+    // Nahkampf-Reichweite: steht trotzdem noch nah genug zum Zuschlagen
+    expect(d).toBeLessThan(NAHKAMPF_REICHWEITE);
+    expect(list[0]?.zustand).toBe("angriff");
+  });
+
   it("mehrere Gegner gleichzeitig", () => {
     let list = [enemyAt(-6, 12, 1), enemyAt(6, 12, 2), enemyAt(0, 14, 3)];
     for (let i = 0; i < 120; i += 1) {

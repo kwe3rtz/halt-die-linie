@@ -4,6 +4,32 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · komplett
+
+- **AP3-05** · `d21cc08` · **Gegner stapeln sich nicht mehr ineinander.**
+  Separation in `src/sim/enemies.ts` — Positions-Schnappschuss (deterministisch,
+  reihenfolge-unabhängig), radialer Push zwischen nahen Gegnern + Mindestabstand
+  zum Spieler (löst Überlappung in 1 Tick), nur auf den Bewegungswunsch vor
+  `moveCapsule`. Nahkampf trifft weiter, kein Pathfinding. Golden-Replay grün.
+  100 Tests.
+- **AP3-04** · `24bbccd` · **Gegner-Lebensbalken aus jedem Blickwinkel.**
+  Ursache: Hintergrund + Füllung je ein eigenes Billboard, Füllung im Weltraum
+  versetzt. Fix: nur der Hintergrund billboardet, Füllung als Kind im lokalen
+  Raum (linksbündig verankert), `zOffset` gegen Z-Fighting. Reiner Renderer-Job.
+- **AP3-03** · `4999c6e` · **Viewmodel steckt nicht mehr in Wänden.**
+  Depth-getrennter Render-Pass (`src/render/index.ts`): drei Rendering-Gruppen
+  (Welt / Viewmodel+Mündungsblitz / Screen-FX), Tiefenpuffer vor Gruppe 1 & 2
+  geleert. Reiner Renderer-Job. 98 Tests.
+- **AP3-02** · `366ebe9` · **Mündungsblitz & Tracer korrigiert.**
+  Ursache war Near-Plane-Clipping (Tracer-Start auf der Kameraposition).
+  `ShotEvent.richtung` (normierte Hitscan-Richtung) dazu; Tracer startet 0,6 m
+  vor dem Auge auf dem Strahl, Mündungsblitz als Welt-Mesh. 98 Tests.
+- **AP3-01** · `9f28022` · **Fadenkreuz & Trefferbestätigung.**
+  `src/ui/hud.ts` — dünnes CSS-„+" exakt mittig, Hitmarker (4 Speichen, ~120 ms)
+  nur bei Gegner-Treffern, kräftiger bei tödlichem Treffer;
+  `prefers-reduced-motion`, im Tod ausgeblendet. `ShotEvent` um `gegnerTreffer`
+  + `toedlich` (Bool-Flags, keine Verhaltensänderung). 97 Tests.
+
 ## Arbeitspaket 2 — Erster Kampf-Loop · Branch `arbeitspaket-2` · komplett
 
 - **AP2-05** · `4a4e7b1` · **Nachschub-Zähler & minimales HUD.**

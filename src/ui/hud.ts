@@ -11,7 +11,12 @@ export interface HudData {
   weapon: { imLauf: number; reserve: number; reloading: boolean };
   wave: SimState["wave"];
   nachschub: number;
+  /** Letzter Schuss (Signal für die Trefferbestätigung). */
+  lastShot: SimState["lastShot"];
 }
+
+// Sichtbare Dauer der Trefferbestätigung.
+const HITMARKER_MS = 120;
 
 export interface Hud {
   update(data: HudData): void;
@@ -65,6 +70,54 @@ const CSS = `
   background: rgba(8, 6, 6, 0.35);
 }
 .hdl-hud__death--on { display: flex; }
+.hdl-hud__crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+}
+.hdl-hud__crosshair::before,
+.hdl-hud__crosshair::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: rgba(230, 236, 224, 0.82);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.85);
+}
+.hdl-hud__crosshair::before { width: 2px; height: 20px; transform: translate(-50%, -50%); }
+.hdl-hud__crosshair::after { width: 20px; height: 2px; transform: translate(-50%, -50%); }
+.hdl-hud__crosshair--hidden { display: none; }
+.hdl-hud__hit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  opacity: 0;
+}
+.hdl-hud__hit > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  margin: -4px 0 0 -1px;
+  background: #e9efe1;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.9);
+}
+.hdl-hud__hit > span:nth-child(1) { transform: translateY(-9px); }
+.hdl-hud__hit > span:nth-child(2) { transform: translateY(9px); }
+.hdl-hud__hit > span:nth-child(3) { transform: rotate(90deg) translateY(-9px); }
+.hdl-hud__hit > span:nth-child(4) { transform: rotate(90deg) translateY(9px); }
+.hdl-hud__hit--on { opacity: 1; }
+.hdl-hud__hit--kill > span { background: #ff6a4d; width: 3px; height: 10px; margin: -5px 0 0 -1.5px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hdl-hud__hit { transition: opacity 90ms linear; }
+}
 .hdl-hud__death-title { font-size: 30px; letter-spacing: 0.08em; }
 .hdl-hud__death-sub { font-size: 15px; opacity: 0.85; }
 @media (prefers-reduced-motion: no-preference) {
@@ -137,6 +190,11 @@ export function createHud(parent: HTMLElement = document.body): Hud {
   const nachschubText = el("div");
   wavePanel.append(waveText, akBar, nachschubText);
 
+  // Fadenkreuz + Trefferbestätigung (exakte Bildmitte)
+  const crosshair = el("div", "hdl-hud__crosshair");
+  const hit = el("div", "hdl-hud__hit");
+  hit.append(el("span"), el("span"), el("span"), el("span"));
+
   // Tod-Overlay
   const death = el("div", "hdl-hud__death");
   const deathTitle = el("div", "hdl-hud__death-title");
@@ -144,8 +202,22 @@ export function createHud(parent: HTMLElement = document.body): Hud {
   const deathSub = el("div", "hdl-hud__death-sub");
   death.append(deathTitle, deathSub);
 
-  root.append(hpPanel, ammoPanel, wavePanel, death);
+  root.append(hpPanel, ammoPanel, wavePanel, crosshair, hit, death);
   parent.appendChild(root);
+
+  let hitSeenTick = -1;
+  let hitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const zeigeHitmarker = (toedlich: boolean): void => {
+    if (hitTimer !== undefined) {
+      clearTimeout(hitTimer);
+    }
+    hit.classList.add("hdl-hud__hit--on");
+    hit.classList.toggle("hdl-hud__hit--kill", toedlich);
+    hitTimer = setTimeout(() => {
+      hit.classList.remove("hdl-hud__hit--on");
+    }, HITMARKER_MS);
+  };
 
   return {
     update: (data) => {
@@ -174,8 +246,21 @@ export function createHud(parent: HTMLElement = document.body): Hud {
       if (data.tot) {
         deathSub.textContent = `Respawn in ${Math.max(0, Math.ceil(data.respawnRest))} s`;
       }
+
+      // Fadenkreuz verschwindet im Tod (nichts zu zielen).
+      crosshair.classList.toggle("hdl-hud__crosshair--hidden", data.tot);
+
+      // Trefferbestätigung: nur bei Gegner-Treffern, jeder Schuss nur einmal.
+      const s = data.lastShot;
+      if (s && s.gegnerTreffer && s.tick !== hitSeenTick) {
+        hitSeenTick = s.tick;
+        zeigeHitmarker(s.toedlich);
+      }
     },
     dispose: () => {
+      if (hitTimer !== undefined) {
+        clearTimeout(hitTimer);
+      }
       root.remove();
     },
   };

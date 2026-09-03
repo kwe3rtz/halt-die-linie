@@ -33,6 +33,14 @@ const BASIS_TEMPO = 2.6; // m/s bei EnemyDef.tempo = 1 (Platzhalter)
 const ANGRIFF_INTERVALL = 1.1; // s zwischen Nahkampftreffern
 const LEICHE_LIEGEZEIT = 1.4; // s
 
+// Muss zu PLAYER_RADIUS in `src/sim/index.ts` passen (beides Platzhalter).
+const SPIELER_RADIUS = 0.35;
+// Mindestabstände.
+const GEGNER_MINDESTABSTAND = 2 * ENEMY_RADIUS; // Gegner ↔ Gegner
+const SPIELER_MINDESTABSTAND = ENEMY_RADIUS + SPIELER_RADIUS; // Gegner ↔ Spieler
+// Wie schnell ein voll überlappendes Gegnerpaar auseinanderdriftet (m/s, Platzhalter).
+const SEPARATION_TEMPO = 3.0;
+
 export function spawnEnemy(
   def: EnemyDef,
   id: number,
@@ -93,6 +101,12 @@ export function updateEnemies(
 ): EnemyEntity[] {
   const survivors: EnemyEntity[] = [];
 
+  // Positions-Schnappschuss vor der Bewegung: die Separation liest daraus, damit
+  // der Push unabhängig von der Iterationsreihenfolge und deterministisch ist.
+  const startPos = enemies
+    .filter((e) => e.zustand !== "tot")
+    .map((e) => ({ id: e.id, x: e.pos.x, z: e.pos.z }));
+
   for (const e of enemies) {
     if (e.zustand === "tot") {
       e.totRest -= dt;
@@ -139,6 +153,48 @@ export function updateEnemies(
       } else {
         e.vel.x = 0;
         e.vel.z = 0;
+      }
+    }
+
+    // Separation: weicher radialer Push von zu nahen anderen Gegnern und ein
+    // Mindestabstand zum Spieler. Nur der Bewegungswunsch wird verändert —
+    // `moveCapsule` löst danach die Level-Kollision wie gehabt.
+    let pushX = 0;
+    let pushZ = 0;
+    for (const o of startPos) {
+      if (o.id === e.id) {
+        continue;
+      }
+      const ox = e.pos.x - o.x;
+      const oz = e.pos.z - o.z;
+      const od = Math.hypot(ox, oz);
+      if (od >= GEGNER_MINDESTABSTAND) {
+        continue;
+      }
+      if (od > 1e-6) {
+        const t = (GEGNER_MINDESTABSTAND - od) / GEGNER_MINDESTABSTAND; // 0..1
+        pushX += (ox / od) * t;
+        pushZ += (oz / od) * t;
+      } else {
+        // Exakt derselbe Punkt: deterministisch anhand der Id auf die x-Achse.
+        pushX += e.id < o.id ? -1 : 1;
+      }
+    }
+    e.vel.x += pushX * SEPARATION_TEMPO;
+    e.vel.z += pushZ * SEPARATION_TEMPO;
+
+    const sx = e.pos.x - playerPos.x;
+    const sz = e.pos.z - playerPos.z;
+    const sd = Math.hypot(sx, sz);
+    if (sd < SPIELER_MINDESTABSTAND) {
+      // In genau einem Tick auf Mindestabstand schieben (bounded: verschiebt nur
+      // die Überlappung, kein Teleport). Nahkampf (1,6 m) greift weiter.
+      const raus = (SPIELER_MINDESTABSTAND - Math.max(sd, 0)) / dt;
+      if (sd > 1e-6) {
+        e.vel.x += (sx / sd) * raus;
+        e.vel.z += (sz / sd) * raus;
+      } else {
+        e.vel.x += raus; // Gegner exakt auf dem Spieler: feste Achse
       }
     }
 

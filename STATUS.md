@@ -11,10 +11,10 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 ## Wo wir stehen
 
 - **Konzept:** vollständig beschlossen. Nicht mehr im Fluss.
-- **Code:** AP1 (Fundament) + AP2 (erster Kampf-Loop) auf `main` (PR #1, #4).
-  Der Nutzer hat AP2 gespielt — Feedback unten.
-- **Als Nächstes gebaut:** **AP3 — Basis solide machen** (5 Fix-Tickets aus dem
-  Spieltest, `tickets/AP3-*.md`). Danach Design-Runden (Map, Gegner-Roster).
+- **Code:** AP1 + AP2 auf `main` (PR #1, #4). **AP3 „Basis solide machen"
+  komplett** (5 Fix-Tickets, alle reviewed) — **PR #5 offen, wartet auf Merge.**
+- **Als Nächstes:** Design-Runde „Map / prozeduraler Sektor" (Nutzer + Planer),
+  daraus AP4.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -36,28 +36,48 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP3 bauen** (Fix-Paket, 5 Tickets) — Worker-Session, `arbeitspaket-3`.
-2. **Design-Runde „Map / Sektor"** mit dem Nutzer (er hat einen Plan im Kopf,
-   will ihn schildern) → daraus die echte Map-Erzeugung. Am besten in einer
-   frischen Planer-Session.
-3. **Design-Runde „Gegner-Roster-Ausbau"** — varied behaviours (Charger,
-   Anschleicher, Fernkampf, …).
+1. Nutzer: PR #5 (`arbeitspaket-3` → `main`) reviewen + mergen, AP3 kurz
+   nachspielen (v. a. HP-Balken-Teilfüllung aus schrägem Winkel, siehe unten).
+2. **Design-Runde „Map / prozeduraler Sektor"** — der Nutzer hat einen Plan im
+   Kopf, will ihn schildern. Am besten frische Planer-Session; die 8
+   Leitfragen stehen unten. → daraus AP4.
+3. **Design-Runde „Gegner-Roster-Ausbau"** — Charger, Anschleicher, Fernkampf …
 4. Danach: Rückzugslogik, Klassen, Nachschub-Ökonomie, Quartier.
+
+### Leitfragen für die Map-Design-Runde
+
+1. Immer derselbe handgebaute Sektor (der sich „entwickelt") oder jeder Einsatz
+   neu? (Konzept sagt bisher „prozedural".)
+2. Die drei Ebenen — Abstand, Größe je, Anzahl Frontabschnitte?
+3. Niemandsland — Tiefe, Inhalt (Trichter, Draht, Gefallene)?
+4. Woher kommt der Feind — feste Ausstiegspunkte / ganze Gegnerlinie / aus dem
+   Boden (Nacht)?
+5. Vertikalität — Graben unter Bodenniveau, Feuertritt, Unterstände,
+   Parapet-Höhe?
+6. Flanken — wie dicht gesperrt, wie „Korridor"?
+7. Maßstab — Laufzeit Front → Home-Line?
+8. Lesbarkeit — Minikarte/Kompass ja/nein, oder nur Landmarken + Grabenschilder?
 
 **Externes KI-Sparring:** `SPARRING.md` — self-contained Briefing zum Weitergeben
 an ChatGPT / andere Claudes / Gemini, um Design/Tech/Backlog gegenzuchecken.
 
-## Spieltest-Feedback (2026-09-03, AP2) — offen bis AP3 erledigt
+## Spieltest-Feedback (2026-09-03, AP2)
 
-- **Map stimmt noch nicht** — kein Beinbruch, wird in der Design-Runde geklärt
-  (Nutzer hat einen konkreten Plan).
-- Bugs → AP3: kein Fadenkreuz · Tracer/Mündungsblitz gehen manchmal in
-  Zufallsrichtung · Viewmodel clippt in Wände · Gegner-HP-Balken je nach Winkel
-  falsch · Gegner stapeln sich ineinander (keine Separation).
-- **Erinnerung (kein Bug):** Gegner sind bewusst noch langsam/eintönig. Später
-  gemischt — Bajonett-Charger, Anschleicher, Rusher etc. Steht im Roster
-  (`KONZEPT.md` §5), Ausbau ist ein eigenes Paket nach AP3.
-- Positiv: Pitch-Richtung stimmt. Wellen-Tempo ok (niedrige Prio).
+- **Bugs → AP3, alle behoben** (Fadenkreuz, Tracer/Mündungsblitz, Viewmodel in
+  Wänden, HP-Balken je Winkel, Gegner-Stacking). PR #5.
+- **Map stimmt noch nicht** — kein Beinbruch, wird in der Map-Design-Runde
+  geklärt (Nutzer hat einen konkreten Plan).
+- **Erinnerung (kein Bug):** Gegner bewusst noch langsam/eintönig. Später
+  gemischt — Bajonett-Charger, Anschleicher, Rusher etc. Roster in `KONZEPT.md`
+  §5, Ausbau als eigenes Paket (`BACKLOG.md` → Gegner).
+- Positiv: Pitch-Richtung stimmt, Wellen-Tempo ok.
+
+### Beim nächsten Spieltest gegenchecken
+
+- **AP3-04:** Gegner anschießen + um ihn herumlaufen → HP-Balken-Teilfüllung
+  bleibt aus jedem Winkel linksbündig (headless konnte nur volle Balken zeigen).
+- **AP3-05:** Gegner-Pulk verteilt sich, keiner clippt in die Kamera.
+- **AP3-02:** kein „heller Strich quer über den Bildschirm" mehr beim Feuern.
 
 ## Offene Fäden — nicht vergessen
 
@@ -82,9 +102,11 @@ an ChatGPT / andere Claudes / Gemini, um Design/Tech/Backlog gegenzuchecken.
   (dies), `CHANGELOG.md`, `WORKFLOW.md` (inkl. Onboarding-Prompts für frische
   Planer- **und** Worker-Sessions), `tickets/erledigt/` (Audit-Trail: Spec +
   Worker-Bericht + Review je Ticket).
-- **2026-09-03** — Erster Spieltest (AP2). Feedback → **AP3 „Basis solide
-  machen"** (5 Fix-Tickets) vorgezogen; prozedurale Map + Gegner-Roster-Ausbau
-  rücken dahinter. `SPARRING.md` für externes KI-Sparring angelegt.
+- **2026-09-03** — **AP3 „Basis solide machen" komplett** (AP3-01…05, alle
+  reviewed, 100 Tests): Fadenkreuz+Hitmarker, Tracer/Mündungsblitz-Fix,
+  Viewmodel-Wandkollision, HP-Balken-Fix, Gegner-Separation. PR #5 offen.
+- **2026-09-03** — Erster Spieltest (AP2). Feedback → AP3 vorgezogen;
+  prozedurale Map + Gegner-Roster-Ausbau dahinter. `SPARRING.md` angelegt.
 - **2026-09-03** — **Arbeitspaket 2 komplett** (AP2-01…AP2-05, alle reviewed,
   95 Tests): Waffen-Feuerlogik, Spieler-HP/Tod/Respawn, Linieninfanterie,
   Wave-Director, HUD, Golden-Replay-Test. Nach `main` gemergt (PR #4).
