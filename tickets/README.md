@@ -28,6 +28,21 @@ Fixes aus dem ersten Spieltest. Branch `arbeitspaket-3` von `main`.
 | AP3-04 Gegner-Lebensbalken aus jedem Blickwinkel | ✅ `erledigt/` |
 | AP3-05 Gegner stapeln sich nicht mehr ineinander | ✅ `erledigt/` |
 
-## Arbeitspaket 4+
+## Arbeitspaket 4 — Verteidigung in der Tiefe
 
-Nach den Design-Runden (Map / prozeduraler Sektor, dann Gegner-Roster-Ausbau).
+Der handgebaute Greybox-Sektor (das „H", `KONZEPT.md` §3) + der Kern-Bogen:
+Front halten → Abschnitt verlieren → zurückfallen → Home-Line halten. Branch
+`arbeitspaket-4` von `main`. Kein Generator, keine neuen Gegner, kein Tag/Nacht.
+
+| Ticket | Status |
+|---|---|
+| AP4-01 Sektor-Geometrie (das „H") als Daten + Renderer | offen |
+| AP4-02 Feind-Navigation: semantischer Graph | offen |
+| AP4-03 Frontabschnitte: Besitz, Bresche, Fall | offen |
+| AP4-04 Die Uhr, der Rückzug & das Home-Line-Finale | offen |
+| AP4-05 Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | offen |
+
+## Arbeitspaket 5+
+
+Nach AP4: „zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
+Generator fürs vordere Labyrinth, dann Gegner-Roster-Ausbau.

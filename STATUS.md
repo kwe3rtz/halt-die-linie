@@ -10,11 +10,14 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 
 ## Wo wir stehen
 
-- **Konzept:** vollständig beschlossen. Nicht mehr im Fluss.
-- **Code:** AP1 + AP2 auf `main` (PR #1, #4). **AP3 „Basis solide machen"
-  komplett** (5 Fix-Tickets, alle reviewed) — **PR #5 offen, wartet auf Merge.**
-- **Als Nächstes:** Design-Runde „Map / prozeduraler Sektor" (Nutzer + Planer),
-  daraus AP4.
+- **Konzept:** beschlossen. §3 (Sektor) am 2026-09-03 aus der Map-Design-Runde
+  neu gefasst — H-Grundriss, offenes Feld statt hartem Korridor, „die Uhr",
+  Generator später.
+- **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). Spielbar: FP-Shooter auf
+  dem Boxen-Testgraben, Wellen aus Nahkampf-Infanterie.
+- **Als Nächstes:** **AP4 „Verteidigung in der Tiefe"** — spezifiziert
+  (`tickets/AP4-01…05`), Branch `arbeitspaket-4` steht. Worker kann AP4-01
+  starten.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -36,38 +39,34 @@ angesagt.
 
 ## Als Nächstes
 
-1. Nutzer: PR #5 (`arbeitspaket-3` → `main`) reviewen + mergen, AP3 kurz
-   nachspielen (v. a. HP-Balken-Teilfüllung aus schrägem Winkel, siehe unten).
-2. **Design-Runde „Map / prozeduraler Sektor"** — der Nutzer hat einen Plan im
-   Kopf, will ihn schildern. Am besten frische Planer-Session; die 8
-   Leitfragen stehen unten. → daraus AP4.
-3. **Design-Runde „Gegner-Roster-Ausbau"** — Charger, Anschleicher, Fernkampf …
-4. Danach: Rückzugslogik, Klassen, Nachschub-Ökonomie, Quartier.
+1. **AP4 „Verteidigung in der Tiefe"** bauen — Worker im Ticket-Loop, AP4-01 →
+   AP4-05 der Reihe nach. Branch `arbeitspaket-4`. Kickoff-Prompt: `WORKFLOW.md`.
+2. Nach AP4: Spieltest des Kern-Bogens (Front halten → verlieren → zurückfallen →
+   Home-Line). Trägt der Moment, geht es weiter.
+3. Danach: „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
+   Generator fürs vordere Labyrinth, dann Gegner-Roster-Ausbau (`AUFGABEN.md`
+   „Arbeitspaket 5+").
 
-### Leitfragen für die Map-Design-Runde
+### Map-Design-Runde — Ergebnis (2026-09-03)
 
-1. Immer derselbe handgebaute Sektor (der sich „entwickelt") oder jeder Einsatz
-   neu? (Konzept sagt bisher „prozedural".)
-2. Die drei Ebenen — Abstand, Größe je, Anzahl Frontabschnitte?
-3. Niemandsland — Tiefe, Inhalt (Trichter, Draht, Gefallene)?
-4. Woher kommt der Feind — feste Ausstiegspunkte / ganze Gegnerlinie / aus dem
-   Boden (Nacht)?
-5. Vertikalität — Graben unter Bodenniveau, Feuertritt, Unterstände,
-   Parapet-Höhe?
-6. Flanken — wie dicht gesperrt, wie „Korridor"?
-7. Maßstab — Laufzeit Front → Home-Line?
-8. Lesbarkeit — Minikarte/Kompass ja/nein, oder nur Landmarken + Grabenschilder?
+Durch. Grundriss = **H**: durchgehende Frontlinie (Abschnitte A/B/C), zentraler
+Verbindungsgraben, durchgehende Home-Line. Dazwischen **offenes Trichterfeld**
+(„breiter offener Schlauch" — Kartengrenzen gesperrt, Umgehen nein). Feind kommt
+von den vorderen Ecken durch ein **vorderes Grabenlabyrinth** (das ist der Teil,
+den der Generator später würfelt). Front halten lohnt über **„die Uhr"**
+(Angriffskraft wird an der gehaltenen Linie zermürbt). Maße = KI-Startwerte,
+im Greybox justiert. Voll in `KONZEPT.md` §3, Tickets `tickets/AP4-*`.
 
-**Externes KI-Sparring:** `SPARRING.md` (aktuelle Fassung, **v2 — Map-Straw-Man**) ·
-`SPARRING-LOG.md` (Chronik) · `SPARRING-ANTWORTEN.md` (Runde 1 Gesamtkonzept +
-**Runde 2 Sektor/Map**, je mit Konvergenz-Analyse).
+**Externes KI-Sparring:** `SPARRING.md` (aktuell v2 — Map) · `SPARRING-LOG.md`
+(Chronik) · `SPARRING-ANTWORTEN.md` (Runde 1 Gesamtkonzept + Runde 2 Sektor/Map,
+je mit Konvergenz-Analyse).
 
 ## Spieltest-Feedback (2026-09-03, AP2)
 
 - **Bugs → AP3, alle behoben** (Fadenkreuz, Tracer/Mündungsblitz, Viewmodel in
-  Wänden, HP-Balken je Winkel, Gegner-Stacking). PR #5.
-- **Map stimmt noch nicht** — kein Beinbruch, wird in der Map-Design-Runde
-  geklärt (Nutzer hat einen konkreten Plan).
+  Wänden, HP-Balken je Winkel, Gegner-Stacking). PR #5 gemergt.
+- **Map stimmt noch nicht** — geklärt: Map-Design-Runde durch, AP4 baut den
+  echten Sektor.
 - **Erinnerung (kein Bug):** Gegner bewusst noch langsam/eintönig. Später
   gemischt — Bajonett-Charger, Anschleicher, Rusher etc. Roster in `KONZEPT.md`
   §5, Ausbau als eigenes Paket (`BACKLOG.md` → Gegner).
@@ -82,23 +81,35 @@ angesagt.
 
 ## Offene Fäden — nicht vergessen
 
-- **Prozedurale Sektor-Erzeugung** (KONZEPT §9.5): vollprozedural vs.
-  handgebaute Grabenstücke zusammensetzen; Biome/Abwechslung; Lesbarkeit in
-  First Person (Schilder, Kompass, Minikarte). Noch nicht entschieden.
-- **Nachschub-Ökonomie** (KONZEPT §9.6): eine oder zwei Währungen, Verdienst-/
-  Kosten-Zahlen.
+- **Prozeduraler Generator** (KONZEPT §9.5): Grundriss + Lesbarkeit sind
+  entschieden (§3). Offen: das Erzeugungsverfahren fürs **vordere Labyrinth** —
+  eigenes Paket nach AP4, ggf. mit einem zweiten handgebauten Sektor als
+  Gegenprobe.
+- **Nachschub-Ökonomie** (KONZEPT §9.6): Sparring-Konsens = *eine* Währung +
+  Budgets/Slots pro Kategorie (statt zwei Währungen). Zahlen offen. Nach AP4.
+- **In-Mission-Quest** (KONZEPT §4): Sparring-Konsens = als Dauermechanik
+  streichen (einmaliger Unlock / auto nach Welle X / Ladungen nur an der
+  Home-Line). §4 muss bei den Klassen überarbeitet werden.
+- **Tag/Nacht** — größter Scope-Multiplikator; nicht beide Roster parallel. Nach
+  AP4 als „zwei Kampfsprachen"-Paket (ein Tag-Fernkampf-, ein Nacht-Gegner).
 - **Onboarding, Quartier-Ausbau, Art-/Render-Stil in 3D, „Krieg"-Modus**
   (KONZEPT §9.7–9.10) — offen.
 - **Kamera-Pitch-Vorzeichen** beim manuellen Spielen gegenchecken
   (`src/ARCHITEKTUR.md` → Offene Rückfragen).
-- **Golden-/Replay-Test** fürs Sim noch nicht etabliert (`AUFGABEN.md`
-  Konventionen) — `math.ts` hängt bei 63 % Coverage. In AP2-05 / am AP2-Ende
-  nachziehen.
-- **Bundle 6,8 MB** — Bundle-Budget-Gate im Infrastruktur-Backlog.
+- **Bundle ~6,6 MB** (`@babylonjs/core`) — Bundle-Budget-Gate im
+  Infrastruktur-Backlog.
 - Weiteres siehe `AUFGABEN.md` → „Infrastruktur-Backlog".
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-03** — **Map-Design-Runde abgeschlossen + AP4 spezifiziert.**
+  Sektor-Grundriss = H (durchgehende Front / zentraler Verbindungsgraben /
+  durchgehende Home-Line), **offenes Feld** statt hartem Korridor (Kartengrenzen
+  gesperrt), Feind durch ein **vorderes Grabenlabyrinth** (= späterer
+  Generator-Scope), Front-Anreiz über **„die Uhr"**. `KONZEPT.md` §3/§6/§9
+  umgeschrieben, §10 zwei Verworfen-Einträge. AP4 = 5 Tickets (`tickets/AP4-*`),
+  Branch `arbeitspaket-4`. Generator/Tag-Nacht/Klassen bewusst dahinter
+  (`AUFGABEN.md` AP5+).
 - **2026-09-03** — Map-Design-Runde gestartet. Statt offener Fragerunde ein
   **Straw-Man** (Planer-Vorschlag zu allen 8 Leitfragen) formuliert und als
   `SPARRING.md` v2 an die externen KIs gegeben — konkreter Vorschlag zum Zerlegen
@@ -110,7 +121,7 @@ angesagt.
   Worker-Bericht + Review je Ticket).
 - **2026-09-03** — **AP3 „Basis solide machen" komplett** (AP3-01…05, alle
   reviewed, 100 Tests): Fadenkreuz+Hitmarker, Tracer/Mündungsblitz-Fix,
-  Viewmodel-Wandkollision, HP-Balken-Fix, Gegner-Separation. PR #5 offen.
+  Viewmodel-Wandkollision, HP-Balken-Fix, Gegner-Separation. PR #5 gemergt.
 - **2026-09-03** — Erster Spieltest (AP2). Feedback → AP3 vorgezogen;
   prozedurale Map + Gegner-Roster-Ausbau dahinter. `SPARRING.md` angelegt.
 - **2026-09-03** — **Arbeitspaket 2 komplett** (AP2-01…AP2-05, alle reviewed,

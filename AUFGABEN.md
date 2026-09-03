@@ -598,12 +598,47 @@ Bericht an die Ticket-Datei, pushen, CI, Meldung an den Planer, warten.
 prozedurale Map · dreistufiger Sektor · Klassen · Tag/Nacht · Sound · echte Art.
 Das kommt danach.
 
-## Arbeitspaket 4+ (Skizze — nach den Design-Runden)
+## Arbeitspaket 4 — Verteidigung in der Tiefe (der handgebaute Sektor + Kern-Bogen)
 
-- **Design-Runde „Map / prozeduraler Sektor"** mit dem Nutzer → daraus die
-  echte Map-Erzeugung (Frontlinie / Verbindungsgraben / Home-Line, FP-
-  Lesbarkeit).
-- **Gegner-Roster-Ausbau:** Bajonett-Charger, Anschleicher, MG-Trupp,
-  Grabenräumer, Sturmtrupp — inkl. Gegner-Fernkampf und ggf. Pathing.
-- Rückzugslogik (Boden wechselt Besitzer), dann Klassen + Fähigkeiten, dann
-  Nachschub-Ökonomie, dann Quartier.
+**Ziel:** Aus „Wellen auf einem Boxen-Graben abwehren" wird der eigentliche Kern
+von „Halt die Linie": **Front halten → Abschnitt verlieren → geordnet
+zurückfallen → Home-Line halten**. Ein *einziger, handgebauter* Greybox-Sektor
+(das H aus `KONZEPT.md` §3), aus modularen Bausteinen. **Kein Generator** (eigenes
+späteres Paket), **keine** neuen Gegnertypen, **kein** Tag/Nacht, **keine**
+Klassen, **kein** Nachschub-Ausgeben, **keine** echte Art — nur der räumliche
+Loop mit dem bestehenden Nahkampf-Gegner + der bestehenden Waffe.
+
+Ergebnis der Design-Runde 2026-09-03 (Nutzer + Planer, gegengecheckt mit
+externem KI-Sparring Runde 2 — `SPARRING-ANTWORTEN.md`). Grundriss + „die Uhr" +
+Lesbarkeit stehen in `KONZEPT.md` §3.
+
+Branch: `arbeitspaket-4` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien in
+`tickets/`.
+
+| Nr | Ticket | Status |
+|---|---|---|
+| AP4-01 | Sektor-Geometrie (das „H") als Daten + Renderer | offen |
+| AP4-02 | Feind-Navigation: semantischer Graph | offen |
+| AP4-03 | Frontabschnitte: Besitz, Bresche, Fall | offen |
+| AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | offen |
+| AP4-05 | Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | offen |
+
+Reihenfolge einhalten — 02 vor 03/04, weil sonst auf Platzhalter-Geradeauslauf
+aufgebaut wird.
+
+**Ausdrücklich NICHT in AP4:** prozeduraler Generator · neue Gegnertypen /
+Gegner-Fernkampf · Tag/Nacht · Klassen + Fähigkeiten · Bauen / Platzierungen /
+Pionier-Reparatur · Nachschub-Ökonomie · Quartier · echte Art / Sound-Politur ·
+Netcode. Das kommt in eigenen Paketen danach.
+
+## Arbeitspaket 5+ (Skizze — nach AP4)
+
+- **„Zwei Kampfsprachen":** ein überzeugender Tag-Fernkampf-Gegner + ein
+  Nacht-Gegner, derselbe Sektor zweimal (ChatGPT-Vorschlag).
+- **Prozeduraler Generator** — nur fürs vordere Grabenlabyrinth, authored Module
+  + Makrolayout + Nav-Graph automatisch. Erst wenn der AP4-Kern im Spieltest
+  trägt; ggf. vorher ein zweiter handgebauter Sektor als Gegenprobe.
+- **Gegner-Roster-Ausbau:** Bajonett-Charger, MG-Trupp, Grabenräumer, Sturmtrupp
+  (`BACKLOG.md`).
+- Klassen + Fähigkeiten · Nachschub-Ökonomie (eine Währung + Budgets/Slots) ·
+  Bauen/Platzierungen · Quartier.

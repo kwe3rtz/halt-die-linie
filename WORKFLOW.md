@@ -112,11 +112,15 @@ LIES IN DIESER REIHENFOLGE, bevor du irgendetwas tust:
 1. STATUS.md (ganz)
 2. WORKFLOW.md (ganz — besonders "Der Ticket-Loop" und "Bericht-Vorlage")
 3. AUFGABEN.md (Arbeitsweise + Projekt-Konventionen + goldene Regel)
-4. KONZEPT.md §1/§2/§5/§6, WAFFEN.md wenn Waffen/Daten dran sind
-5. git log --oneline -15  und  git branch --show-current
+4. KONZEPT.md §1/§2/§3/§5/§6 (§3 = der Sektor, für AP4 zentral),
+   WAFFEN.md wenn Waffen/Daten dran sind
+5. Für AP4: SPARRING-ANTWORTEN.md „Runde 2" quer lesen (Begründung der
+   Sektor-Entscheidungen — Kontext, kein Auftrag)
+6. git log --oneline -15  und  git branch --show-current
 
 DEIN AUFTRAG: das nächste offene Ticket in tickets/ (siehe Tabelle in
-AUFGABEN.md → aktuelles Arbeitspaket). Aktuell: AP<x>-<nn>.
+AUFGABEN.md → aktuelles Arbeitspaket). Aktuell: AP4-01. Reihenfolge AP4-01 →
+AP4-05 einhalten.
 
 REGELN (aus AUFGABEN.md + WORKFLOW.md):
 - Auf dem Arbeitspaket-Branch bleiben (git branch zeigt ihn). Zuerst git pull.
