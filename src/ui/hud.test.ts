@@ -16,7 +16,20 @@ const base: HudData = {
     angriffskraftMax: 60,
   },
   nachschub: 0,
+  lastShot: null,
 };
+
+const schuss = (
+  over: Partial<NonNullable<HudData["lastShot"]>> = {},
+): HudData["lastShot"] => ({
+  tick: 1,
+  von: { x: 0, y: 0, z: 0 },
+  nach: { x: 0, y: 0, z: 1 },
+  treffer: true,
+  gegnerTreffer: true,
+  toedlich: false,
+  ...over,
+});
 
 describe("hud", () => {
   let hud: Hud;
@@ -89,6 +102,42 @@ describe("hud", () => {
     );
     expect(root()?.hidden).toBe(false); // HUD reagiert nicht auf F3
     debug.dispose();
+  });
+
+  it("Fadenkreuz sitzt zentriert über dem Canvas, verschwindet im Tod", () => {
+    hud.update(base);
+    const cross = q(".hdl-hud__crosshair");
+    expect(cross).not.toBeNull();
+    const cs = getComputedStyle(cross as HTMLElement);
+    expect(cs.position).toBe("absolute");
+    expect(cs.left).toBe("50%");
+    expect(cs.top).toBe("50%");
+
+    hud.update({ ...base, tot: true });
+    expect(cross?.classList.contains("hdl-hud__crosshair--hidden")).toBe(true);
+    hud.update({ ...base, tot: false });
+    expect(cross?.classList.contains("hdl-hud__crosshair--hidden")).toBe(false);
+  });
+
+  it("Trefferbestätigung toggelt auf ein Gegner-Treffer-Signal, nicht auf Wand", () => {
+    const marker = q(".hdl-hud__hit");
+    expect(marker?.classList.contains("hdl-hud__hit--on")).toBe(false);
+
+    // Wand-Treffer: kein Hitmarker.
+    hud.update({
+      ...base,
+      lastShot: schuss({ tick: 5, gegnerTreffer: false }),
+    });
+    expect(marker?.classList.contains("hdl-hud__hit--on")).toBe(false);
+
+    // Gegner-Treffer: Hitmarker an.
+    hud.update({ ...base, lastShot: schuss({ tick: 6 }) });
+    expect(marker?.classList.contains("hdl-hud__hit--on")).toBe(true);
+    expect(marker?.classList.contains("hdl-hud__hit--kill")).toBe(false);
+
+    // Tödlicher Treffer: kräftigere Variante.
+    hud.update({ ...base, lastShot: schuss({ tick: 7, toedlich: true }) });
+    expect(marker?.classList.contains("hdl-hud__hit--kill")).toBe(true);
   });
 
   it("dispose entfernt den Knoten", () => {

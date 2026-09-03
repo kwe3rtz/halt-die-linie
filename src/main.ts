@@ -43,6 +43,7 @@ const loop = createLoop({
       weapon: state.player.weapon,
       wave: state.wave,
       nachschub: state.nachschub,
+      lastShot: state.lastShot,
     });
   },
 });

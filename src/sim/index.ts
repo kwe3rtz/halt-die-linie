@@ -103,6 +103,10 @@ export interface ShotEvent {
   /** Trefferpunkt bzw. Punkt in maximaler Reichweite. */
   nach: Vec3;
   treffer: boolean;
+  /** Der Schuss traf einen Gegner (nicht nur Level-Geometrie). */
+  gegnerTreffer: boolean;
+  /** Der Gegner-Treffer war tödlich. */
+  toedlich: boolean;
 }
 
 /**
@@ -331,21 +335,26 @@ export function createSim(
               y: eye.y + dir.y * reichweite,
               z: eye.z + dir.z * reichweite,
             };
-        lastShot = Object.freeze({
-          tick: tickCount,
-          von: Object.freeze({ ...eye }),
-          nach: Object.freeze(nach),
-          treffer: shot.treffer !== undefined,
-        });
-        if (shot.treffer?.enemyId !== undefined) {
+        const gegnerTreffer = shot.treffer?.enemyId !== undefined;
+        let toedlich = false;
+        if (gegnerTreffer) {
           const getroffen = enemies.find((e) => e.id === shot.treffer?.enemyId);
           if (
             getroffen &&
             damageEnemy(getroffen, weaponDef.basisSchaden, tickCount)
           ) {
+            toedlich = true;
             nachschub += NACHSCHUB_PRO_KILL;
           }
         }
+        lastShot = Object.freeze({
+          tick: tickCount,
+          von: Object.freeze({ ...eye }),
+          nach: Object.freeze(nach),
+          treffer: shot.treffer !== undefined,
+          gegnerTreffer,
+          toedlich,
+        });
       }
     }
     // Flanke nie über den Tod hinweg aufstauen.
