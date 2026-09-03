@@ -6,6 +6,10 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · in Arbeit
 
+- **AP3-04** · `24bbccd` · **Gegner-Lebensbalken aus jedem Blickwinkel.**
+  Ursache: Hintergrund + Füllung je ein eigenes Billboard, Füllung im Weltraum
+  versetzt. Fix: nur der Hintergrund billboardet, Füllung als Kind im lokalen
+  Raum (linksbündig verankert), `zOffset` gegen Z-Fighting. Reiner Renderer-Job.
 - **AP3-03** · `4999c6e` · **Viewmodel steckt nicht mehr in Wänden.**
   Depth-getrennter Render-Pass (`src/render/index.ts`): drei Rendering-Gruppen
   (Welt / Viewmodel+Mündungsblitz / Screen-FX), Tiefenpuffer vor Gruppe 1 & 2

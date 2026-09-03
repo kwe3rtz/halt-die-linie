@@ -1,6 +1,6 @@
 # AP3-04 — Gegner-Lebensbalken korrekt aus jedem Blickwinkel
 
-**Status:** review
+**Status:** erledigt · `24bbccd` · reviewed 2026-09-03
 **Arbeitspaket:** 3 · **Branch:** `arbeitspaket-3`
 **Feedback-Bezug:** Spieltest — „der rote Balken ist je nach Blickwinkel mal
 rechts in der schwarzen Bar, mal dahinter".
@@ -51,8 +51,8 @@ fummelig — dann B und `// TODO(Rückfrage)`.
 
 ## Bericht — AP3-04
 
-COMMIT: <wird beim Merge/Archiv ergänzt> (Branch `arbeitspaket-3`)
-CI: grün / grün (Hash in der Nachricht an die Planer-Session)
+COMMIT: `24bbccd` (Branch `arbeitspaket-3`)
+CI: CI = success, Pages Preview = success — beide auf `24bbccd`.
 TODO(Rückfrage): keine neuen.
 
 Checks: typecheck / lint / format:check / test:coverage / build — alle grün.
@@ -122,3 +122,23 @@ Pitch-Kontrolle meist daneben, darum ist auf den Screenshots **kein
 angeschossener Balken aus schrägem Winkel** zu sehen — nur volle Balken. Das
 Links-Anker-Verhalten für Teilfüllung ist oben hergeleitet; der Bug selbst
 (Welt-x-Versatz + Eigen-Billboard) ist strukturell entfernt.
+
+---
+
+## Review — AP3-04 · 2026-09-03
+
+Verdikt: **grünes Licht**.
+Geprüft: alle Checks grün (98 Tests, Renderer-only), CI grün auf `24bbccd`.
+Render-Diff gelesen — Ursachenanalyse (zwei Billboards + Welt-x-Versatz der
+Füllung) korrekt. Variante A sauber: nur `barBg` billboardet, `barFill` als Kind
+(erbt Ausrichtung), Füllung im lokalen Raum (`scaling.x = ratio`, `position.x =
+-(BAR_W·(1-ratio))/2` — Links-Anker-Herleitung nachgerechnet, stimmt),
+`zOffset = -4` gegen Z-Fighting (statt `renderingGroupId`, richtig, Gruppe 0
+bleibt). Pool + dispose-Reihenfolge ok.
+Anmerkungen: Die 2 Abweichungen sind vertretbar. **Test-Lücke (offen gelegt,
+nicht blockierend):** Headless-Chrome hat kein Pointer-Lock → auf den Screenshots
+kein *teilgefüllter* Balken aus schrägem Winkel, nur volle. Der Teilfüllungs-
+Anker ist hergeleitet, der Strukturbug entfernt. **→ Beim nächsten Spieltest
+kurz gegenchecken: Gegner anschießen, um ihn herumlaufen, Balken bleibt
+linksbündig.**
+Folge-Ticket: AP3-05 (letztes AP3-Ticket).

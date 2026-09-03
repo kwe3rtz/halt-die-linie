@@ -591,7 +591,7 @@ Bericht an die Ticket-Datei, pushen, CI, Meldung an den Planer, warten.
 | AP3-01 | Fadenkreuz & Trefferbestätigung | ✅ `erledigt/` (`9f28022`) |
 | AP3-02 | Mündungsblitz & Tracer korrigieren | ✅ `erledigt/` (`366ebe9`) |
 | AP3-03 | Viewmodel steckt nicht mehr in Wänden | ✅ `erledigt/` (`4999c6e`) |
-| AP3-04 | Gegner-Lebensbalken aus jedem Blickwinkel | offen |
+| AP3-04 | Gegner-Lebensbalken aus jedem Blickwinkel | ✅ `erledigt/` (`24bbccd`) |
 | AP3-05 | Gegner stapeln sich nicht mehr ineinander | offen |
 
 **Ausdrücklich NICHT in AP3:** neue Waffen/Gegner · Gegner-Fernkampf ·
