@@ -4,3 +4,5 @@ export * from "./beispiele";
 export * from "./waffen";
 export * from "./gegner";
 export * from "./testlevel";
+export * from "./module";
+export * from "./sektor";

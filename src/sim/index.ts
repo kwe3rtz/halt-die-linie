@@ -45,6 +45,15 @@ export type { Vec3 } from "./math";
 export type { LevelBox, LevelData, CollisionWorld, Aabb } from "./collision";
 export type { EnemyZustand } from "./enemies";
 export type { WavePhase } from "./wave";
+export type {
+  ZonenId,
+  ZonenEintrag,
+  FrontAbschnitt,
+  HomeZugang,
+  SektorMeta,
+  SektorData,
+} from "./sektor";
+export { zoneAt, abschnittAt } from "./sektor";
 
 export interface SimState {
   tick: number;

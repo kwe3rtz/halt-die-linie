@@ -24,21 +24,21 @@ Das frühere Tower-Defense-Skelett liegt archiviert unter
 
 ## Struktur
 
-| Pfad           | Inhalt                                                                                |
-| -------------- | ------------------------------------------------------------------------------------- |
-| `STATUS.md`    | Stand, offene Fäden, Entscheidungs-Log · **hier anfangen**                            |
-| `CHANGELOG.md` | Kuratiert, ein Eintrag pro Ticket                                                     |
-| `WORKFLOW.md`  | Arbeitsweise: Ticket-Loop, Rollen, Bericht-Vorlage, Dokumenten-Karte                  |
-| `KONZEPT.md`   | Maßgebliches Konzeptdokument — was das Spiel ist, was beschlossen/offen/verworfen ist |
-| `TECHNIK.md`   | Tech-Stack, Architektur-Prinzipien                                                    |
-| `WAFFEN.md`    | Waffenmodell, v1-Arsenal, WW1-Rohrecherche                                            |
-| `AUFGABEN.md`  | Regeln, Konventionen, Arbeitspaket-Übersicht                                          |
-| `tickets/`     | Ticket-Specs (offen) · `tickets/erledigt/` = Audit-Trail                              |
-| `BACKLOG.md`   | Bewusst zurückgestellte Ideen für später                                              |
-| `SPARRING.md`  | Self-contained Briefing zum Weitergeben an externe KI — **aktuelle** Fassung          |
-| `SPARRING-LOG.md` | Chronik der bisherigen Sparring-Briefings                                         |
-| `SPARRING-ANTWORTEN.md` | Antworten der externen KIs + Konvergenz-Analyse                             |
-| `prototyp-td/` | Archivierter TD-Prototyp, nur noch Referenz                                           |
+| Pfad                    | Inhalt                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `STATUS.md`             | Stand, offene Fäden, Entscheidungs-Log · **hier anfangen**                            |
+| `CHANGELOG.md`          | Kuratiert, ein Eintrag pro Ticket                                                     |
+| `WORKFLOW.md`           | Arbeitsweise: Ticket-Loop, Rollen, Bericht-Vorlage, Dokumenten-Karte                  |
+| `KONZEPT.md`            | Maßgebliches Konzeptdokument — was das Spiel ist, was beschlossen/offen/verworfen ist |
+| `TECHNIK.md`            | Tech-Stack, Architektur-Prinzipien                                                    |
+| `WAFFEN.md`             | Waffenmodell, v1-Arsenal, WW1-Rohrecherche                                            |
+| `AUFGABEN.md`           | Regeln, Konventionen, Arbeitspaket-Übersicht                                          |
+| `tickets/`              | Ticket-Specs (offen) · `tickets/erledigt/` = Audit-Trail                              |
+| `BACKLOG.md`            | Bewusst zurückgestellte Ideen für später                                              |
+| `SPARRING.md`           | Self-contained Briefing zum Weitergeben an externe KI — **aktuelle** Fassung          |
+| `SPARRING-LOG.md`       | Chronik der bisherigen Sparring-Briefings                                             |
+| `SPARRING-ANTWORTEN.md` | Antworten der externen KIs + Konvergenz-Analyse                                       |
+| `prototyp-td/`          | Archivierter TD-Prototyp, nur noch Referenz                                           |
 
 ## Änderungen am Konzept
 

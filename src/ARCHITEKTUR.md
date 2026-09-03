@@ -61,12 +61,30 @@ Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
   aus dem Maus-Delta (Pitch geklemmt ±89°), bewegt den Spieler yaw-relativ auf
   der x/z-Bodenebene, wendet Sprint/Sprung an und kollidiert gegen die
   `CollisionWorld`.
-- `src/render/index.ts`: `createRenderer(canvas, level)`. Baut die Boxen einmalig,
-  `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
+- `src/render/index.ts`: `createRenderer(canvas, level, meta?)`. Baut die Boxen
+  einmalig, `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
   Spielerposition (+ Augenhöhe) und Rotation aus `yaw`/`pitch` — kein
-  `attachControl`, die Sim ist die Wahrheit.
+  `attachControl`, die Sim ist die Wahrheit. Mit `meta` (Sektor) bekommt jede Box
+  ihr Zonen-Material (`zoneAt`) — erste Stufe der Zonensilhouette.
 - Regressionsschutz: Golden-/Replay-Test in `src/sim/sim.test.ts`
-  (Seed + Kommandosequenz → identischer End-State).
+  (Seed + Kommandosequenz → identischer End-State; nutzt ein Inline-Testlevel,
+  nicht den Sektor).
+
+## Sektor (AP4)
+
+- `src/data/module.ts` — Rasterbaukasten (`RASTER = 4`), `modul(typ, at, drehung,
+opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
+  zweistufiger Feuertritt, ohne Sprung begehbar), `unterstand`, `rampe`,
+  `kartengrenze`. Vertikale Kennwerte (`GRABEN_SOHLE` −1,8 / `PARAPET_OBERKANTE`
+  +0,55 / `FEUERTRITT_OBERKANTE` −0,95) als Greybox-Startwerte. **Derselbe
+  Baukasten ist für den späteren Labyrinth-Generator gedacht.**
+- `src/data/sektor.ts` — `sektorGreybox: SektorData`, das „H" aus KONZEPT.md §3,
+  aus `modul(...)` + Roh-Quadern. EINE Quelle für Render + Sim. `main.ts` fährt
+  den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
+- `src/sim/sektor.ts` — Typen (`ZonenId`, `SektorMeta`,
+  `SektorData extends LevelData`, `FrontAbschnitt` …) + reine Helfer
+  `zoneAt(meta, pos)` / `abschnittAt(meta, pos)` (X/Z-Punkttest, für
+  AP4-02/03/04). Kein Babylon.
 
 ## Bundle-Größe
 

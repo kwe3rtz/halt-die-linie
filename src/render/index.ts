@@ -15,8 +15,9 @@ import {
   StandardMaterial,
   Vector3,
 } from "@babylonjs/core";
-import type { EnemyView, SimState } from "../sim";
-import type { LevelData } from "../sim/collision";
+import type { EnemyView, SimState, SektorMeta, ZonenId } from "../sim";
+import { zoneAt } from "../sim";
+import type { LevelBox, LevelData } from "../sim/collision";
 
 const SHOT_EFFECT_MS = 50;
 const ENEMY_HIT_FLASH_MS = 90;
@@ -68,9 +69,21 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + delta * t;
 }
 
+// Grobe, klar unterscheidbare Zonen-Farbtöne — erste Stufe der Zonensilhouette
+// (Feinschliff in AP4-05).
+const ZONEN_TON: Record<ZonenId, [number, number, number]> = {
+  feindzone: [0.28, 0.22, 0.22],
+  labyrinth: [0.35, 0.3, 0.21],
+  frontlinie: [0.47, 0.44, 0.37],
+  feld: [0.41, 0.44, 0.34],
+  verbindungsgraben: [0.3, 0.33, 0.4],
+  homeline: [0.37, 0.35, 0.42],
+};
+
 export function createRenderer(
   canvas: HTMLCanvasElement,
   level: LevelData,
+  meta?: SektorMeta,
 ): Renderer {
   const engine = new Engine(canvas, true, { stencil: true });
   const scene = new Scene(engine);
@@ -278,13 +291,33 @@ export function createRenderer(
     }
   };
 
-  const groundMat = new StandardMaterial("ground", scene);
-  groundMat.diffuseColor = new Color3(0.46, 0.43, 0.37);
-  groundMat.specularColor = new Color3(0, 0, 0);
+  const flachMat = (name: string, r: number, g: number, b: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = new Color3(r, g, b);
+    m.specularColor = new Color3(0, 0, 0);
+    return m;
+  };
 
-  const parapetMat = new StandardMaterial("parapet", scene);
-  parapetMat.diffuseColor = new Color3(0.52, 0.49, 0.34);
-  parapetMat.specularColor = new Color3(0, 0, 0);
+  const groundMat = flachMat("ground", 0.46, 0.43, 0.37);
+  const parapetMat = flachMat("parapet", 0.52, 0.49, 0.34);
+  const grenzeMat = flachMat("grenze", 0.22, 0.22, 0.24); // hohe Sperrwände
+
+  const zonenMat = new Map<ZonenId, StandardMaterial>();
+  for (const id of Object.keys(ZONEN_TON) as ZonenId[]) {
+    const [r, g, b] = ZONEN_TON[id];
+    zonenMat.set(id, flachMat(`zone_${id}`, r, g, b));
+  }
+
+  const boxMaterial = (box: LevelBox): StandardMaterial => {
+    if (box.center.y + box.size.y / 2 > 2) {
+      return grenzeMat; // Kartengrenze / hohe Betonsilhouette
+    }
+    const zone = meta ? zoneAt(meta, box.center) : null;
+    if (zone) {
+      return zonenMat.get(zone) ?? groundMat;
+    }
+    return box.center.y > 0.25 ? parapetMat : groundMat;
+  };
 
   const meshes = level.boxes.map((box, i) => {
     const mesh = MeshBuilder.CreateBox(
@@ -293,10 +326,33 @@ export function createRenderer(
       scene,
     );
     mesh.position.set(box.center.x, box.center.y, box.center.z);
-    mesh.material = box.center.y > 0.25 ? parapetMat : groundMat;
+    mesh.material = boxMaterial(box);
     mesh.renderingGroupId = GROUP_WORLD;
     return mesh;
   });
+
+  // Landmark-Akzent: leuchtender Pfosten über dem Panzerwrack-Hulk, damit der
+  // Fixpunkt fürs Auge aus jeder Zone lesbar bleibt (KONZEPT.md §3).
+  let landmarkMesh: Mesh | null = null;
+  let landmarkMat: StandardMaterial | null = null;
+  if (meta) {
+    landmarkMat = new StandardMaterial("landmark", scene);
+    landmarkMat.emissiveColor = new Color3(0.9, 0.55, 0.2);
+    landmarkMat.disableLighting = true;
+    landmarkMesh = MeshBuilder.CreateBox(
+      "landmark",
+      { width: 1.2, height: 3, depth: 1.2 },
+      scene,
+    );
+    landmarkMesh.position.set(
+      meta.landmark.x,
+      meta.landmark.y + 5.5,
+      meta.landmark.z,
+    );
+    landmarkMesh.material = landmarkMat;
+    landmarkMesh.isPickable = false;
+    landmarkMesh.renderingGroupId = GROUP_WORLD;
+  }
 
   const resize = () => engine.resize();
   window.addEventListener("resize", resize);
@@ -407,6 +463,12 @@ export function createRenderer(
       }
       enemyVisuals.clear();
       enemyBarBgMat.dispose();
+      landmarkMesh?.dispose();
+      landmarkMat?.dispose();
+      for (const m of zonenMat.values()) {
+        m.dispose();
+      }
+      grenzeMat.dispose();
       for (const mesh of meshes) {
         mesh.material?.dispose();
         mesh.dispose();

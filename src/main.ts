@@ -1,6 +1,6 @@
 // Einstiegspunkt: verdrahtet Input -> Loop -> Sim -> Renderer + HUD + Debug-Overlay.
-// Die Level-Daten sind die eine Quelle für Sim-Collider und Render-Meshes.
-import { testLevel } from "./data/testlevel";
+// Die Sektor-Daten sind die eine Quelle für Sim-Collider und Render-Meshes.
+import { sektorGreybox } from "./data/sektor";
 import { createInput } from "./input";
 import { createLoop } from "./loop";
 import { createRenderer } from "./render";
@@ -16,9 +16,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const SEED = 1;
 
-// Der Wave-Director spawnt die Gegner (Spawnpunkte aus dem Level).
-const sim = createSim(SEED, testLevel, { waves: true });
-const renderer = createRenderer(canvas, testLevel);
+// Der Wave-Director spawnt die Gegner (Spawnpunkte aus dem Sektor).
+const sim = createSim(SEED, sektorGreybox, { waves: true });
+const renderer = createRenderer(canvas, sektorGreybox, sektorGreybox.meta);
 const input = createInput(canvas);
 const overlay = createDebugOverlay();
 const hud = createHud();
