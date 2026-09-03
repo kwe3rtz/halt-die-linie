@@ -26,6 +26,11 @@ const EYE_HEIGHT = 1.6;
 const ENEMY_RADIUS = 0.35;
 const ENEMY_HEIGHT = 1.8;
 
+// Gegner-HP-Balken: Maße in Weltmetern, Höhe über dem Kopf.
+const BAR_W = 0.9;
+const BAR_H = 0.12;
+const BAR_HOEHE = ENEMY_HEIGHT + 0.28;
+
 // Render-Reihenfolge (Babylon leert den Tiefenpuffer vor jeder Gruppe > 0):
 //  0 = Welt, Gegner, Tracer     — normale Tiefenprüfung
 //  1 = Viewmodel + Mündungsblitz — eigener Tiefenraum, liegt immer über der Welt
@@ -176,17 +181,29 @@ export function createRenderer(
     body.material = bodyMat;
     body.isPickable = false;
 
-    const barBg = MeshBuilder.CreatePlane("enemyBarBg", { size: 1 }, scene);
-    barBg.scaling.set(0.9, 0.12, 1);
+    // Nur der Hintergrund ist ein Billboard. Die Füllung hängt als Kind daran
+    // und erbt dessen Ausrichtung — so laufen sie aus keinem Winkel auseinander.
+    const barBg = MeshBuilder.CreatePlane(
+      "enemyBarBg",
+      { width: BAR_W, height: BAR_H },
+      scene,
+    );
     barBg.material = enemyBarBgMat;
     barBg.billboardMode = BILLBOARD_ALL;
     barBg.isPickable = false;
 
     const barFillMat = new StandardMaterial("enemyBarFill", scene);
     barFillMat.disableLighting = true;
-    const barFill = MeshBuilder.CreatePlane("enemyBarFill", { size: 1 }, scene);
+    // Polygon-Offset: die Füllung gewinnt die Tiefenprüfung gegen den
+    // Hintergrund unabhängig vom Blickwinkel (kein Z-Fighting).
+    barFillMat.zOffset = -4;
+    const barFill = MeshBuilder.CreatePlane(
+      "enemyBarFill",
+      { width: BAR_W, height: BAR_H },
+      scene,
+    );
     barFill.material = barFillMat;
-    barFill.billboardMode = BILLBOARD_ALL;
+    barFill.parent = barBg;
     barFill.isPickable = false;
 
     return {
@@ -203,9 +220,9 @@ export function createRenderer(
   const disposeEnemyVisual = (v: EnemyVisual): void => {
     v.body.dispose();
     v.bodyMat.dispose();
-    v.barBg.dispose();
     v.barFill.dispose();
     v.barFillMat.dispose();
+    v.barBg.dispose(true); // Kind (barFill) ist schon weg -> nicht rekursiv
   };
 
   const syncEnemies = (list: readonly EnemyView[], now: number): void => {
@@ -227,13 +244,13 @@ export function createRenderer(
       }
 
       v.body.position.set(e.pos.x, e.pos.y + ENEMY_HEIGHT / 2, e.pos.z);
-      v.barBg.position.set(e.pos.x, e.pos.y + ENEMY_HEIGHT + 0.28, e.pos.z);
-      v.barFill.position.copyFrom(v.barBg.position);
+      v.barBg.position.set(e.pos.x, e.pos.y + BAR_HOEHE, e.pos.z);
 
       const ratio = e.maxHp > 0 ? Math.max(0, Math.min(1, e.hp / e.maxHp)) : 0;
-      v.barFill.scaling.set(0.9 * ratio, 0.12, 1);
-      // von der Mitte aus links ausrichten
-      v.barFill.position.x -= (0.9 * (1 - ratio)) / 2;
+      // Füllung im lokalen Raum des (billboardenden) Hintergrunds: um `ratio`
+      // schmaler, linke Kante bleibt bündig -> aus jedem Winkel „von links".
+      v.barFill.scaling.set(ratio, 1, 1);
+      v.barFill.position.set(-(BAR_W * (1 - ratio)) / 2, 0, 0);
       v.barFillMat.emissiveColor.set(1 - ratio, ratio, 0.15);
 
       if (e.letzterTreffer !== v.lastHitTick) {
