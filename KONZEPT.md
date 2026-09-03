@@ -56,21 +56,61 @@ CoD-Zombies (Wellenstruktur, „du bist mittendrin") × Deep Rock Galactic
 
 Ohne Türme ist der Graben trotzdem ein lebendiges Ziel: Die Linie hält oder
 bricht abschnittsweise, und der Sektor hat Tiefe, in die man zurückweichen kann.
+Grundriss in der Draufsicht: ein **H** — eine durchgehende Frontlinie oben, eine
+durchgehende Home-Line unten, dazwischen ein zentraler Verbindungsgraben.
 
-### Dreistufiger Sektor — `BESCHLOSSEN`
-Historisch die Verteidigung in der Tiefe des Ersten Weltkriegs:
+### Grundriss — `BESCHLOSSEN` (Design-Runde 2026-09-03)
+Von der Feindseite nach hinten:
 
-1. **Frontlinie** — vorderes Grabensystem am Niemandsland. Verzweigt sich in
-   mehrere kleinere Gräben. Fällt abschnittsweise. Hier wird das meiste Bauzeug
-   platziert.
-2. **Verbindungsgraben(en)** — führen von der Frontmitte nach hinten. Enge
-   Engstellen, ideal zum Verstärken und zum fechtenden Rückzug.
-3. **Home-Line** — rückwärtige Linie, startet schon befestigt. Die echte
-   Verlustgrenze.
+1. **Feindzone (nördlich)** — feindliche Gräben + zwei schräge Anmarsch-Korridore
+   aus den vorderen Ecken. Der Feind spawnt hier (Tag). Für den Spieler nicht
+   betretbar.
+2. **Vorderes Grabenlabyrinth (Niemandsland)** — teils feindgehaltene
+   Verzweigungsgräben zwischen den Anmarsch-Korridoren und der Frontlinie. Hier
+   arbeitet sich der Tag-Feind an die Front heran, Nahkampf um Ecken. Trichter,
+   versetzte Drahtfelder (kanalisieren, aber **keine** drei sauberen sichtbaren
+   Gassen), ein großes Landmark (Panzerwrack o. Ä.). **Das ist der einzige Teil,
+   den der spätere Generator würfelt** — der Rest ist handgebaut.
+3. **Frontlinie** — *eine durchgehende* Grabenlinie über die volle Breite,
+   unterteilt in benannte Abschnitte (A / B / C …). Feuertritt, Parapet, ein bis
+   zwei Bresche-Punkte je Abschnitt, Bau-Slots, ein kleines Nachschubdepot je
+   Abschnitt. Abschnitte fallen einzeln.
+4. **Das offene Feld („die Wanne")** — offenes Trichtergelände zwischen Front und
+   Home, beidseitig des Verbindungsgrabens. **Nicht** kanalisiert: fällt die
+   Front, queren Gegner offenes Gelände Richtung Home-Line, unter Feuer von
+   Front *und* Home. Links und rechts hart gesperrt (Kartengrenze: Sumpf,
+   zerbombtes Gelände) — Weite ja, Umgehen der Home-Line nein.
+5. **Verbindungsgraben** — zentral, die *gedeckte* Route zwischen Home und Front.
+   Enge, ein paar Knicke mit kleinen defensiven Nischen, evtl. eine Sprengbarriere
+   als Rückzugs-Notbremse. Eine Route von mehreren, nicht die einzige.
+6. **Home-Line** — durchgehende rückwärtige Linie über die volle Breite, startet
+   befestigt, begehbare Unterstände (Munitionslager, Verbandsplatz,
+   Feldkommandeur). Zugänge: der Verbindungsgraben **und** das offene Feld
+   beidseitig. Die echte Verlustgrenze.
 
-Der Sektor ist eher ein Korridor: Flanken durch Sumpf, Draht, Trichterfeld
-gesperrt, sodass die Home-Line nicht übers offene Feld umgangen werden kann —
-Zugang praktisch nur über den Verbindungsgraben.
+### Die „Uhr" — warum die Front halten — `BESCHLOSSEN`
+Die endliche Angriffskraft des Feindes (§6) wird dort zermürbt, wo der Trupp
+hält. Die Front zu halten heißt: mehr Feindverluste pro Welle, bevor der Feind
+die Home-Line erreicht — also Zeitgewinn bis zum Zeit-Finale. Fällt ein
+Frontabschnitt, wird der Weg des Feindes nach hinten kürzer und die Uhr läuft
+schneller; zusätzlich ist das Nachschubdepot des Abschnitts weg und die
+Vorwarnzeit kürzer. Rückzug ist also eine echte Abwägung, kein reiner Verlust.
+
+### Maßstab kompakt halten — `RICHTUNG`
+Externes Sparring (alle drei KIs) + Planer: in First Person wirken Strecken
+doppelt so lang. Frontbreite, Verbindungsgraben und das offene Feld bleiben
+**kompakt** — der freie Rückweg Front → Home soll wenige Sekunden dauern; lang
+wird der Rückzug, weil der Feind ihn verlängert, nicht weil der Weg weit ist.
+Konkrete Maße stehen in den AP4-Tickets, nicht hier (Greybox-Startwerte,
+im Spieltest justiert).
+
+### Handgebaut zuerst, Generator später — `BESCHLOSSEN`
+Erst ein **einziger, komplett handgebauter Greybox-Sektor** (das H), um den
+Kern-Bogen — Front halten → Abschnitt verlieren → geordnet zurückfallen →
+Home-Line halten — überhaupt zu beweisen. Aus modularen Rasterbausteinen gebaut,
+damit derselbe Baukasten später der Generator nutzt. Die prozedurale Erzeugung
+ist ein **eigenes späteres Arbeitspaket** und betrifft nur das vordere
+Grabenlabyrinth (§9.5).
 
 ### Parapet als lebendiges Ziel — `BESCHLOSSEN`
 Grabenwände haben Struktur. Gegner reißen an einzelnen Abschnitten Löcher; durch
@@ -78,9 +118,25 @@ eine Bresche strömt der Feind. Der Trupp muss die Lücke physisch stopfen oder
 den Abschnitt aufgeben.
 
 ### Fechtender Rückzug, Boden wechselt — `BESCHLOSSEN`
-Frontabschnitte wechseln den Besitzer. In Wellenpausen oder mit KI-Trupps kann
-man zurückerobern. „Zurückziehen" ist eine Entscheidung des Spielers, kein
-Skript. Aufgegebener Boden bleibt weg, bis er zurückerobert wird.
+Frontabschnitte durchlaufen `stabil → bedrängt → gebrochen → verloren`. Ein
+verlorener Abschnitt öffnet dem Feind den Weg nach hinten (durch den Abschnitt
+Richtung offenes Feld / Verbindungsgraben) — Gegner **materialisieren nie im
+Sichtfeld**, Verstärkung kommt aus verdeckten Bereichen / hinter Rauch.
+„Zurückziehen" ist eine Entscheidung des Spielers, kein Skript. Rückeroberung ist
+möglich, aber **selten und teuer** (in Wellenpausen, mit KI-Trupps) — kein
+ständiges Hin- und Hercapturen.
+
+### Lesbarkeit im First-Person-Graben — `BESCHLOSSEN`
+Keine Minikarte als Krücke für verwirrendes Layout. In dieser Reihenfolge:
+klar unterschiedliche **Silhouetten** der Zonen (Front weit/flach, Labyrinth
+eng, Home hoch/befestigt) · ein durchgehender **„Spine"** an der Grabenwand
+(Kommunikationskabel + Pfosten) von jedem Frontabschnitt zur Home-Line, **redundant
+codiert** (Farbe + geometrisches Symbol) · nummerierte Frontabschnitte auf
+Schildern · **Kompass** im HUD mit „HOME"-Marker und Markern nur für strategische
+Zustände (Abschnitt bedrängt / gebrochen) · eine **Lagekarte** an der Home-Line.
+Dazu **direktionales Audio** als Pflicht — Signalhorn aus Richtung Home-Line beim
+Abschnittsverlust, Truppen-Rufe. Eine feste Callout-Grammatik von Anfang an
+(Front A/B/C, Route Verbindungsgraben / Feld links / Feld rechts).
 
 ### Platzierungen sind klassen-gebunden — `BESCHLOSSEN`
 Kein Bau-Raster für alle. Sandsäcke, Stacheldraht, MG-Stellung, Sprengladungen,
@@ -279,9 +335,12 @@ Zombies. Im Einsatz rüstest du mit erbeutetem Material auf: bessere Wandwaffe,
 Munitionstyp, Platzierungen, KI-Trupp. Spürbare Kurve über den Einsatz.
 
 ### Sektor — `BESCHLOSSEN`
-Pro Einsatz prozedural erzeugt (dreistufig, korridorartig, lesbares Layout).
-Frontbreite skaliert mit Spielerzahl; Verbindungsgraben + Home-Line bleiben.
-Kurz — eine Belagerung, dann vorbei. Das Erzeugungsverfahren ist offen (§9).
+Grundriss + Zonen: §3. Handgebaut zuerst (ein Greybox-Sektor), Generator als
+eigenes späteres Paket und nur für das vordere Grabenlabyrinth. Skalierung mit
+der Spielerzahl über die **Anzahl gleichzeitig aktiver Frontabschnitte** (solo
+~2, bei 4 Spielern ~4) und primär über den Wave-Director (Angriffsachsen,
+Gleichzeitigkeit, Gegnerzahl) — **nicht** über breitere Gräben oder immer längere
+Wege. Verbindungsgraben + Home-Line bleiben. Kurz — eine Belagerung, dann vorbei.
 
 ---
 
@@ -330,7 +389,7 @@ Ton in Grabenhorror — Angst und Enge statt Splatter.
 
 ```
 01 Lobby        Soldat aus dem Kader wählen, Loadout einstellen
-02 Einsatz      Tag oder Nacht, prozedural erzeugter dreistufiger Sektor
+02 Einsatz      Tag oder Nacht, dreistufiger Sektor (Front → Feld → Home-Line)
 03 Wellen       Endliche Angriffskraft zermürben, im Einsatz aufrüsten,
                 fechtend von der Frontlinie zurückweichen
 04 Zeit-Finale  Home-Line halten, bis der Entsatz eintrifft
@@ -352,9 +411,12 @@ Systemdesign. In grober Reihenfolge der Dringlichkeit.
    Zahlenbalance, Nachschub-Kosten, die genauen Quest-Bedingungen je Klasse.
 4. **Gegner-Roster je Modus** — `BESCHLOSSEN` (§5, 5+5 mit Konter-Karte). Offen:
    Zahlenbalance, KI-Verhalten (Feuer & Bewegung, Infiltration, Horde-Pathing).
-5. **Prozedurale Sektor-Erzeugung** — Vollprozedural oder Zusammensetzen aus
-   handgebauten 3D-Grabenstücken; Lesbarkeit in First Person (Schilder, Kompass,
-   Minikarte); Balance-Kontrolle.
+5. **Prozedurale Sektor-Erzeugung** — Grundriss + Lesbarkeit `BESCHLOSSEN`
+   (§3, Design-Runde 2026-09-03): das H handgebaut, Generator ein eigenes
+   späteres Paket und nur für das vordere Grabenlabyrinth (authored Module +
+   prozedurales Makrolayout, semantischer Nav-Graph, kein NavMesh). Offen: das
+   konkrete Erzeugungsverfahren fürs Labyrinth — erst nachdem der handgebaute
+   Kern-Bogen im Spieltest trägt (AP4).
 6. **Einsatz-Währung Nachschub** — eine oder zwei getrennte Währungen;
    Verdienst-Raten, Kosten-Tabelle, Auffüll-Regeln.
 7. **Onboarding / erste Stunde** — Wie sich „klein starten" konkret anfühlt: ein
@@ -382,6 +444,12 @@ Systemdesign. In grober Reihenfolge der Dringlichkeit.
 - **Top-Down- / 3rd-Person-Kamera** — verworfen zugunsten First Person.
 - **Einzelne Grabenlinie ohne Tiefe** — ersetzt durch den dreistufigen Sektor
   (Frontlinie / Verbindungsgraben / Home-Line).
+- **Sektor als harter Korridor** (Zugang zur Home-Line praktisch nur über den
+  Verbindungsgraben, Flanken komplett gesperrt) — ersetzt durch das offene Feld
+  zwischen Front und Home (§3); nur die Kartengrenzen sind gesperrt, umgangen
+  wird die Home-Line trotzdem nicht.
+- **Sektor pro Einsatz vollprozedural** — ersetzt durch handgebautes H +
+  späterer Generator nur fürs vordere Labyrinth (§3, §9.5).
 - **Reine 2D-Version** — verworfen, da 3D „ziemlich sicher" ist; direkt 3D mit
   Platzhalter-Geometrie.
 - **Einmalige Klassenwahl bei Spielstart** — ersetzt durch das Kader-Modell.
