@@ -1,6 +1,6 @@
 # AP3-05 — Gegner stapeln sich nicht mehr ineinander
 
-**Status:** review
+**Status:** erledigt · `d21cc08` · reviewed 2026-09-03
 **Arbeitspaket:** 3 · **Branch:** `arbeitspaket-3`
 **Feedback-Bezug:** Spieltest — „Gegner waren, wenn sie mir gefolgt sind, alle
 ineinander gestackt (keine Kollision untereinander)". Außerdem: Gegner clippen in
@@ -46,8 +46,8 @@ Gegner-drängeln-durch-Engstellen. Nur „nicht mehr im selben Punkt stehen".
 
 ## Bericht — AP3-05
 
-COMMIT: <wird beim Merge/Archiv ergänzt> (Branch `arbeitspaket-3`)
-CI: grün / grün (Hash in der Nachricht an die Planer-Session)
+COMMIT: `d21cc08` (Branch `arbeitspaket-3`)
+CI: CI = success, Pages Preview = success — beide auf `d21cc08`.
 TODO(Rückfrage): keine neuen.
 
 Checks: typecheck / lint / format:check / test:coverage / build — alle grün.
@@ -122,3 +122,22 @@ ohne die Änderung:
   (Nahkampf trifft). Screenshots `ap3-05_vorher.png` / `ap3-05_nachher.png` an
   den Nutzer.
 - 0 Konsolen-Errors.
+
+---
+
+## Review — AP3-05 · 2026-09-03
+
+Verdikt: **grünes Licht**. Damit ist **Arbeitspaket 3 komplett**.
+Geprüft: alle Checks grün (100 Tests, +2), CI grün auf `d21cc08`, Coverage
+src/sim 97,77 %. Sim-Diff gelesen — Positions-Schnappschuss vor der Schleife
+macht die Separation reihenfolge-unabhängig und deterministisch; Gegner↔Gegner
+weicher Push (gewichtet, `SEPARATION_TEMPO`), Gegner↔Spieler löst die Überlappung
+in genau einem Tick (`vel = overlap/dt`, `moveCapsule` clampt gegen Wände, kein
+Teleport). Nahkampf (1,6 m) unberührt. Leichen ausgenommen. Golden-Replay bleibt
+grün ohne Anker-Änderung — Begründung im Bericht plausibel (Anker prüft keine
+Gegner-Positionen, `toEqual`-Determinismus bestätigt).
+Anmerkungen: Kleiner DRY-Punkt (nicht blockierend): `SPIELER_RADIUS = 0.35` ist
+in `enemies.ts` dupliziert (mit Kommentar „muss zu `PLAYER_RADIUS` passen") —
+ein Import würde einen Zyklus riskieren, daher ok als Platzhalter. Die 2
+Abweichungen sind vertretbar.
+Folge: PR `arbeitspaket-3` → `main`.

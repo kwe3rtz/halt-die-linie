@@ -26,7 +26,7 @@ Fixes aus dem ersten Spieltest. Branch `arbeitspaket-3` von `main`.
 | AP3-02 Mündungsblitz & Tracer korrigieren | ✅ `erledigt/` |
 | AP3-03 Viewmodel steckt nicht mehr in Wänden | ✅ `erledigt/` |
 | AP3-04 Gegner-Lebensbalken aus jedem Blickwinkel | ✅ `erledigt/` |
-| AP3-05 Gegner stapeln sich nicht mehr ineinander | offen |
+| AP3-05 Gegner stapeln sich nicht mehr ineinander | ✅ `erledigt/` |
 
 ## Arbeitspaket 4+
 

@@ -4,8 +4,14 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
-## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · in Arbeit
+## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · komplett
 
+- **AP3-05** · `d21cc08` · **Gegner stapeln sich nicht mehr ineinander.**
+  Separation in `src/sim/enemies.ts` — Positions-Schnappschuss (deterministisch,
+  reihenfolge-unabhängig), radialer Push zwischen nahen Gegnern + Mindestabstand
+  zum Spieler (löst Überlappung in 1 Tick), nur auf den Bewegungswunsch vor
+  `moveCapsule`. Nahkampf trifft weiter, kein Pathfinding. Golden-Replay grün.
+  100 Tests.
 - **AP3-04** · `24bbccd` · **Gegner-Lebensbalken aus jedem Blickwinkel.**
   Ursache: Hintergrund + Füllung je ein eigenes Billboard, Füllung im Weltraum
   versetzt. Fix: nur der Hintergrund billboardet, Füllung als Kind im lokalen
