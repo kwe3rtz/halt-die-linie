@@ -1,6 +1,6 @@
 # AP2-03 — Erster Gegner: Linieninfanterie
 
-**Status:** offen
+**Status:** erledigt
 **Arbeitspaket:** 2 · **Branch:** `arbeitspaket-2`
 **Abhängigkeiten:** AP2-01, AP2-02
 **Vorbedingung:** `AUFGABEN.md` gelesen. Goldene Regel gilt.

@@ -222,3 +222,66 @@ describe("first-person controller — weapon", () => {
     expect(sim.getState().player.weapon.reloading).toBe(false);
   });
 });
+
+describe("first-person controller — enemies", () => {
+  const clickAndWait = (sim: ReturnType<typeof createSim>) => {
+    sim.tick(command({ fire: true }), DT);
+    for (let i = 0; i < 90; i += 1) sim.tick(command(), DT);
+  };
+
+  it("Gegner marschiert an und fügt in Reichweite Schaden zu", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: 0, y: 0, z: 3 } }],
+    });
+    expect(sim.getState().enemies.length).toBe(1);
+
+    for (let i = 0; i < 400; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.player.hp).toBeLessThan(s.player.maxHp);
+    expect(s.enemies[0]?.zustand).toBe("angriff");
+  });
+
+  it("Raycast-Feuer tötet den Gegner, er verschwindet, Nachschub steigt", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: 0, y: 0, z: 4 } }],
+    });
+    expect(sim.getState().nachschub).toBe(0);
+
+    // langgewehr basisSchaden 85 -> 2 Treffer töten (hp 100)
+    for (let k = 0; k < 4; k += 1) {
+      clickAndWait(sim);
+      if (sim.getState().enemies.length === 0) break;
+    }
+
+    // Leiche kurz liegen lassen
+    for (let i = 0; i < 200; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.enemies.length).toBe(0);
+    expect(s.nachschub).toBeGreaterThan(0);
+  });
+
+  it("mehrere Gegner werden verwaltet (kein Hardcode auf 1)", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [
+        { defId: "linieninfanterie", pos: { x: -3, y: 0, z: 8 } },
+        { defId: "linieninfanterie", pos: { x: 3, y: 0, z: 8 } },
+      ],
+    });
+    expect(sim.getState().enemies.length).toBe(2);
+    sim.spawnEnemy("linieninfanterie", { x: 0, y: 0, z: 10 });
+    expect(sim.getState().enemies.length).toBe(3);
+    sim.spawnEnemy("gibtsnicht", { x: 0, y: 0, z: 1 });
+    expect(sim.getState().enemies.length).toBe(3); // unbekannt -> No-op
+  });
+
+  it("Gegner-State ist eingefroren", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: 0, y: 0, z: 6 } }],
+    });
+    sim.tick(command(), DT);
+    const e = sim.getState().enemies[0];
+    expect(() => {
+      (e as { hp: number }).hp = 1;
+    }).toThrow();
+  });
+});

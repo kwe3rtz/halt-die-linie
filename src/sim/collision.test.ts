@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createCollisionWorld,
   moveCapsule,
+  raycastCylinder,
   STEP_HEIGHT,
   type LevelData,
 } from "./collision";
@@ -124,5 +125,102 @@ describe("moveCapsule", () => {
     moveCapsule(w, pos, vel, RADIUS, HEIGHT, DT);
     expect(pos).toEqual({ x: 0, y: 3, z: 0 });
     expect(vel).toEqual({ x: 1, y: 0, z: 0 });
+  });
+});
+
+describe("raycastCylinder", () => {
+  const feet = { x: 0, y: 0, z: 5 };
+
+  it("trifft einen Zylinder auf Augenhöhe und liefert die Eintrittsdistanz", () => {
+    const t = raycastCylinder(
+      { x: 0, y: 1.6, z: 0 },
+      { x: 0, y: 0, z: 1 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(t).toBeCloseTo(4.6, 5); // 5 - Radius 0.4
+  });
+
+  it("verfehlt seitlich vorbei", () => {
+    const t = raycastCylinder(
+      { x: 3, y: 1, z: 0 },
+      { x: 0, y: 0, z: 1 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(t).toBeUndefined();
+  });
+
+  it("verfehlt über den Kopf hinweg", () => {
+    const t = raycastCylinder(
+      { x: 0, y: 3, z: 0 },
+      { x: 0, y: 0, z: 1 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(t).toBeUndefined();
+  });
+
+  it("respektiert die maximale Distanz", () => {
+    const t = raycastCylinder(
+      { x: 0, y: 1, z: 0 },
+      { x: 0, y: 0, z: 1 },
+      feet,
+      0.4,
+      1.8,
+      3,
+    );
+    expect(t).toBeUndefined();
+  });
+
+  it("senkrechter Strahl: Treffer nur, wenn er innerhalb der Säule startet", () => {
+    // Ursprung horizontal in der Säule und auf Körperhöhe -> Treffer bei t = 0.
+    const drin = raycastCylinder(
+      { x: 0.1, y: 1, z: 5 },
+      { x: 0, y: -1, z: 0 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(drin).toBe(0);
+    // horizontal daneben -> kein Treffer.
+    const daneben = raycastCylinder(
+      { x: 2, y: 1, z: 5 },
+      { x: 0, y: -1, z: 0 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(daneben).toBeUndefined();
+    // in der Säule, aber über dem Kopf -> kein Treffer (keine Deckflächen).
+    const drueber = raycastCylinder(
+      { x: 0.1, y: 5, z: 5 },
+      { x: 0, y: -1, z: 0 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(drueber).toBeUndefined();
+  });
+
+  it("trifft von innen die Rückwand (tExit)", () => {
+    const t = raycastCylinder(
+      { x: 0, y: 1, z: 5 }, // im Zylinder
+      { x: 0, y: 0, z: 1 },
+      feet,
+      0.4,
+      1.8,
+      100,
+    );
+    expect(t).toBeCloseTo(0.4, 5);
   });
 });

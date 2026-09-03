@@ -23,9 +23,21 @@ import {
   respawnCombat,
   type PlayerCombat,
 } from "./player";
+import {
+  damageEnemy,
+  ENEMY_HEIGHT,
+  ENEMY_RADIUS,
+  NACHSCHUB_PRO_KILL,
+  spawnEnemy,
+  updateEnemies,
+  type EnemyEntity,
+  type EnemyZustand,
+} from "./enemies";
+import { gegnerDefs } from "../data/gegner";
 
 export type { Vec3 } from "./math";
 export type { LevelBox, LevelData, CollisionWorld, Aabb } from "./collision";
+export type { EnemyZustand } from "./enemies";
 
 export interface SimState {
   tick: number;
@@ -49,8 +61,23 @@ export interface SimState {
       reloading: boolean;
     };
   };
+  /** Gegner, eingefroren nach außen (wie `player`). */
+  enemies: readonly EnemyView[];
+  /** Einsatz-Währung. Zähler/HUD kommen in AP2-05; die Gutschrift läuft hier. */
+  nachschub: number;
   /** Letzter abgegebener Schuss (Signal für Tracer/Mündungsblitz). */
   lastShot: ShotEvent | null;
+}
+
+export interface EnemyView {
+  id: number;
+  pos: Vec3;
+  hp: number;
+  maxHp: number;
+  zustand: EnemyZustand;
+  defId: string;
+  /** Tick des letzten HP-Rückgangs (Render-Trefferblitz). */
+  letzterTreffer: number;
 }
 
 export interface ShotEvent {
@@ -86,10 +113,15 @@ export interface Sim {
   tick: (cmd: InputCommand, dt: number) => void;
   getState: () => Readonly<SimState>;
   /**
-   * Fügt dem Spieler Schaden zu. Externer/Test-Eingang; ab AP2-03 rufen die
-   * Gegner intern `applyDamage` auf dem Kampfzustand auf.
+   * Fügt dem Spieler Schaden zu. Externer/Test-Eingang; die Gegner rufen intern
+   * `applyDamage` auf dem Kampfzustand auf.
    */
   applyDamage: (menge: number, quelle?: string) => void;
+  /**
+   * Spawnt einen Gegner. Externer/Test-Eingang; der Wave-Director (AP2-04)
+   * nutzt ihn. `defId` unbekannt → No-op.
+   */
+  spawnEnemy: (defId: string, pos: Vec3) => void;
 }
 
 // First-Person-Controller — Platzhalterwerte, Balancing kommt später.
@@ -125,6 +157,8 @@ function pickSpawn(level: LevelData, seed: number): Vec3 {
 export interface SimOptions {
   /** Startwaffe des Spielers. Default: `standardWaffe` aus `src/data`. */
   weapon?: WeaponDef;
+  /** Gegner, die beim Start schon stehen (bis der Wave-Director in AP2-04 kommt). */
+  enemies?: ReadonlyArray<{ defId: string; pos: Vec3 }>;
 }
 
 export function createSim(
@@ -139,8 +173,24 @@ export function createSim(
   let tickCount = 0;
   let firePrev = false;
   let lastShot: Readonly<ShotEvent> | null = null;
+  let nachschub = 0;
+  let nextEnemyId = 1;
+  let enemies: EnemyEntity[] = [];
   const weapon: WeaponState = createWeaponState(weaponDef);
   const combat: PlayerCombat = createPlayerCombat();
+
+  const spawnEnemyById = (defId: string, pos: Vec3): void => {
+    const def = gegnerDefs[defId];
+    if (!def) {
+      return;
+    }
+    enemies.push(spawnEnemy(def, nextEnemyId, pos));
+    nextEnemyId += 1;
+  };
+
+  for (const s of options.enemies ?? []) {
+    spawnEnemyById(s.defId, s.pos);
+  }
 
   const player = {
     pos: { x: spawn.x, y: spawn.y, z: spawn.z },
@@ -233,10 +283,23 @@ export function createSim(
         z: player.pos.z,
       };
       const dir = dirFromYawPitch(player.yaw, player.pitch);
-      const shot = fire(weapon, world, eye, dir, weaponDef, {
-        gedrueckt: cmd.buttons.fire,
-        flanke,
-      });
+      const ziele = enemies
+        .filter((e) => e.zustand !== "tot")
+        .map((e) => ({
+          id: e.id,
+          pos: e.pos,
+          radius: ENEMY_RADIUS,
+          height: ENEMY_HEIGHT,
+        }));
+      const shot = fire(
+        weapon,
+        world,
+        eye,
+        dir,
+        weaponDef,
+        { gedrueckt: cmd.buttons.fire, flanke },
+        ziele,
+      );
       if (shot.schuss) {
         const reichweite = weaponDef.handling.reichweiteMax;
         const nach: Vec3 = shot.treffer
@@ -252,10 +315,29 @@ export function createSim(
           nach: Object.freeze(nach),
           treffer: shot.treffer !== undefined,
         });
+        if (shot.treffer?.enemyId !== undefined) {
+          const getroffen = enemies.find((e) => e.id === shot.treffer?.enemyId);
+          if (
+            getroffen &&
+            damageEnemy(getroffen, weaponDef.basisSchaden, tickCount)
+          ) {
+            nachschub += NACHSCHUB_PRO_KILL;
+          }
+        }
       }
     }
     // Flanke nie über den Tod hinweg aufstauen.
     firePrev = cmd.buttons.fire;
+
+    // Gegner bewegen / angreifen; verwehte Leichen fallen raus.
+    enemies = updateEnemies(
+      enemies,
+      world,
+      player.pos,
+      !combat.tot,
+      (menge) => applyDamage(combat, menge, "nahkampf"),
+      dt,
+    );
 
     // Tod / Respawn.
     if (advancePlayerCombat(combat, dt)) {
@@ -282,6 +364,20 @@ export function createSim(
           reloading: weapon.reloading,
         }),
       }),
+      enemies: Object.freeze(
+        enemies.map((e) =>
+          Object.freeze({
+            id: e.id,
+            pos: Object.freeze({ ...e.pos }),
+            hp: e.hp,
+            maxHp: e.maxHp,
+            zustand: e.zustand,
+            defId: e.def.id,
+            letzterTreffer: e.letzterTreffer,
+          }),
+        ),
+      ),
+      nachschub,
       lastShot,
     });
 
@@ -289,5 +385,6 @@ export function createSim(
     tick: step,
     getState: snapshot,
     applyDamage: (menge, quelle) => applyDamage(combat, menge, quelle),
+    spawnEnemy: spawnEnemyById,
   };
 }

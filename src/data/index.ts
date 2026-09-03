@@ -2,4 +2,5 @@
 export * from "./schema";
 export * from "./beispiele";
 export * from "./waffen";
+export * from "./gegner";
 export * from "./testlevel";

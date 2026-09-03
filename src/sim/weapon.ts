@@ -5,7 +5,7 @@
 // (`dt`), kein `Math.random`, kein Babylon, keine Browser-Globals (goldene Regel).
 // Der Waffenzustand wird in-place fortgeschrieben (ein Objekt pro Spieler).
 import type { Vec3 } from "./math";
-import { raycast, type CollisionWorld, type RayHit } from "./collision";
+import { raycast, raycastCylinder, type CollisionWorld } from "./collision";
 import type { NachladeArt, WeaponDef } from "../data/schema";
 
 export interface WeaponState {
@@ -63,14 +63,31 @@ export interface FireButtons {
   flanke: boolean;
 }
 
+/** Ziel-Kapsel für den Hitscan (z. B. ein Gegner). */
+export interface AimTarget {
+  id: number;
+  /** Fußpunkt der Kapsel. */
+  pos: Vec3;
+  radius: number;
+  height: number;
+}
+
+export interface WeaponHit {
+  punkt: Vec3;
+  distanz: number;
+  /** Getroffene Ziel-Id, falls ein Ziel näher war als die Level-Geometrie. */
+  enemyId?: number;
+}
+
 export interface FireResult {
   schuss: boolean;
-  treffer?: RayHit;
+  treffer?: WeaponHit;
 }
 
 /**
  * Versucht zu feuern. Mutiert `state` (imLauf/cooldown, ggf. Nachlade-Abbruch).
- * `richtung` muss normalisiert sein.
+ * `richtung` muss normalisiert sein. Der Hitscan trifft die Level-Geometrie und
+ * — falls näher — eines der `ziele`; der nächste Treffer gewinnt.
  */
 export function fire(
   state: WeaponState,
@@ -79,6 +96,7 @@ export function fire(
   richtung: Vec3,
   def: WeaponDef,
   buttons: FireButtons,
+  ziele: readonly AimTarget[] = [],
 ): FireResult {
   const wantShot =
     def.feuerModus === "vollauto" ? buttons.gedrueckt : buttons.flanke;
@@ -103,7 +121,36 @@ export function fire(
   state.imLauf -= 1;
   state.cooldown = 60 / def.kadenz;
 
-  const treffer = raycast(world, origin, richtung, def.handling.reichweiteMax);
+  const maxD = def.handling.reichweiteMax;
+  const levelHit = raycast(world, origin, richtung, maxD);
+  let bestDist = levelHit ? levelHit.distanz : maxD;
+  let treffer: WeaponHit | undefined = levelHit
+    ? { punkt: levelHit.punkt, distanz: levelHit.distanz }
+    : undefined;
+
+  for (const z of ziele) {
+    const t = raycastCylinder(
+      origin,
+      richtung,
+      z.pos,
+      z.radius,
+      z.height,
+      bestDist,
+    );
+    if (t !== undefined && t < bestDist) {
+      bestDist = t;
+      treffer = {
+        punkt: {
+          x: origin.x + richtung.x * t,
+          y: origin.y + richtung.y * t,
+          z: origin.z + richtung.z * t,
+        },
+        distanz: t,
+        enemyId: z.id,
+      };
+    }
+  }
+
   return treffer ? { schuss: true, treffer } : { schuss: true };
 }
 
