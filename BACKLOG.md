@@ -18,6 +18,12 @@ dazukommen können. Kein Wegwurf — nur zurückgestellt. Reihenfolge ohne Bedeu
 
 ## Gegner
 
+- **Gegner-Roster-Ausbau (eigenes Paket nach AP3).** AP2 hat nur
+  Linieninfanterie als langsamen Nahkämpfer-Stub. Gebraucht: Bajonett-Charger
+  (rennt gezielt an), Anschleicher, MG-Trupp (unterdrückt, nagelt fest),
+  Grabenräumer (reißt Parapet auf), Sturmtrupp (jagt Platzierungen) — inkl.
+  **Gegner-Fernkampf** und ggf. Pathing. Verhaltens-Tags stehen in `KONZEPT.md`
+  §5, die `EnemyDef`-Typen in `src/data/schema.ts`.
 - **Scharfschütze** (Tag) — bestraft Stillstand in First Person, schwer zu orten.
 - **Gasleiche** (Nacht) — aufgedunsen, Giftwolke beim Tod, als echte Einheit
   statt nur Umweltgefahr.

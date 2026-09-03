@@ -35,6 +35,7 @@ Das frühere Tower-Defense-Skelett liegt archiviert unter
 | `AUFGABEN.md`  | Regeln, Konventionen, Arbeitspaket-Übersicht                                          |
 | `tickets/`     | Ticket-Specs (offen) · `tickets/erledigt/` = Audit-Trail                              |
 | `BACKLOG.md`   | Bewusst zurückgestellte Ideen für später                                              |
+| `SPARRING.md`  | Self-contained Briefing zum Weitergeben an externe KI (Design-/Tech-Sparring)         |
 | `prototyp-td/` | Archivierter TD-Prototyp, nur noch Referenz                                           |
 
 ## Änderungen am Konzept

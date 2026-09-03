@@ -575,22 +575,35 @@ Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket
 | AP2-04 | Wave-Director | ✅ `erledigt/` (`719537d`) |
 | AP2-05 | Nachschub-Zähler & minimales HUD | ✅ `erledigt/` (`4a4e7b1`) |
 
-**Arbeitspaket 2 ist komplett.** PR `arbeitspaket-2` → `main` offen.
+**Arbeitspaket 2 ist komplett** (PR #4 nach `main` gemergt).
 
-**Reihenfolge einhalten.** Commit-Message beginnt mit der Ticketnummer
-(`AP2-04 …`). Ein Commit pro Ticket, `Status:`-Zeile der Ticket-Datei
-aktualisieren, den **Bericht** (Vorlage in `WORKFLOW.md`) unten an die
-Ticket-Datei hängen — alles im selben Commit. Dann pushen (CI grün), STOPP und
-Meldung an den Planer.
+## Arbeitspaket 3 — Basis solide machen (Politur & Fixes)
 
-**Ausdrücklich NICHT in Arbeitspaket 2:** mehrere Waffen/Gegnertypen ·
-Gegner-Fernkampf (Linieninfanterie ist in AP2 Nahkampf-only) · KI-Trupps ·
-Platzierungen/Bauen · prozedurale Erzeugung · Rückzugs-/Home-Line-Logik ·
-Zeit-Finale · Klassen-Fähigkeiten · Tag/Nacht · Sound · Art über Boxen/Kapseln
-hinaus · Netcode.
+**Ziel:** Den jetzigen Kern *richtig anfühlen* lassen, bevor größere Systeme
+dazukommen. Reine Fixes aus dem ersten Spieltest — kein neues Gameplay.
 
-## Arbeitspaket 3+ (Skizze)
+Branch: `arbeitspaket-3` (von `main`).
+Ablauf: [`WORKFLOW.md`](WORKFLOW.md). Ein Commit pro Ticket, `Status:`-Zeile +
+Bericht an die Ticket-Datei, pushen, CI, Meldung an den Planer, warten.
 
-Nach AP2 und der Design-Runde „prozedurale Sektor-Erzeugung": mehrere Gegner des
-Tag-Rosters + Gegner-Fernkampf, dann der dreistufige Sektor (Frontlinie /
-Verbindungsgraben / Home-Line) mit Rückzugslogik, dann Klassen + Fähigkeiten.
+| Nr | Ticket | Status |
+|---|---|---|
+| AP3-01 | Fadenkreuz & Trefferbestätigung | offen |
+| AP3-02 | Mündungsblitz & Tracer korrigieren | offen |
+| AP3-03 | Viewmodel steckt nicht mehr in Wänden | offen |
+| AP3-04 | Gegner-Lebensbalken aus jedem Blickwinkel | offen |
+| AP3-05 | Gegner stapeln sich nicht mehr ineinander | offen |
+
+**Ausdrücklich NICHT in AP3:** neue Waffen/Gegner · Gegner-Fernkampf ·
+prozedurale Map · dreistufiger Sektor · Klassen · Tag/Nacht · Sound · echte Art.
+Das kommt danach.
+
+## Arbeitspaket 4+ (Skizze — nach den Design-Runden)
+
+- **Design-Runde „Map / prozeduraler Sektor"** mit dem Nutzer → daraus die
+  echte Map-Erzeugung (Frontlinie / Verbindungsgraben / Home-Line, FP-
+  Lesbarkeit).
+- **Gegner-Roster-Ausbau:** Bajonett-Charger, Anschleicher, MG-Trupp,
+  Grabenräumer, Sturmtrupp — inkl. Gegner-Fernkampf und ggf. Pathing.
+- Rückzugslogik (Boden wechselt Besitzer), dann Klassen + Fähigkeiten, dann
+  Nachschub-Ökonomie, dann Quartier.

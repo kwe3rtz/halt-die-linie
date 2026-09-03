@@ -11,12 +11,11 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 ## Wo wir stehen
 
 - **Konzept:** vollständig beschlossen. Nicht mehr im Fluss.
-- **Code:** Arbeitspaket 1 (Fundament) auf `main` (PR #1). **Arbeitspaket 2
-  (erster Kampf-Loop) komplett** auf `arbeitspaket-2` (AP2-01…AP2-05, alle
-  reviewed) — **PR nach `main` offen, wartet auf Merge durch den Nutzer.**
-- **AP2:** Waffen-Feuerlogik, Spieler-HP/Tod/Respawn, Linieninfanterie,
-  Wave-Director, HUD + Golden-Replay-Test. 95 Tests, Coverage src/sim 97,65 %.
-  Details: `CHANGELOG.md` + `tickets/erledigt/`.
+- **Code:** AP1 (Fundament) + AP2 (erster Kampf-Loop) auf `main` (PR #1, #4).
+  Der Nutzer hat AP2 gespielt — Feedback unten.
+- **Als Nächstes gebaut:** **AP3 — Basis solide machen** (5 Fix-Tickets aus dem
+  Spieltest, `tickets/AP3-*.md`). Danach Design-Runden (Map, Gegner-Roster).
+- Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
 
@@ -37,11 +36,28 @@ angesagt.
 
 ## Als Nächstes
 
-1. Nutzer: PR `arbeitspaket-2` → `main` reviewen + mergen (`--no-ff`).
-2. Nutzer spielt AP2 (`npm run dev`), gibt Feedback.
-3. **Design-Runde: prozedurale Sektor-Erzeugung** — braucht Nutzer-Input
-   (vollprozedural vs. handgebaute Grabenstücke, Biome, FP-Lesbarkeit).
-4. Arbeitspaket 3 spezifizieren + bauen.
+1. **AP3 bauen** (Fix-Paket, 5 Tickets) — Worker-Session, `arbeitspaket-3`.
+2. **Design-Runde „Map / Sektor"** mit dem Nutzer (er hat einen Plan im Kopf,
+   will ihn schildern) → daraus die echte Map-Erzeugung. Am besten in einer
+   frischen Planer-Session.
+3. **Design-Runde „Gegner-Roster-Ausbau"** — varied behaviours (Charger,
+   Anschleicher, Fernkampf, …).
+4. Danach: Rückzugslogik, Klassen, Nachschub-Ökonomie, Quartier.
+
+**Externes KI-Sparring:** `SPARRING.md` — self-contained Briefing zum Weitergeben
+an ChatGPT / andere Claudes / Gemini, um Design/Tech/Backlog gegenzuchecken.
+
+## Spieltest-Feedback (2026-09-03, AP2) — offen bis AP3 erledigt
+
+- **Map stimmt noch nicht** — kein Beinbruch, wird in der Design-Runde geklärt
+  (Nutzer hat einen konkreten Plan).
+- Bugs → AP3: kein Fadenkreuz · Tracer/Mündungsblitz gehen manchmal in
+  Zufallsrichtung · Viewmodel clippt in Wände · Gegner-HP-Balken je nach Winkel
+  falsch · Gegner stapeln sich ineinander (keine Separation).
+- **Erinnerung (kein Bug):** Gegner sind bewusst noch langsam/eintönig. Später
+  gemischt — Bajonett-Charger, Anschleicher, Rusher etc. Steht im Roster
+  (`KONZEPT.md` §5), Ausbau ist ein eigenes Paket nach AP3.
+- Positiv: Pitch-Richtung stimmt. Wellen-Tempo ok (niedrige Prio).
 
 ## Offene Fäden — nicht vergessen
 
@@ -66,9 +82,12 @@ angesagt.
   (dies), `CHANGELOG.md`, `WORKFLOW.md` (inkl. Onboarding-Prompts für frische
   Planer- **und** Worker-Sessions), `tickets/erledigt/` (Audit-Trail: Spec +
   Worker-Bericht + Review je Ticket).
+- **2026-09-03** — Erster Spieltest (AP2). Feedback → **AP3 „Basis solide
+  machen"** (5 Fix-Tickets) vorgezogen; prozedurale Map + Gegner-Roster-Ausbau
+  rücken dahinter. `SPARRING.md` für externes KI-Sparring angelegt.
 - **2026-09-03** — **Arbeitspaket 2 komplett** (AP2-01…AP2-05, alle reviewed,
   95 Tests): Waffen-Feuerlogik, Spieler-HP/Tod/Respawn, Linieninfanterie,
-  Wave-Director, HUD, Golden-Replay-Test. PR `arbeitspaket-2` → `main` offen.
+  Wave-Director, HUD, Golden-Replay-Test. Nach `main` gemergt (PR #4).
 - **2026-09-03** — AP1 → `main` gemergt (PR #1). AP2 auf Branch `arbeitspaket-2`,
   Ticket-Ordner `tickets/`.
 - **2026-09-02** — Tech festgezurrt: TypeScript + Vite + **Babylon.js**, **3D +

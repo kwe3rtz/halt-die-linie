@@ -14,12 +14,20 @@ hierher und ergänzt Bericht + Review.
 
 ## Arbeitspaket 2 — Erster Kampf-Loop · ✅ komplett
 
-Alle Tickets in `erledigt/`. PR `arbeitspaket-2` → `main` offen.
+Alle Tickets in `erledigt/`. Nach `main` gemergt (PR #4).
 
-| AP2-01 Waffen-Feuerlogik · AP2-02 Spieler-HP · AP2-03 Linieninfanterie ·
-AP2-04 Wave-Director · AP2-05 HUD + Golden-Replay-Test |
+## Arbeitspaket 3 — Basis solide machen (Politur & Fixes)
 
-## Arbeitspaket 3
+Fixes aus dem ersten Spieltest. Branch `arbeitspaket-3` von `main`.
 
-Noch nicht spezifiziert — kommt nach der Design-Runde „prozedurale
-Sektor-Erzeugung".
+| Ticket | Status |
+|---|---|
+| AP3-01 Fadenkreuz & Trefferbestätigung | offen |
+| AP3-02 Mündungsblitz & Tracer korrigieren | offen |
+| AP3-03 Viewmodel steckt nicht mehr in Wänden | offen |
+| AP3-04 Gegner-Lebensbalken aus jedem Blickwinkel | offen |
+| AP3-05 Gegner stapeln sich nicht mehr ineinander | offen |
+
+## Arbeitspaket 4+
+
+Nach den Design-Runden (Map / prozeduraler Sektor, dann Gegner-Roster-Ausbau).
