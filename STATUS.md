@@ -11,10 +11,11 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 ## Wo wir stehen
 
 - **Konzept:** vollständig beschlossen. Nicht mehr im Fluss.
-- **Code:** Arbeitspaket 1 (Fundament) fertig, auf `main` gemergt (PR #1).
-  Arbeitspaket 2 (erster Kampf-Loop) läuft auf Branch `arbeitspaket-2`.
-- **AP2-Fortschritt:** AP2-01…AP2-04 ✅ (Waffen, Spieler-HP, Linieninfanterie,
-  Wave-Director). **AP2-05 (Nachschub-Zähler + HUD) ist das letzte AP2-Ticket.**
+- **Code:** Arbeitspaket 1 (Fundament) auf `main` (PR #1). **Arbeitspaket 2
+  (erster Kampf-Loop) komplett** auf `arbeitspaket-2` (AP2-01…AP2-05, alle
+  reviewed) — **PR nach `main` offen, wartet auf Merge durch den Nutzer.**
+- **AP2:** Waffen-Feuerlogik, Spieler-HP/Tod/Respawn, Linieninfanterie,
+  Wave-Director, HUD + Golden-Replay-Test. 95 Tests, Coverage src/sim 97,65 %.
   Details: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -36,11 +37,11 @@ angesagt.
 
 ## Als Nächstes
 
-1. AP2 fertigbauen (AP2-02 Spieler-HP → AP2-03 Linieninfanterie → AP2-04
-   Wave-Director → AP2-05 Nachschub + HUD).
-2. Nutzer spielt AP2, gibt Feedback.
-3. **Design-Runde: prozedurale Sektor-Erzeugung** — braucht Nutzer-Input.
-4. Arbeitspaket 3.
+1. Nutzer: PR `arbeitspaket-2` → `main` reviewen + mergen (`--no-ff`).
+2. Nutzer spielt AP2 (`npm run dev`), gibt Feedback.
+3. **Design-Runde: prozedurale Sektor-Erzeugung** — braucht Nutzer-Input
+   (vollprozedural vs. handgebaute Grabenstücke, Biome, FP-Lesbarkeit).
+4. Arbeitspaket 3 spezifizieren + bauen.
 
 ## Offene Fäden — nicht vergessen
 
@@ -65,9 +66,11 @@ angesagt.
   (dies), `CHANGELOG.md`, `WORKFLOW.md` (inkl. Onboarding-Prompts für frische
   Planer- **und** Worker-Sessions), `tickets/erledigt/` (Audit-Trail: Spec +
   Worker-Bericht + Review je Ticket).
+- **2026-09-03** — **Arbeitspaket 2 komplett** (AP2-01…AP2-05, alle reviewed,
+  95 Tests): Waffen-Feuerlogik, Spieler-HP/Tod/Respawn, Linieninfanterie,
+  Wave-Director, HUD, Golden-Replay-Test. PR `arbeitspaket-2` → `main` offen.
 - **2026-09-03** — AP1 → `main` gemergt (PR #1). AP2 auf Branch `arbeitspaket-2`,
-  Ticket-Ordner `tickets/`. AP2-01 (Waffen), AP2-02 (Spieler-HP), AP2-03
-  (Linieninfanterie), AP2-04 (Wave-Director) fertig, je reviewed.
+  Ticket-Ordner `tickets/`.
 - **2026-09-02** — Tech festgezurrt: TypeScript + Vite + **Babylon.js**, **3D +
   First Person ab Tag eins** (keine 2D-Zwischenstufe), headless Sim strikt
   getrennt vom Rendering, `@babylonjs/core`. Kein Unity/Godot/C++. Desktop

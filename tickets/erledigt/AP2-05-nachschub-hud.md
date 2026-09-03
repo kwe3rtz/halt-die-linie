@@ -1,6 +1,6 @@
 # AP2-05 — Nachschub-Zähler & minimales HUD
 
-**Status:** review
+**Status:** erledigt · `4a4e7b1` · reviewed 2026-09-03
 **Arbeitspaket:** 2 · **Branch:** `arbeitspaket-2`
 **Abhängigkeiten:** AP2-01 … AP2-04
 **Vorbedingung:** `AUFGABEN.md` gelesen. Goldene Regel gilt.
@@ -53,8 +53,8 @@ Kurzer PR-Text-Vorschlag für `arbeitspaket-2` → `main`. Danach: Design-Runde
 
 ## Bericht — AP2-05
 
-COMMIT: <wird beim Commit ergänzt> (Branch `arbeitspaket-2`)
-CI: grün / grün (Hash in der Nachricht an ki-game-10)
+COMMIT: `4a4e7b1` (Branch `arbeitspaket-2`)
+CI: CI = success, Pages Preview = success — beide auf `4a4e7b1`.
 TODO(Rückfrage): keine neuen. (Bestehend: `player.ts:16` HP-Regen aus AP2-02,
 Pages-Hinweis in `ARCHITEKTUR.md` aus AP1.)
 
@@ -108,3 +108,20 @@ Manuell geprüft (headless Chromium): HUD live — Aufbau „HP 100/100 · Aufba
 Nachschub 0", dann „Welle 1 · Angriff", HP sinkt unter Beschuss auf 0 →
 „Gefallen / Respawn in 3 s" mittig; F3 blendet das Debug-Overlay aus, HUD bleibt.
 Keine Konsolenfehler.
+
+---
+
+## Review — AP2-05 · 2026-09-03
+
+Verdikt: **grünes Licht**. Damit ist **Arbeitspaket 2 komplett**.
+Geprüft: lokal typecheck/lint/format/test grün (95 Tests, 13 Dateien), CI grün
+auf `4a4e7b1`, Coverage src/sim 97,65 % (alle Module ≥ 92 %, `math.ts` jetzt
+100 %). `hud.ts` gelesen — reines DOM/CSS, `pointer-events:none`, `aria-hidden`,
+`prefers-reduced-motion` korrekt (opt-in zur Transition), `update()` bekommt
+alles übergeben, keine Tasten. Golden-Replay-Test gelesen — zwei Läufe `toEqual`
+plus ~13 konkrete Golden-Anker (`toBeCloseTo(…,3)`), bricht bei
+Verhaltensänderung. Der `math.ts`-Coverage-/Replay-Test-Merk-Posten ist damit
+erledigt.
+Anmerkungen: Die 4 Abweichungen sind alle vertretbar. Keine offenen Punkte.
+Folge: PR `arbeitspaket-2` → `main` (`--no-ff`), dann Design-Runde „prozedurale
+Sektor-Erzeugung" mit dem Nutzer, dann AP3.

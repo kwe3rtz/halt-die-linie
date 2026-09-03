@@ -12,12 +12,14 @@ Eine Datei pro Ticket ab Arbeitspaket 2. Gemeinsame Regeln und Konventionen:
 Wenn ein Ticket grünes Licht bekommt, verschiebt der Planer es per `git mv`
 hierher und ergänzt Bericht + Review.
 
-## Arbeitspaket 2 — Erster Kampf-Loop
+## Arbeitspaket 2 — Erster Kampf-Loop · ✅ komplett
 
-| Ticket | Status |
-|---|---|
-| AP2-01 Waffen-Feuerlogik & Munition | ✅ `erledigt/` |
-| AP2-02 Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` |
-| AP2-03 Erster Gegner: Linieninfanterie | ✅ `erledigt/` |
-| AP2-04 Wave-Director | ✅ `erledigt/` |
-| AP2-05 Nachschub-Zähler & minimales HUD | offen (letztes AP2-Ticket) |
+Alle Tickets in `erledigt/`. PR `arbeitspaket-2` → `main` offen.
+
+| AP2-01 Waffen-Feuerlogik · AP2-02 Spieler-HP · AP2-03 Linieninfanterie ·
+AP2-04 Wave-Director · AP2-05 HUD + Golden-Replay-Test |
+
+## Arbeitspaket 3
+
+Noch nicht spezifiziert — kommt nach der Design-Runde „prozedurale
+Sektor-Erzeugung".

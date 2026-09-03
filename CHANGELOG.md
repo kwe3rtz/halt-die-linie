@@ -4,8 +4,16 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
-## Arbeitspaket 2 — Erster Kampf-Loop · Branch `arbeitspaket-2` · in Arbeit
+## Arbeitspaket 2 — Erster Kampf-Loop · Branch `arbeitspaket-2` · komplett
 
+- **AP2-05** · `4a4e7b1` · **Nachschub-Zähler & minimales HUD.**
+  `src/ui/hud.ts` — reines DOM/CSS (kein Babylon-GUI), getrennt vom
+  F3-Debug-Overlay, `pointer-events:none`, `prefers-reduced-motion`. HP-Balken +
+  Zahl, Munition + „Nachladen…", Welle/Phase/Angriffskraft-Balken, Nachschub,
+  Tod-Overlay mit Respawn-Countdown. `SimState` um `respawnRest` +
+  `angriffskraftMax`. **Golden-/Replay-Test** etabliert (Seed + 360er-Sequenz →
+  `toEqual` + ~13 Golden-Anker); `math.test.ts` → `math.ts` 100 %. 95 Tests,
+  Coverage src/sim 97,65 %.
 - **AP2-04** · `719537d` · **Wave-Director.**
   `src/sim/wave.ts` — Phasen `aufbau` (3 s) → `welle` → `pause` (5 s) →
   `welle+1` / `vorbei`. `4 + (welle-1)·2` Gegner gestaffelt alle 1,4 s aus

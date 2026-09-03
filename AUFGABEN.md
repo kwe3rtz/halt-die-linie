@@ -573,7 +573,9 @@ Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket
 | AP2-02 | Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` (`c3cd6ab`) |
 | AP2-03 | Erster Gegner: Linieninfanterie | ✅ `erledigt/` (`30c70eb`) |
 | AP2-04 | Wave-Director | ✅ `erledigt/` (`719537d`) |
-| AP2-05 | Nachschub-Zähler & minimales HUD | review (letztes AP2-Ticket) |
+| AP2-05 | Nachschub-Zähler & minimales HUD | ✅ `erledigt/` (`4a4e7b1`) |
+
+**Arbeitspaket 2 ist komplett.** PR `arbeitspaket-2` → `main` offen.
 
 **Reihenfolge einhalten.** Commit-Message beginnt mit der Ticketnummer
 (`AP2-04 …`). Ein Commit pro Ticket, `Status:`-Zeile der Ticket-Datei
