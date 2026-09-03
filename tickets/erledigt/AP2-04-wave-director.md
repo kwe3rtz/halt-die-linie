@@ -1,9 +1,7 @@
 # AP2-04 — Wave-Director
 
-**Status:** review
+**Status:** erledigt · `719537d` · reviewed 2026-09-03
 **Arbeitspaket:** 2 · **Branch:** `arbeitspaket-2`
-**Abhängigkeiten:** AP2-03
-**Vorbedingung:** `AUFGABEN.md` gelesen. Goldene Regel gilt.
 **Referenz:** `KONZEPT.md` §6 (Wellen zermürben eine endliche Angriffskraft).
 
 ## Ziel
@@ -59,8 +57,8 @@ hier weglassen.
 
 ## Bericht — AP2-04
 
-COMMIT: <wird beim Commit ergänzt> (Branch `arbeitspaket-2`)
-CI: grün / grün (siehe Nachricht an ki-game-10 mit Hash)
+COMMIT: `719537d` (Branch `arbeitspaket-2`)
+CI: CI = success, Pages Preview = success — beide auf `719537d`.
 TODO(Rückfrage): keine neuen. HP-Skalierung pro Welle ist umgesetzt (Faktor
 `1 + (welle-1)*0.12`), nicht als offene Frage gelassen.
 
@@ -114,3 +112,22 @@ Entscheidungen / Abweichungen vom Ticket:
 Manuell geprüft (headless Chromium): Aufbau ~3 s ohne Gegner, dann Welle 1 —
 Gegner erscheinen gestaffelt aus der Parapet-Lücke, marschieren an, roter
 Schadens-Flash bei Kontakt, HP-Balken, keine Konsolenfehler.
+
+---
+
+## Review — AP2-04 · 2026-09-03
+
+Verdikt: **grünes Licht**.
+Geprüft: lokal typecheck/lint/format/test grün (82 Tests), CI grün auf
+`719537d`, Coverage src/sim 96,2 % (`wave.ts` 100 %). `wave.ts` gelesen —
+saubere Phasenmaschine (aufbau/welle/pause/vorbei), `WaveContext` entkoppelt
+sauber (kein Import von `enemies`/`data`), `angriffskraft` −1 nur bei echtem
+Spawn, `starteWelle` kappt die Anzahl an der Restangriffskraft, `vorbei` bei
+leerem Feld + erschöpfter Kraft. Deterministisch, eigener `waveRng`.
+Anmerkungen: Die 5 Abweichungen sind alle vertretbar — das `waves`-Flag
+(Default aus) hält die anderen Sim-Tests sauber, `enemySpawnPoints` ist die
+richtige Lösung. Kleiner Punkt (nicht blockierend): ohne Spawnpunkte wird ein
+`SpawnPlan` verworfen ohne Angriffskraft-Abzug — in der Praxis egal (testlevel
+liefert immer Punkte).
+Folge-Ticket: AP2-05 (Nachschub-Zähler + HUD, **letztes AP2-Ticket**). Dabei:
+Golden-/Replay-Test fürs Sim etablieren, `math.ts`-Coverage mit hochziehen.

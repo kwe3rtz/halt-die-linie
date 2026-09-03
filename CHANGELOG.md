@@ -6,6 +6,13 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 2 — Erster Kampf-Loop · Branch `arbeitspaket-2` · in Arbeit
 
+- **AP2-04** · `719537d` · **Wave-Director.**
+  `src/sim/wave.ts` — Phasen `aufbau` (3 s) → `welle` → `pause` (5 s) →
+  `welle+1` / `vorbei`. `4 + (welle-1)·2` Gegner gestaffelt alle 1,4 s aus
+  neuen `enemySpawnPoints` (Parapet-Lücke); HP-Faktor `1 + (welle-1)·0,12`.
+  Endliche Angriffskraft (Start 60, −1/Spawn) → bei 0 + leerem Feld `vorbei`.
+  `SimOptions.waves` (Default aus; `main.ts` an), `SimState.wave` fürs HUD.
+  Feste Start-Gegner raus. 82 Tests, Coverage src/sim 96,2 %.
 - **AP2-03** · `30c70eb` · **Erster Gegner: Linieninfanterie.**
   `src/data/gegner.ts` (`EnemyDef`, Platzhalterzahlen), `src/sim/enemies.ts`
   (Zustandsmaschine anmarsch/angriff/tot, gerader Anmarsch via `moveCapsule`,

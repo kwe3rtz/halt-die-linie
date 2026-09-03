@@ -19,5 +19,5 @@ hierher und ergänzt Bericht + Review.
 | AP2-01 Waffen-Feuerlogik & Munition | ✅ `erledigt/` |
 | AP2-02 Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` |
 | AP2-03 Erster Gegner: Linieninfanterie | ✅ `erledigt/` |
-| AP2-04 Wave-Director | offen |
-| AP2-05 Nachschub-Zähler & minimales HUD | offen |
+| AP2-04 Wave-Director | ✅ `erledigt/` |
+| AP2-05 Nachschub-Zähler & minimales HUD | offen (letztes AP2-Ticket) |

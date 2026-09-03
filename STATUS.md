@@ -13,16 +13,17 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Konzept:** vollständig beschlossen. Nicht mehr im Fluss.
 - **Code:** Arbeitspaket 1 (Fundament) fertig, auf `main` gemergt (PR #1).
   Arbeitspaket 2 (erster Kampf-Loop) läuft auf Branch `arbeitspaket-2`.
-- **AP2-Fortschritt:** AP2-01 Waffen-Feuerlogik ✅, AP2-02 Spieler-HP/Tod/
-  Respawn ✅, AP2-03 Linieninfanterie ✅. AP2-04 (Wave-Director) als Nächstes,
-  AP2-05 (Nachschub + HUD) offen. Details: `CHANGELOG.md` + `tickets/erledigt/`.
+- **AP2-Fortschritt:** AP2-01…AP2-04 ✅ (Waffen, Spieler-HP, Linieninfanterie,
+  Wave-Director). **AP2-05 (Nachschub-Zähler + HUD) ist das letzte AP2-Ticket.**
+  Details: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
 
 `npm run dev` → in First Person durch einen Boxen-Test-Graben laufen, schießen
-(Langgewehr M98, Hitscan), drei Linieninfanterie-Kapseln marschieren an und
-schlagen im Nahkampf zu, Nachschub-Zähler bei Kills. Debug-Overlay per F3.
-Preview: <https://kwe3rtz.github.io/halt-die-linie/>
+(Langgewehr M98, Hitscan). Nach ~3 s Aufbau starten **Wellen** aus der
+Parapet-Lücke — Linieninfanterie marschiert an, schlägt im Nahkampf zu, Kills
+geben Nachschub; Wellen werden größer, bis die endliche Angriffskraft leer ist.
+Debug-Overlay per F3. Preview: <https://kwe3rtz.github.io/halt-die-linie/>
 
 ## Arbeitsweise gerade
 
@@ -61,13 +62,12 @@ angesagt.
 ## Entscheidungs-Log (neueste zuerst)
 
 - **2026-09-03** — Doku-System aufgesetzt gegen Kontextverlust: `STATUS.md`
-  (dies), `CHANGELOG.md`, `WORKFLOW.md`, `tickets/erledigt/` (Audit-Trail:
-  Spec + Worker-Bericht + Review je Ticket). Frische Sessions steigen über
-  `STATUS.md` + Memory ein.
-- **2026-09-03** — AP1 → `main` gemergt (PR #1). AP2 gestartet (Branch
-  `arbeitspaket-2`, Ticket-Ordner `tickets/`). AP2-01 (Waffen-Feuerlogik,
-  Hitscan), AP2-02 (Spieler-HP, Tod/Respawn), AP2-03 (Linieninfanterie) fertig,
-  je reviewed.
+  (dies), `CHANGELOG.md`, `WORKFLOW.md` (inkl. Onboarding-Prompts für frische
+  Planer- **und** Worker-Sessions), `tickets/erledigt/` (Audit-Trail: Spec +
+  Worker-Bericht + Review je Ticket).
+- **2026-09-03** — AP1 → `main` gemergt (PR #1). AP2 auf Branch `arbeitspaket-2`,
+  Ticket-Ordner `tickets/`. AP2-01 (Waffen), AP2-02 (Spieler-HP), AP2-03
+  (Linieninfanterie), AP2-04 (Wave-Director) fertig, je reviewed.
 - **2026-09-02** — Tech festgezurrt: TypeScript + Vite + **Babylon.js**, **3D +
   First Person ab Tag eins** (keine 2D-Zwischenstufe), headless Sim strikt
   getrennt vom Rendering, `@babylonjs/core`. Kein Unity/Godot/C++. Desktop
