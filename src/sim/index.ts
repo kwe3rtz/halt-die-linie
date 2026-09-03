@@ -34,10 +34,17 @@ import {
   type EnemyZustand,
 } from "./enemies";
 import { gegnerDefs } from "../data/gegner";
+import {
+  createWaveState,
+  updateWave,
+  type WavePhase,
+  type WaveState,
+} from "./wave";
 
 export type { Vec3 } from "./math";
 export type { LevelBox, LevelData, CollisionWorld, Aabb } from "./collision";
 export type { EnemyZustand } from "./enemies";
+export type { WavePhase } from "./wave";
 
 export interface SimState {
   tick: number;
@@ -65,6 +72,12 @@ export interface SimState {
   enemies: readonly EnemyView[];
   /** Einsatz-Währung. Zähler/HUD kommen in AP2-05; die Gutschrift läuft hier. */
   nachschub: number;
+  /** Wave-Director-Stand (HUD liest das in AP2-05). */
+  wave: {
+    welle: number;
+    phase: WavePhase;
+    angriffskraftRest: number;
+  };
   /** Letzter abgegebener Schuss (Signal für Tracer/Mündungsblitz). */
   lastShot: ShotEvent | null;
 }
@@ -157,8 +170,10 @@ function pickSpawn(level: LevelData, seed: number): Vec3 {
 export interface SimOptions {
   /** Startwaffe des Spielers. Default: `standardWaffe` aus `src/data`. */
   weapon?: WeaponDef;
-  /** Gegner, die beim Start schon stehen (bis der Wave-Director in AP2-04 kommt). */
+  /** Gegner, die beim Start schon stehen (für Tests / gezieltes Debugging). */
   enemies?: ReadonlyArray<{ defId: string; pos: Vec3 }>;
+  /** Wave-Director aktivieren (im echten Spiel an; Tests opten ein). */
+  waves?: boolean;
 }
 
 export function createSim(
@@ -178,13 +193,16 @@ export function createSim(
   let enemies: EnemyEntity[] = [];
   const weapon: WeaponState = createWeaponState(weaponDef);
   const combat: PlayerCombat = createPlayerCombat();
+  const wave: WaveState = createWaveState();
+  const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
+  const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
 
-  const spawnEnemyById = (defId: string, pos: Vec3): void => {
+  const spawnEnemyById = (defId: string, pos: Vec3, hpFaktor = 1): void => {
     const def = gegnerDefs[defId];
     if (!def) {
       return;
     }
-    enemies.push(spawnEnemy(def, nextEnemyId, pos));
+    enemies.push(spawnEnemy(def, nextEnemyId, pos, hpFaktor));
     nextEnemyId += 1;
   };
 
@@ -339,6 +357,20 @@ export function createSim(
       dt,
     );
 
+    // Wave-Director: spawnt neue Gegner (erst ab nächstem Tick aktiv).
+    if (options.waves) {
+      updateWave(
+        wave,
+        {
+          lebendeGegner: enemies.filter((e) => e.zustand !== "tot").length,
+          spawnPunkte: enemySpawnPunkte,
+          rng: waveRng,
+          spawn: spawnEnemyById,
+        },
+        dt,
+      );
+    }
+
     // Tod / Respawn.
     if (advancePlayerCombat(combat, dt)) {
       respawnPlayer();
@@ -378,6 +410,11 @@ export function createSim(
         ),
       ),
       nachschub,
+      wave: Object.freeze({
+        welle: wave.welle,
+        phase: wave.phase,
+        angriffskraftRest: wave.angriffskraft,
+      }),
       lastShot,
     });
 

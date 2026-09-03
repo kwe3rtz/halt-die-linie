@@ -572,7 +572,7 @@ Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket
 | AP2-01 | Waffen-Feuerlogik & Munition | ✅ `erledigt/` (`35fe077`) |
 | AP2-02 | Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` (`c3cd6ab`) |
 | AP2-03 | Erster Gegner: Linieninfanterie | ✅ `erledigt/` (`30c70eb`) |
-| AP2-04 | Wave-Director | offen |
+| AP2-04 | Wave-Director | review |
 | AP2-05 | Nachschub-Zähler & minimales HUD | offen |
 
 **Reihenfolge einhalten.** Commit-Message beginnt mit der Ticketnummer

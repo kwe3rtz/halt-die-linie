@@ -20,6 +20,11 @@ export interface LevelData {
   boxes: readonly LevelBox[];
   /** Mögliche Startpositionen (Fußpunkt des Spielers). */
   spawnPoints: readonly Vec3[];
+  /**
+   * Mögliche Gegner-Startpositionen (Wave-Director). Fehlt sie, fällt die Sim
+   * auf `spawnPoints` zurück.
+   */
+  enemySpawnPoints?: readonly Vec3[];
 }
 
 /** Achsenparalleler Kasten über Min/Max-Ecken. */

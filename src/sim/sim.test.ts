@@ -285,3 +285,47 @@ describe("first-person controller — enemies", () => {
     }).toThrow();
   });
 });
+
+describe("first-person controller — wave director", () => {
+  const waveWorld: LevelData = {
+    ...testWorld,
+    enemySpawnPoints: [{ x: 0, y: 1, z: 20 }],
+  };
+
+  it("ohne waves: kein Director, keine Gegner", () => {
+    const sim = createSim(1, waveWorld);
+    for (let i = 0; i < 600; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.enemies.length).toBe(0);
+    expect(s.wave.phase).toBe("aufbau");
+    expect(s.wave.welle).toBe(0);
+  });
+
+  it("mit waves: nach der Aufbauphase spawnt Welle 1", () => {
+    const sim = createSim(1, waveWorld, { waves: true });
+    expect(sim.getState().wave.phase).toBe("aufbau");
+
+    // Aufbau 3 s
+    for (let i = 0; i < 200; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.wave.phase).toBe("welle");
+    expect(s.wave.welle).toBe(1);
+    expect(s.enemies.length).toBeGreaterThan(0);
+    expect(s.wave.angriffskraftRest).toBeLessThan(60);
+  });
+
+  it("deterministisch: gleicher Seed -> gleicher Wellenverlauf", () => {
+    const run = () => {
+      const sim = createSim(7, waveWorld, { waves: true });
+      for (let i = 0; i < 500; i += 1) sim.tick(command(), DT);
+      const s = sim.getState();
+      return {
+        phase: s.wave.phase,
+        welle: s.wave.welle,
+        ak: s.wave.angriffskraftRest,
+        gegner: s.enemies.map((e) => [e.id, e.pos.x, e.pos.z]),
+      };
+    };
+    expect(run()).toEqual(run());
+  });
+});

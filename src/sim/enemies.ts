@@ -33,13 +33,19 @@ const BASIS_TEMPO = 2.6; // m/s bei EnemyDef.tempo = 1 (Platzhalter)
 const ANGRIFF_INTERVALL = 1.1; // s zwischen Nahkampftreffern
 const LEICHE_LIEGEZEIT = 1.4; // s
 
-export function spawnEnemy(def: EnemyDef, id: number, pos: Vec3): EnemyEntity {
+export function spawnEnemy(
+  def: EnemyDef,
+  id: number,
+  pos: Vec3,
+  hpFaktor = 1,
+): EnemyEntity {
+  const hp = Math.round(def.hp * hpFaktor);
   return {
     id,
     pos: { x: pos.x, y: pos.y, z: pos.z },
     vel: { x: 0, y: 0, z: 0 },
-    hp: def.hp,
-    maxHp: def.hp,
+    hp,
+    maxHp: hp,
     def,
     zustand: "anmarsch",
     angriffCooldown: 0,

@@ -15,15 +15,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const SEED = 1;
 
-// AP2-04 ersetzt die festen Start-Gegner durch den Wave-Director. Hier stehen
-// sie bewusst in der Feuerbucht (freier gerader Weg — es gibt noch kein Pathing).
-const sim = createSim(SEED, testLevel, {
-  enemies: [
-    { defId: "linieninfanterie", pos: { x: 3, y: 0, z: 14 } },
-    { defId: "linieninfanterie", pos: { x: 0, y: 0, z: 14 } },
-    { defId: "linieninfanterie", pos: { x: 6, y: 0, z: 13 } },
-  ],
-});
+// Der Wave-Director spawnt die Gegner (Spawnpunkte aus dem Level).
+const sim = createSim(SEED, testLevel, { waves: true });
 const renderer = createRenderer(canvas, testLevel);
 const input = createInput(canvas);
 const overlay = createDebugOverlay();
