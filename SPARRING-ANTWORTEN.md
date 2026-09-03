@@ -603,6 +603,407 @@ Wirtschaft und Meta darauf auf.
 
 ---
 
+---
+
+# Runde 2 — Sektor / Map (2026-09-03)
+
+Briefing: `SPARRING.md` v2 (Straw-Man zu den 8 Map-Leitfragen). Voller Wortlaut
+des Briefings in `SPARRING-LOG.md`. Wieder Gemini, Perplexity, ChatGPT.
+
+## Konvergenz Runde 2 — Planer-Beobachtung (nicht von den KIs)
+
+Alle drei sind sich bei den wichtigsten Punkten einig:
+
+- **Struktur des Straw-Mans hält** (Front → Connector → Home, greybox zuerst,
+  Generator später). Die **Zahlen sind durchweg zu groß.**
+- **Alles lateral schrumpfen, ~25–40 %.** Grober Konsens-Korridor:
+  - Frontabschnitt: **15–20 m** statt 25–30 m.
+  - Gesamtfront solo: **35–60 m** statt 85 m (Gemini 35–40 · Perplexity ~36 ·
+    ChatGPT 50–60).
+  - Connector: **20–35 m** statt 40–50 m, mit 2–3 Knicken / kleinen Pockets.
+  - Home-Line: **30–45 m** statt 60 m.
+- **Transitzeit ist zu lang.** Freier Rückweg Front → Home soll **~8–15 s** sein,
+  nicht 20–30 s. Designregel (ChatGPT/Gemini): *Transit ist kurz — der Rückzug
+  wird lang, weil der Feind ihn verlängert*, nicht durch Distanz. (Perplexity
+  will das *bekämpfte* Zurückweichen durch den Connector bei 45–60 s — Divergenz
+  über die Dauer des Gefechts, Einigkeit über den freien Laufweg.)
+- **Die eine Greybox von Tag 1 aus modularen Rasterbausteinen bauen**, nicht als
+  Freiform-Mesh — dieselben Blocks, die später der Generator nutzt (Gemini:
+  10×10-m-Grid). Alle drei explizit.
+- **Grundsatzfrage B: mehr Abschnitte, nicht breitere.** Abschnittsbreite
+  konstant (~15–20 m), solo 2 aktiv → 4 Spieler 4 aktiv. Primärer Skalierungs-
+  Regler ist der **Director** (Gleichzeitigkeit der Angriffsachsen, Gegnerzahl),
+  Geometrie wächst nur mild mit.
+- **Feuertritt automatisieren** — nahtlose Stufe/Proximity-Rampe beim Herangehen
+  an die Wand, **kein manuelles Anspringen** (Kollisionskapsel-Hakeln in FP).
+  ChatGPT hält zusätzlich die 40 cm für zu niedrig (Auge bleibt unter dem
+  Parapet) → eher Feuertritt +65–85 cm über Sohle; Perplexity hält die Maße
+  historisch für ok. Einigkeit: kein Sprung.
+- **Infiltration durch gefallene Abschnitte behalten** (starke Regel: Gebiet
+  verlieren verändert den Graphen), aber **Gegner nie im Sichtfeld spawnen** —
+  Rauch-/Sperrfeuer-Vorhang über dem verlorenen Abschnitt als visuelle Deckung
+  fürs Spawnen (Gemini, ChatGPT). Perplexity: im gefallenen Abschnitt gar nicht
+  neu spawnen, nur den Pfad öffnen, damit vorhandene Gegner durchfluten.
+- **Semantische Routen dürfen deterministisch sein — ihre Darstellung nicht.**
+  Keine drei sauberen sichtbaren Draht-Korridore (→ Tower-Defense-Gefühl).
+  Statt fester Draht-Wände: versetzte Drahtfelder, unterbrochene Reihen,
+  Trichtergruppen, Sichtblocker. Mehr Spawn-*Kandidaten* als aktive Spawns
+  (ChatGPT: 7–9 Kandidaten, Director aktiviert 2–4 je Angriff).
+- **Das eine große Landmark behalten** — Orientierung, Distanzschätzung,
+  Koop-Callouts („links vom Panzer" statt „Lane 2").
+- **Spine an die Wand, nicht auf den Boden** — im Shooter ist Blick-nach-unten
+  die falsche Blickrichtung. Kommunikationskabel auf Brust-/Augenhöhe an der
+  Grabenwand, **redundant codiert** (Farbe + geometrisches Symbol) für Nacht /
+  Farbsehschwäche / gedämpfte Palette.
+- **Direktionales Audio ist Pflicht**, nicht optional — Signalhorn/Trillerpfeife
+  aus Richtung Home-Line beim Abschnittsverlust (akustischer Rückzugs-Kompass),
+  Truppen-Rufe. In FP oft schneller als Auge oder HUD.
+- **Grundsatzfrage A: Generator bewusst später.** Erst eine Greybox (Loop
+  überhaupt validieren), dann eine **zweite, manuell gebaute, strukturell andere**
+  Greybox (Sektor B — beweist, dass der Loop robust gegen andere Geometrie ist,
+  nicht nur auf einer glücklichen Geometrie), **dann** den Modulvertrag
+  festschreiben, **dann** den Generator. Gemini will Phase 1 strikt auf *einer*
+  Map, warnt vor 2–3 frühen Varianten; ChatGPT/Perplexity wollen Sektor B vor dem
+  Generator. Kein Widerspruch im Kern: Generator kommt spät.
+
+### Divergenzen Runde 2
+
+- **Flanken-Notausgang an der Home-Line:** ChatGPT — behalten, aber diegetisch
+  (verschütteter Reservegraben, Artillerietreffer bricht ihn im Finale auf,
+  vorher sichtbar). Perplexity — 3 Zugänge, Notausgang finale-freigeschaltet oder
+  nur für Spieler passierbar. **Gemini — ganz streichen**, 2 Connectoren, Drama
+  aus gleichzeitigem Durchbruch. → echter Konflikt.
+- **Anzahl Connectoren solo:** Gemini 1 · ChatGPT/Perplexity/Straw-Man 2.
+- **Home-Line-Breite vs. Front:** Perplexity — gleich breit (Konsistenz).
+  ChatGPT/Straw-Man — Home kompakter als Front (Kompressionsgefühl).
+- **Niemandsland nachts:** Perplexity — auf 30–40 m verkürzen (hintere 20 m
+  spawn-gesperrt), sonst zu wenig Horde-Druck. Andere erwähnen es nicht.
+- **Niemandsland-Neigung:** Gemini — Gelände steigt Richtung Feind (1–2 m auf
+  50 m), damit anstürmende Silhouetten gegen den Horizont lesbar sind. Nur
+  Gemini.
+- **Kompass:** ChatGPT — behalten (nur strategische Zustände). Perplexity — erst
+  weglassen, später bei Bedarf; Audio ist stärker.
+- **Sektor B:** Gemini dagegen (erst *eine* Map beweisen), ChatGPT/Perplexity
+  dafür (vor dem Generator).
+
+## Gemini — Runde 2
+
+**Einordnung:** Briefing v2 ist hervorragend fokussiert; Kern-Dynamik an einer
+Greybox zu beweisen ist die richtige Vorgehensweise.
+
+**1. Fix oder neu — hält, mit Einschränkung.** Handgebaute Greybox für Phase 1
+notwendig (macht der Loop hier keinen Spaß, dann prozedural erst recht nicht).
+Aber: von Tag 1 aus Baukasten-Modulen auf festem 10×10-m-Grid bauen, nicht als
+Freiform-Mesh — dann testet man den Loop *und* validiert das Modul-Raster.
+
+**2. Die drei Ebenen — bricht im Solo massiv, Zahlen viel zu groß für FP.**
+- 85 m Front solo: Spieler sieht durch Biegungen/Parapets nur 10–15 m weit;
+  Abschnitt C ist „jenseits von gut und böse", 10–15 s Dauerlauf um überhaupt zu
+  sehen was los ist.
+- 40–50 m Connector: 2 m breiter, 50 m langer Schlauch = 8–10 s „W-Taste
+  halten" ohne Gameplay.
+- **Konkrete Gegenwerte:** Front solo max. 2 Abschnitte (A & B) à 15–20 m =
+  35–40 m gesamt · Connector 20–25 m mit Engstelle/Sprengbarriere in der Mitte
+  (Notbremse beim Rückzug) · Home-Line 30–40 m breit, damit 1–2 Spieler alle
+  2–3 Zugänge im Blick behalten.
+- Referenz: *GTFO*, *Left 4 Dead* — Verteidigungszonen in FP extrem eng, um
+  „dead walking space" zu vermeiden und Panik durch Enge zu erzeugen.
+
+**3. Niemandsland — hält im Grundsatz, aber „Feuertritt-Paradoxon".** 45–60 m ist
+die richtige WW1-Gewehrdistanz. Risiko: sind Trichter hoch genug für Deckung,
+sieht der Spieler Stürmende erst auf 10 m (Jump-Scare/Frust); sind sie zu flach,
+wird das Parapet zum Moorhuhn-Schießstand.
+- Korrektur: Niemandsland steigt zum Feind hin leicht an (1–2 m auf 50 m) →
+  Silhouetten zeichnen sich gegen den Horizont ab. Stacheldraht für den Spieler
+  durchsichtig (Alpha-Cutout), blockiert Bewegung, nicht Sicht.
+
+**4. Feind-Spawns — hält, Infiltration ist exzellent.** Verlorener Abschnitt als
+Spawn-Vektor Richtung Connector erzeugt genau den dynamischen Druck.
+- Korrektur: Gegner dürfen nie sichtbar im verlorenen Graben aufpoppen —
+  feindlicher Rauch / Rauchgranate auf dem Abschnitt, *dann* spawnen Gegner
+  darin. Historisch plausibel, verbirgt das Poppen, signalisiert „dieser Graben
+  gehört jetzt dem Feind".
+
+**5. Vertikalität — hält mathematisch.** Sohle −1,8 m, Feuertritt +0,4 m,
+Augenhöhe ~1,6 m → Auge auf +0,2 m über Sohle, Parapet +0,4 m: auf dem Feuertritt
+knapp übers Parapet, am Boden voll in Deckung — passt exakt.
+- Gefahr: manuelles Anspringen einer 40-cm-Stufe im Gefecht ist hölzern
+  (Collision-Jiggling). Lösung: Feuertritt als kontextuelle Rampe / breite Stufe,
+  nahtlich hochlaufen, kein Springen.
+
+**6. Flanken — bricht beim Notausgang.** Harter Korridor (Sumpf/Draht) richtig
+für Performance, Pathing, Fokus. Notausgang ist Design-Falle: vorher gesperrt =
+totes Dekor; im Finale geöffnet = warum nutzen ihn die Gegner nicht auch zum
+Rückenangriff? → **Streichen.** Home-Line strikt 2 Hauptzugänge (die
+Connectoren). Finale-Drama = Feind bricht gleichzeitig durch Connector 1 und 2,
+Team muss die Linie spalten.
+
+**7. Maßstab — bricht bei der Laufzeit.** 20–30 s Sprint Front → Home ist für ein
+taktisches Rückzugsgefecht viel zu lang; in 30 s Dauerlauf verliert der Spieler
+jede Kontrolle. → Sprintzeit Front → Home max. **8–10 s** (~35–45 m Gesamtweg
+durch den Connector). 12–18 min Matchdauer ist der Sweetspot.
+
+**8. Lesbarkeit — hält hervorragend, Spine-Konzept ist Gold.** Farbcodiertes
+Telefonkabel + Silhouetten = Weltklasse (*Portal*, *Left 4 Dead*, *DRG*).
+- Ergänzung zwingend: direktionales Audio — Trillerpfeife/Signalhorn aus Richtung
+  Home-Line bei Abschnittsverlust (akustischer Kompass), Einheits-Rufe. Ohr ist
+  in FP oft schneller als Auge/Kompass.
+
+**A:** 100 % *eine* handgebaute Greybox für Phase 1, keine 2–3 Varianten, keinen
+frühen Generator. Macht der Kern-Loop auf der ersten Map keinen Spaß, liegt es am
+Regelwerk, nicht am Sektor. Aber: strikt aus modularen 10×10-m-Rasterbausteinen.
+
+**B:** Ausschließlich über **Anzahl** der Abschnitte skalieren, nie über
+Grabenbreite. Solo 2 Frontabschnitte / 1 Connector / kompakte Home; 4 Spieler
+4 Abschnitte / 2–3 Connectoren / breitere Home. Ein doppelt so breiter Graben
+verliert seine Deckungseigenschaft und fühlt sich wie eine Straße an.
+
+**3 wichtigste Korrekturen:** (1) Maßstäbe drastisch schrumpfen — Front 85 → 35–40
+m, Connector 50 → ~20 m (in FP wirken Strecken doppelt so lang; lange Wege =
+Leerlauf statt Panik). (2) Feuertritt-Movement automatisieren (Proximity-Rampe,
+kein Sprung). (3) Infiltrations-Spawns durch Rauchvorhang abdecken, nie im
+Sichtfeld.
+
+## Perplexity — Runde 2
+
+**1. Fix oder neu — hält.** Handgebaute Greybox für Kern-Validierung ist der
+günstigste Weg, den Rückzugs-Loop zu testen.
+- Ändern: von Anfang an **modular** bauen (gerade Stücke, Ecken, T-Kreuzungen,
+  Bunker), auch wenn nur ein Sektor. Kostet jetzt kaum mehr, spart später Wochen.
+- Referenz: *Deep Rock Galactic* — Level aus handgefertigten Raum-Templates,
+  prozedural zusammengesetzt. Dev-Team explizit: *„At first we tried to do true
+  procedural… Then we decided to put up some simple shapes manually and generate
+  the level out of that."*
+
+**2. Die drei Ebenen — hält teilweise, Zahlen problematisch.**
+
+| Maß | Straw-Man | Problem | Korrektur |
+|---|---|---|---|
+| Frontbreite/Abschnitt | 25–30 m | zu breit für Solo (~10 s Sprint end-to-end) | 15–20 m |
+| Gesamtfront | ~85 m | zu groß für 1, zu klein für 4 | skalierbar 2 → 4 Abschnitte |
+| Connector-Länge | 40–50 m | 25+ s reiner Laufweg, langweilig | 25–35 m, 2–3 Knicke |
+| Home-Line-Breite | ~60 m | warum breiter als Front? | gleich breit wie Front |
+| Abstand Front → Home | 90–110 m | mit Connector-Umweg 150+ m = 45+ s | 60–80 m Luftlinie |
+
+- Greybox-Startwerte: Front 2 × 18 m = 36 m · Connector 30 m, 2 Knicke · Home
+  36 m breit / 15 m tief · Abstand 70 m Luftlinie.
+- Referenz: *Helldivers 2* Defense-Missionen 12–20 min — passt zur Einsatzdauer,
+  aber nur wenn Laufwege nicht die Zeit fressen. Enge Gräben: Zeit = Spannung.
+
+**3. Niemandsland — hält für Tag, zu groß für Nacht.** 45–60 m ok für Feuer &
+Bewegung. Nachts bei 60 m verteilt sich die Horde zu dünn.
+- Korrektur: Tag 50–60 m · **Nacht 30–40 m** (hintere ~20 m spawn-gesperrt).
+  Nachts brauchst du Druck, nicht Raum.
+- Draht-Lanes müssen exakt zu den `approach lane`-Nodes im Graph passen, sonst
+  laufen Gegner in den Draht oder bleiben stecken.
+
+**4. Feind-Spawns — hält.** Feste Ausstiegspunkte Tag, Trichter nachts = Kontrolle
+über Anmarsch-Lanes.
+- Problem: „gefallener Abschnitt spawnt Gegner" ist riskant — fühlt sich nach
+  „eingekreist" statt „Rückzug" an.
+- Korrektur: gefallene Abschnitte spawnen **keine** neuen Gegner, sondern öffnen
+  den Pfad — Gegner spawnen weiter am Front-Edge, laufen aber nach dem Fall von B
+  ungehindert durch B → Connector. Simuliert Durchflutung ohne Cheat-Gefühl.
+- Referenz: *Helldivers 2* „Defend" — Gegner an festen Punkten, geöffnete Gates
+  lassen sie durchströmen; keine neuen Spawns hinter der Linie.
+
+**5. Vertikalität — hält vollständig.** Feuertritt ~40 cm + Parapet ~0,5 m +
+Sohle ~1,8 m ist historisch korrekt und sinnvoll; mehr Vertikalität kompliziert
+Kollision/Pathing unnötig. Tabletop-Trench-Regeln nutzen exakt diese Maße.
+- Ergänzung: 1–2 erhöhte Positionen an der Home-Line (Beton-Plattform für MG) →
+  „last stand on the high ground" fürs Finale.
+
+**6. Flanken — hält, aber 1 Notausgang zu wenig für 4 Spieler.**
+- Korrektur: 3 Zugänge (2 Connectoren + 1 Notausgang), Notausgang nur im Finale
+  nutzbar (freigeschaltet wenn Home-Line unter Angriff) → Spieler können zwischen
+  Zugängen rotieren. *Helldivers 2* öffnet Gates nacheinander.
+- Alternative: Notausgang von Anfang an da, aber nur für Spieler passierbar
+  (Gegner nicht) → Fluchtroute ohne die Verteidigung zu verwässern.
+
+**7. Maßstab — 12–18 min hält.** *Helldivers 2* Defense 15–20 min, 4–6 Wellen +
+Finale passt.
+- Problem: 20–30 s Sprint Front → Home zu schnell — dann ist der Rückzug
+  bedeutungslos.
+- Korrektur: **45–60 s unter Beschuss** (Connector + Deckung suchen). Stopwatch-
+  Test: durch den Connector laufen und dabei in Deckung gehen — unter 40 s =
+  Connector zu kurz.
+
+**8. Lesbarkeit — Reihenfolge perfekt.** Silhouetten → Spine → Schilder →
+Kompass → Lagekarte.
+- Kompass im HUD für ein Browsergame riskant (UI-Overhead) — erst Spine +
+  Schilder (A/B/C), Kompass später falls Spieler sich verirren. *DRG* nutzt
+  minimale UI, Orientierung über Landmarken + MULE.
+- Zusatz: akustische Hinweise („Abschnitt B unter Angriff!" per Funk) — Audio
+  stärker als UI für Orientierung.
+
+**A:** Eine handgebaute Greybox reicht für die Kern-Validierung, aber modular
+(wiederverwendbare Segmente) statt monolithisch. Generator nach dem ~5. Playtest,
+wenn der Core-Loop sicher trägt; bis dahin 1–2 manuelle Varianten (Sektor A, B).
+*DRG* hat Monate nur mit handgefertigten Templates getestet.
+
+**B:** Mehr Abschnitte, nicht breitere. **2 (solo) → 4 (4 Spieler)**, nicht 3 → 6.
+Abschnittsbreite konstant 15–20 m = die Einheit, die *ein* Spieler halten kann.
+Formel: Frontbreite = Spielerzahl × 18 m.
+
+**3 wichtigste Korrekturen:** (1) Frontabschnitte 25–30 → 15–20 m. (2) Connector
+40–50 → 25–35 m. (3) Niemandsland nachts 60 → 30–40 m. Gesamturteil: Straw-Man zu
+~80 % korrekt — Struktur, Lesbarkeit, Modularität sitzen; die Zahlen sind zu groß.
+
+## ChatGPT — Runde 2
+
+**Einordnung:** Straw-Man deutlich besser als die typische erste Version. Trifft
+die entscheidende Frage: nicht „kann ich einen Graben generieren", sondern
+„funktioniert Front halten → Abschnitt verlieren → Rückzug → Home-Line als
+räumlicher Spielbogen". Drei deutliche Änderungen: Front kompakter, Rückzugsweg
+kürzer, Spawn-/Orientierung weniger geometrisch deterministisch.
+
+**1. Fix oder neu — hält, Generator bewusst später.** Invarianten eines guten
+Sektors sind noch unbekannt — der Greybox-Test soll sie erst liefern.
+- Zwischenstufe: Sektor A → **manuell umgebauter Sektor B** → Generator. Nicht
+  drei neue Levels; Sektor B nutzt dieselben Bauteile, ändert bewusst: welcher
+  Abschnitt zuerst gefährdet ist, Verhältnis der Connectoren, Position der
+  Home-Line-Zugänge, dominante Sichtlinie im Niemandsland. Grund: funktioniert
+  der Loop nur auf A, weißt du nicht ob du eine Mechanik oder zufällig eine gute
+  Geometrie gebaut hast.
+- Referenz *DRG* methodisch: prozedurale Tiefe aus einer *eingeschränkten
+  Grammatik spielbarer Elemente*, nicht aus beliebiger Geometrie.
+
+**2. Die drei Ebenen — größte Zahlenprobleme.**
+
+| Element | Straw-Man | ChatGPT-Startwert |
+|---|---|---|
+| Abschnittsbreite | 25–30 m | 16–20 m |
+| Gesamtfront A–C | ~85 m | 50–60 m |
+| Home-Line | ~60 m | 35–45 m |
+| Connector-Pfad | 40–50 m | 25–35 m |
+
+- 85 m Front → Solospieler pendelt: Bedrohung sehen → 8–15 s laufen → bekämpfen →
+  andere Seite bricht = Pendelarbeit statt Frontdruck. Drei *logische* Abschnitte
+  bleiben, nur physisch kompakter. Ein Abschnitt ≠ 20 m gerade Feuerlinie —
+  Traversen lassen 18 m räumlich groß wirken.
+- Connectoren: nicht als 40–50-m-Röhren. 25–35 m, 2–3 Traversen, kleine
+  Ausbuchtung → „Front → Knick → defensiver Pocket → Knick → Home", kleine
+  temporäre Haltepunkte. Breite 2,4–2,8 m (unter 2 m wird's mit Koop / großen
+  Gegnern / Leichen / Platzierungen nervig).
+- Home-Line: 15 m Tiefe ok, 60 m Breite unnötig groß — soll sich *kompakt und
+  mächtig* anfühlen. Verhältnis wichtig: Front = schwer alles zu kontrollieren,
+  Home = weniger Raum, mehr Druck.
+- Referenz *Battlefield 1 Operations*: fällt eine Linie, wird nicht derselbe
+  Kampf 10 m weiter hinten wiederholt — neue Geometrie, neues Gefühl.
+
+**3. Niemandsland — Tiefe hält, Draht-Lanes weniger sichtbar.** 45–60 m
+plausibel. Gefahr: 2–3 quer verlaufende Drahtreihen → versehentlich Shooting
+Lanes → „dort kommen sie immer" → Tower-Defense-Problem.
+- Unterscheiden: **Navigationslane** (der Graph darf `left/center/right` kennen)
+  vs. **sichtbare Lane** (die Landschaft soll das *nicht* als 3 saubere Korridore
+  zeigen). Statt 3 Drahtwänden: versetzte Drahtfelder, unterbrochene Reihen,
+  Trichtergruppen, niedrige Erdaufwürfe, 2 größere Sichtblocker.
+- 1 großes Landmark unbedingt behalten (Orientierung, Distanz, Spawnreferenz,
+  Koop-Callouts — „links vom Panzer" ≫ „bei Lane 2").
+- Nacht-Spawns: harte Regel — **keine sichtbaren Night-Spawns vor dem Spieler**.
+  Semantische Spawnpunkte mit Bedingungen: außerhalb Sichtkegel / okkludiert,
+  Mindestabstand 18–25 m, Spawnloch vorab visuell kenntlich. Sonst wird Horror
+  zum Cheap Shot.
+
+**4. Feind-Spawns — Grundidee hält, feste Entrances → Kandidatenpool.** 3–5 feste
+Tages-Einstiege für den Prototyp ok, als Endsystem zu vorhersehbar.
+- **7–9 authored `enemyEntrance`-Kandidaten**, Director aktiviert je Angriff nur
+  2 (klein) / 3 (normal) / 4 (breit). Spieler kennt die Front, nicht den nächsten
+  Angriff. Telegraphing: Pfeife, Rufe, Mündungsfeuer, Bewegung am gegnerischen
+  Graben, Artilleriesignal; nachts Schreie / Bodenbewegung. Einige Sekunden
+  vorher: „da kommt gleich was von rechts" — ohne zu wissen wie viele.
+- Referenz *Left 4 Dead*-Logik (nicht die Gegner): viele mögliche Spawnorte +
+  Sichtbarkeits-/Situationsregeln = Variation ohne neue Geometrie.
+- Infiltration: sehr gute Idee, aber semantisch trennen — „Gebiet passierbar" vs.
+  „hier darf gespawnt werden". Nach dem Fall von B rücken Gegner *durch* B nach,
+  materialisieren nicht 5 m hinter dem Spieler. Verlorener Abschnitt schaltet
+  zusätzliche `reinforcementNodes` in *okkludierten* Bereichen frei.
+
+**5. Vertikalität — konkreter geometrischer Fehler.** Sohle −1,8 m, Feuertritt
++0,4 m, Parapet +0,5 m passt nicht: bei −1,8 Sohle / −1,4 Feuertritt / +0,5
+Parapet und ~1,6–1,7 m Augenhöhe ist das Auge auf dem Feuertritt nur bei
++0,2–0,3 m → Spieler schaut weiter gegen das Parapet.
+- Greybox-Werte: Sohle −1,7 bis −1,9 m · Parapet +0,3 bis +0,5 m · **Feuertritt
+  +0,65 bis +0,85 m über Sohle** → Kamera knapp über der Brustwehr. Gegen die
+  konkrete Player-Capsule prüfen; 40 cm sind fast sicher zu wenig.
+- v1 nur ein Höhenwechsel: ja. Kein Springen/Mantling/begehbare Dächer. Aber
+  minimale Bodenvariation (Duckboards, leichte Rampen, Trichterränder, abgesackte
+  Grabenstücke) — nicht als Plattforming, damit der Graben nicht wie ein
+  extrudierter CAD-Kanal wirkt.
+- Referenz *Verdun/Isonzo*: Traversen — Richtungswechsel + kurze Sichtlinien +
+  kleine Feuerstellungen reichen für räumliche Tiefe, keine Vertikalität nötig.
+
+**6. Flanken — harter Korridor hält, dritten Zugang diegetisch.** Für den
+Prototyp harter Korridor absolut legitim. Langfristig soll der Spieler den
+Korridor nicht als unsichtbare Spielregel wahrnehmen: überfluteter Graben,
+zerbombtes Gelände, dichter Draht, eingestürzte Sappe, brennender Bereich, tiefer
+Schlamm — Grenze hart, aber physisch plausibel.
+- Notausgang: „vorher gesperrt, im Finale plötzlich Gegnerzugang" wirkt nach
+  Director-Cheat. Schon vorher sichtbar machen — alter Kommunikationsgraben durch
+  Barrikade/Einsturz verschlossen; im Finale: Artillerietreffer, Wand bricht,
+  Warnruf, neue rote Route auf der Lagekarte. Spieler denkt „die haben den
+  Reservegraben geöffnet" statt „das Spiel hat einen Spawnpunkt aktiviert".
+- Zwei Connectoren richtig — drei wären für diese kleine Karte zu viel
+  Parallelstruktur.
+
+**7. Maßstab — Zahlen widersprechen sich.** 90–110 m Luftlinie + 20–30 s Sprint
+passt physikalisch nicht (100 m unbehindert eher deutlich unter 30 s). Und
+20–30 s reiner Rückweg ist zu lang.
+- Ziel-Spielmaße: A→C-Wechsel 8–12 s · Frontposition → Connector 3–5 s ·
+  Connector → Home 7–10 s · **kompletter Rückzug ideal 10–15 s**. Kämpfend
+  (Magazine leeren, Verwundeten aufheben, Stellung kurz halten) werden daraus
+  automatisch 20–30 s — *das* fühlt sich wie ein Rückzugsgefecht an, 30 s
+  Shift+W nicht.
+- Einsatzdauer: 12–18 min plausibel, für den ersten Test eher 12–15 min — vier
+  14-min-Runs liefern mehr als zwei 25-min-Runs.
+
+**8. Lesbarkeit — einer der stärksten Teile.** Hierarchie Zonensilhouette → Spine
+→ Sektorschilder → Kompass → Lagekarte ist genau richtig.
+- Widerspruch: „Panik → Blick auf den Boden → Farbe folgen" ist im Shooter die
+  falsche Blickrichtung (verliert Gegner, Deckung, Mitspieler, Knick). **Spine an
+  die Wand** auf Brust-/Augenhöhe, regelmäßige Pfeile, **plus geometrisches
+  Symbol** (Connector 1 = gelbes Dreieck, Connector 2 = weißer Doppelstrich) →
+  funktioniert nachts, bei Farbsehschwäche, bei gedämpfter Palette. Nicht nur
+  Farbe.
+- Callout-Grammatik von Anfang an festlegen: Front A/B/C · Route 1/2 · Home
+  Left/Center/Right → später „B fällt, Route 2 zurück".
+- Kompass: HOME-Marker ja; Marker pro Gegner/Spawn nein — nur strategische
+  Zustände (B bedroht, C gebrochen, Home angegriffen).
+
+**A:** Eine Greybox reicht, um den Loop *erstmals* zu validieren — nicht, um zu
+beweisen dass er *robust gegen andere Geometrie* ist. Reihenfolge: Sektor A
+handgebaut → Sektor B manuell aus denselben Prinzipien → Modulvertrag
+festschreiben (was muss jedes Front-/Connector-/Home-Modul garantieren) →
+Generator. Das Gate ist nicht „Map A macht Spaß", sondern „A und ein strukturell
+anderes B erzeugen denselben Kampfablauf". Generator vor Sektor B = unbewiesene
+Annahmen als Infrastruktur.
+
+**B:** Modulgröße konstant, Zahl gleichzeitig relevanter Fronten erhöhen — aber
+primär über **Aktivität** (Director), erst sekundär über Kartengröße:
+
+| Spieler | physische Front | gleichzeitig ernsthaft bedroht |
+|---|---|---|
+| 1 | 3 Abschnitte | 1–2 |
+| 2 | 3 Abschnitte | 2 |
+| 3 | 3–4 Abschnitte | 2–3 |
+| 4 | 4 Abschnitte | 3–4 |
+
+Vier Spieler sollen mehr *parallel tun* können, nicht doppelt so lange laufen.
+Großer Regler = Director (Angriffsachsen, Gleichzeitigkeit, Gegnerzahl,
+Spezialgegner, Ressourcenverbrauch), nicht Meter. Vermeidet zwei getrennte
+Balancing-Probleme „Solo-Map" / „Koop-Map".
+
+**3 wichtigste Korrekturen:** (1) Alles lateral ~25–35 % kompakter (Front 85 →
+50–60 m, Home 60 → 35–45 m) — sonst wird der Solospieler zum Laufboten; die Frage
+soll „welche Stellung rette ich" sein, nicht „schaffe ich es rüber". (2)
+Rückzugszeit aus Widerstand statt Weglänge — Transit kurz, der Feind verlängert
+den Rückzug; Connectoren kürzer, aber durch Traversen + Pockets interessanter.
+(3) Semantische Routen dürfen deterministisch sein, ihre Präsentation nicht —
+mehr Spawn-Kandidaten, weniger sichtbare Draht-Lanes, unregelmäßige Hindernisse,
+gute Telegraphs, verlorene Abschnitte verändern den Graphen.
+
+---
+
 ## Planer-Notiz: was davon wir übernehmen / verwerfen
 
 *Wird in der Design-Runde gefüllt — pro Punkt: übernommen / verworfen / offen,
@@ -612,7 +1013,9 @@ AP-Spezifikation.*
 Erste offene Konflikte, die die Runde klären muss:
 
 - **Skalierung mit Spielerzahl:** Länge/Angriffsachsen (Gemini, ChatGPT) vs.
-  Breite (Perplexity). → Tendenz Länge.
+  Breite (Perplexity Runde 1). Runde 2: **alle drei** → mehr Abschnitte, nicht
+  breitere; primär Director-gesteuert. → weitgehend geklärt, Tendenz „mehr
+  Abschnitte".
 - **Nächste Arbeitspakete:** Map/Pathing zuerst (Gemini, Perplexity) vs.
   Rückzugs-Greybox zuerst (ChatGPT). → mit dem Nutzer-Map-Plan abgleichen.
 - **In-Mission-Quest:** alle drei wollen sie als Dauermechanik weg — die im
@@ -621,3 +1024,21 @@ Erste offene Konflikte, die die Runde klären muss:
   (`KONZEPT.md` §4). → prüfen.
 - **Netcode-Transport:** WebSocket (Perplexity) vs. UDP/WebRTC/Geckos.io
   (Gemini) — für später, aber notieren.
+
+Neue offene Konflikte aus Runde 2:
+
+- **Flanken-Notausgang an der Home-Line:** Gemini streichen vs. ChatGPT/Perplexity
+  behalten (diegetisch bzw. spieler-only). → mit Nutzer-Plan (offene Flanken?)
+  abgleichen.
+- **Sektor B vor dem Generator:** ChatGPT/Perplexity dafür, Gemini dagegen. →
+  Tendenz: A bauen, dann entscheiden.
+- **Feuertritt-Maß:** ChatGPT sagt +0,4 m ist zu niedrig (Auge unter Parapet),
+  will +0,65–0,85 m über Sohle; Gemini/Perplexity halten ~0,4 m für ok. →
+  Detail, gegen die echte Player-Capsule testen.
+- **Contested-Retreat-Dauer:** Perplexity 45–60 s durch den Connector vs.
+  Gemini 8–10 s Transit vs. ChatGPT 10–15 s frei / 20–30 s kämpfend. → im
+  Greybox-Test einstellen.
+- **Nutzer-Map-Plan weicht ab:** durchgehende Frontlinie (nicht 3 getrennte
+  Abschnitte), 1 zentraler Connector, **offenes Trichterfeld zwischen Front und
+  Home** (kein harter Korridor), Verzweigungsgräben gehen *nach vorn* ins
+  Niemandsland. → das ist die eigentliche Design-Runde.

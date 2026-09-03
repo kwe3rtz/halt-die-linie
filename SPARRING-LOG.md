@@ -6,7 +6,7 @@ wurde und wo die Antworten liegen. Neueste Version oben.
 
 | Version | Datum      | Fokus                                  | Antworten in            |
 | ------- | ---------- | -------------------------------------- | ----------------------- |
-| v2      | 2026-09-03 | Map / dreistufiger Sektor (8 Leitfragen, Straw-Man) | *ausstehend*            |
+| v2      | 2026-09-03 | Map / dreistufiger Sektor (8 Leitfragen, Straw-Man) | `SPARRING-ANTWORTEN.md` → „Runde 2" (Gemini · Perplexity · ChatGPT) |
 | v1      | 2026-09-03 | Gesamtkonzept-Sparring (15 Themen)     | `SPARRING-ANTWORTEN.md` (Gemini · Perplexity · ChatGPT) |
 
 ---

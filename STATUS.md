@@ -58,9 +58,9 @@ angesagt.
 7. Maßstab — Laufzeit Front → Home-Line?
 8. Lesbarkeit — Minikarte/Kompass ja/nein, oder nur Landmarken + Grabenschilder?
 
-**Externes KI-Sparring:** `SPARRING.md` (aktuelle Fassung, **v2 — Map-Straw-Man**,
-2026-09-03, Antworten ausstehend) · `SPARRING-LOG.md` (Chronik) ·
-`SPARRING-ANTWORTEN.md` (Antworten v1 + Konvergenz-Analyse).
+**Externes KI-Sparring:** `SPARRING.md` (aktuelle Fassung, **v2 — Map-Straw-Man**) ·
+`SPARRING-LOG.md` (Chronik) · `SPARRING-ANTWORTEN.md` (Runde 1 Gesamtkonzept +
+**Runde 2 Sektor/Map**, je mit Konvergenz-Analyse).
 
 ## Spieltest-Feedback (2026-09-03, AP2)
 
