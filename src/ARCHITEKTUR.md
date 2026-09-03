@@ -82,9 +82,16 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   aus `modul(...)` + Roh-Quadern. EINE Quelle für Render + Sim. `main.ts` fährt
   den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
 - `src/sim/sektor.ts` — Typen (`ZonenId`, `SektorMeta`,
-  `SektorData extends LevelData`, `FrontAbschnitt` …) + reine Helfer
-  `zoneAt(meta, pos)` / `abschnittAt(meta, pos)` (X/Z-Punkttest, für
-  AP4-02/03/04). Kein Babylon.
+  `SektorData extends LevelData`, `FrontAbschnitt`, `NavGraph` …) + reine Helfer
+  `zoneAt(meta, pos)` / `abschnittAt(meta, pos)` (X/Z-Punkttest). Kein Babylon.
+- `src/sim/navgraph.ts` (AP4-02) — `kuerzesterPfad` (BFS über offene Kanten,
+  deterministisch), `naechsterKnoten`, `imSichtkegel`. Der `SektorMeta.navGraph`
+  ist handgepflegt in `src/data/sektor.ts`. `updateEnemies` bekommt einen
+  optionalen `nav`-Kontext: damit folgen Gegner Wegpunkten (Anmarsch → Labyrinth
+  → Front, nach Durchbruch → Home), ohne = gerader Weg wie bisher. Neuberechnung
+  nur bei Zielwechsel. `createSim` arbeitet auf einer Graph-Kopie (die
+  exportierte `sektorGreybox` bleibt unmutiert); Testeingänge `_setKanteOffen` /
+  `_setAbschnittVerloren` (AP4-03 ersetzt sie durch die Zustandsmaschine).
 
 ## Bundle-Größe
 

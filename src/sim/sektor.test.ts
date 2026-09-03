@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand } from "./index";
 import { abschnittAt, zoneAt, type ZonenId } from "./sektor";
+import { kuerzesterPfad } from "./navgraph";
 import { sektorGreybox } from "../data/sektor";
 
 const DT = 1 / 60;
@@ -87,6 +88,50 @@ describe("Greybox-Sektor — Wohlgeformtheit", () => {
     expect(sektorGreybox.spawnPoints).toBe(meta.spielerSpawn);
     expect(sektorGreybox.enemySpawnPoints).toBe(meta.feindAnmarsch);
   });
+
+  it("hat einen wohlgeformten Nav-Graphen (AP4-02)", () => {
+    const g = meta.navGraph;
+    const ids = new Set(g.knoten.map((k) => k.id));
+    expect(ids.size).toBe(g.knoten.length); // eindeutige Ids
+    for (const k of g.kanten) {
+      expect(ids.has(k.von)).toBe(true);
+      expect(ids.has(k.nach)).toBe(true);
+    }
+    for (const id of [
+      "anmarsch-west",
+      "anmarsch-ost",
+      "front-A",
+      "front-B",
+      "front-C",
+      "bresche-A",
+      "bresche-B",
+      "bresche-C",
+      "reinforcement-A",
+      "reinforcement-B",
+      "reinforcement-C",
+      "home-ziel",
+    ]) {
+      expect(ids.has(id)).toBe(true);
+    }
+    // Verstärkungs-Knoten liegen nie im offenen Feld (Infiltration-Regel).
+    for (const k of g.knoten) {
+      if (k.id.startsWith("reinforcement-")) {
+        expect(k.zone).not.toBe("feld");
+      }
+    }
+  });
+
+  it("Nav: jeder Anmarsch erreicht jeden Frontabschnitt; die Front hält dicht", () => {
+    const g = meta.navGraph;
+    for (const start of ["anmarsch-west", "anmarsch-ost"]) {
+      for (const ziel of ["front-A", "front-B", "front-C"]) {
+        expect(kuerzesterPfad(g, start, ziel).length).toBeGreaterThan(0);
+      }
+    }
+    // Vor einem Durchbruch führt kein offener Weg von der Front nach hinten.
+    expect(kuerzesterPfad(g, "front-B", "home-ziel")).toEqual([]);
+    expect(kuerzesterPfad(g, "front-A", "home-ziel")).toEqual([]);
+  });
 });
 
 describe("Greybox-Sektor — zoneAt / abschnittAt", () => {
@@ -164,11 +209,72 @@ describe("Greybox-Sektor — in der Sim", () => {
       );
       expect(nah || e.pos.z < 48).toBe(true);
     }
-    // Nach weiterem Marsch: mindestens ein Gegner ist Richtung Front vorgerückt.
-    for (let i = 0; i < 600; i += 1) {
+    // Gegner folgen dem Graphen durchs Labyrinth an die Front (nicht quer).
+    for (let i = 0; i < 1400; i += 1) {
       sim.tick(command(), DT);
     }
-    const zMin = Math.min(...sim.getState().enemies.map((e) => e.pos.z));
-    expect(zMin).toBeLessThan(44);
+    const es = sim.getState().enemies;
+    expect(Math.min(...es.map((e) => e.pos.z))).toBeLessThan(17); // an der Front
+    for (const e of es) {
+      expect(["A", "B", "C"]).toContain(e.abschnitt);
+      expect(e.zielKnoten).toBe(`front-${e.abschnitt}`);
+      // nicht quer durch die Geometrie zum Spieler durchgebrochen
+      expect(zoneAt(sektorGreybox.meta, e.pos)).not.toBeNull();
+    }
+  });
+
+  it("_setAbschnittVerloren lenkt die Gegner des Abschnitts auf die Home-Line", () => {
+    const sim = createSim(2, sektorGreybox, {
+      waves: true,
+      aktiveAchsen: ["B"],
+    });
+    for (let i = 0; i < 320; i += 1) sim.tick(command(), DT);
+    expect(
+      sim.getState().enemies.every((e) => e.zielKnoten === "front-B"),
+    ).toBe(true);
+
+    sim._setAbschnittVerloren("B", true);
+    for (let i = 0; i < 2200; i += 1) sim.tick(command(), DT);
+    const es = sim.getState().enemies;
+    expect(es.length).toBeGreaterThan(0);
+    expect(es.every((e) => e.zielKnoten === "home-ziel")).toBe(true);
+    // mindestens einer hat den Weg nach hinten bis ins Feld/Home genommen
+    expect(Math.min(...es.map((e) => e.pos.z))).toBeLessThan(0);
+  });
+
+  it("Infiltration: bei verlorenem Abschnitt spawnen Gegner am verdeckten Knoten, nie im Feld", () => {
+    const sim = createSim(5, sektorGreybox, {
+      waves: true,
+      aktiveAchsen: ["C"],
+    });
+    sim._setAbschnittVerloren("C", true);
+    for (let i = 0; i < 400; i += 1) sim.tick(command(), DT);
+    const rein = sektorGreybox.meta.navGraph.knoten.find(
+      (k) => k.id === "reinforcement-C",
+    );
+    const es = sim.getState().enemies;
+    expect(es.length).toBeGreaterThan(0);
+    for (const e of es) {
+      // frisch am Verstärkungs-Knoten oder schon Richtung Home unterwegs — nie
+      // im offenen Feld (Zone „feld") gepoppt.
+      expect(zoneAt(sektorGreybox.meta, e.pos)).not.toBe("feld");
+    }
+    // wenigstens einer ist nahe reinforcement-C gestartet
+    const nahRein = es.some(
+      (e) =>
+        rein !== undefined &&
+        Math.hypot(e.pos.x - rein.pos.x, e.pos.z - rein.pos.z) < 12,
+    );
+    expect(nahRein).toBe(true);
+  });
+
+  it("_setKanteOffen mutiert nicht die exportierte sektorGreybox", () => {
+    const kanteVorher = sektorGreybox.meta.navGraph.kanten.find(
+      (k) => k.von === "front-A" && k.nach === "parados-A",
+    );
+    const sim = createSim(1, sektorGreybox);
+    sim._setKanteOffen("front-A", "parados-A", true);
+    // Die Modul-Singleton-Kante ist unverändert (Sim arbeitet auf einer Kopie).
+    expect(kanteVorher?.offen).toBe(false);
   });
 });

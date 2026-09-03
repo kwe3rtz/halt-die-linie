@@ -39,6 +39,28 @@ export interface HomeZugang {
   pos: Vec3;
 }
 
+/** Ein Knoten des semantischen Nav-Graphen (AP4-02). */
+export interface NavKnoten {
+  id: string;
+  pos: Vec3;
+  zone: ZonenId;
+}
+
+/**
+ * Eine Kante, ungerichtet genutzt. `offen: false` heißt „noch gesperrt" —
+ * die Front→hinten-Kanten öffnet AP4-03, wenn ein Abschnitt fällt.
+ */
+export interface NavKante {
+  von: string;
+  nach: string;
+  offen: boolean;
+}
+
+export interface NavGraph {
+  knoten: NavKnoten[];
+  kanten: NavKante[];
+}
+
 /** Semantische Metadaten neben der reinen Geometrie eines `LevelData`. */
 export interface SektorMeta {
   zonen: ZonenEintrag[];
@@ -51,6 +73,13 @@ export interface SektorMeta {
   landmark: Vec3;
   /** Spieler-Startpunkte an der Frontlinie. */
   spielerSpawn: Vec3[];
+  /**
+   * Semantischer Nav-Graph (AP4-02): von den Anmarschpunkten durchs Labyrinth
+   * an die Front, nach einem Durchbruch weiter übers Feld / durch den
+   * Verbindungsgraben zur Home-Line. Handgepflegt (der spätere Generator
+   * erzeugt ihn mit).
+   */
+  navGraph: NavGraph;
 }
 
 /**

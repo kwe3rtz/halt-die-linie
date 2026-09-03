@@ -32,7 +32,10 @@ import {
   updateEnemies,
   type EnemyEntity,
   type EnemyZustand,
+  type NavKontext,
 } from "./enemies";
+import { imSichtkegel } from "./navgraph";
+import type { NavGraph, SektorData } from "./sektor";
 import { gegnerDefs } from "../data/gegner";
 import {
   createWaveState,
@@ -52,8 +55,12 @@ export type {
   HomeZugang,
   SektorMeta,
   SektorData,
+  NavKnoten,
+  NavKante,
+  NavGraph,
 } from "./sektor";
 export { zoneAt, abschnittAt } from "./sektor";
+export { kuerzesterPfad, naechsterKnoten, imSichtkegel } from "./navgraph";
 
 export interface SimState {
   tick: number;
@@ -103,6 +110,10 @@ export interface EnemyView {
   defId: string;
   /** Tick des letzten HP-Rückgangs (Render-Trefferblitz). */
   letzterTreffer: number;
+  /** Zugewiesener Frontabschnitt ("A"/"B"/"C" oder "") — AP4-02. */
+  abschnitt: string;
+  /** Aktueller Nav-Ziel-Knoten ("" ohne Sektor-Graph) — AP4-02. */
+  zielKnoten: string;
 }
 
 export interface ShotEvent {
@@ -154,9 +165,22 @@ export interface Sim {
   applyDamage: (menge: number, quelle?: string) => void;
   /**
    * Spawnt einen Gegner. Externer/Test-Eingang; der Wave-Director (AP2-04)
-   * nutzt ihn. `defId` unbekannt → No-op.
+   * nutzt ihn. `defId` unbekannt → No-op. `abschnitt` = Ziel-Frontabschnitt
+   * (Default: zufällig aus den aktiven Angriffsachsen).
    */
-  spawnEnemy: (defId: string, pos: Vec3) => void;
+  spawnEnemy: (defId: string, pos: Vec3, abschnitt?: string) => void;
+  /**
+   * AP4-02-Testeingang: eine Nav-Kante direkt öffnen/schließen. Ungerichtet.
+   * Kein Effekt ohne Sektor-Graph.
+   */
+  _setKanteOffen: (von: string, nach: string, offen: boolean) => void;
+  /**
+   * AP4-02-Testeingang (AP4-03 ersetzt ihn durch die Zustandsmaschine): einen
+   * Frontabschnitt als „verloren" markieren — öffnet die Nav-Kante nach hinten,
+   * aktiviert den Infiltrations-Spawn und lenkt die Gegner des Abschnitts auf
+   * die Home-Line.
+   */
+  _setAbschnittVerloren: (abschnittId: string, verloren: boolean) => void;
 }
 
 // First-Person-Controller — Platzhalterwerte, Balancing kommt später.
@@ -193,9 +217,15 @@ export interface SimOptions {
   /** Startwaffe des Spielers. Default: `standardWaffe` aus `src/data`. */
   weapon?: WeaponDef;
   /** Gegner, die beim Start schon stehen (für Tests / gezieltes Debugging). */
-  enemies?: ReadonlyArray<{ defId: string; pos: Vec3 }>;
+  enemies?: ReadonlyArray<{ defId: string; pos: Vec3; abschnitt?: string }>;
   /** Wave-Director aktivieren (im echten Spiel an; Tests opten ein). */
   waves?: boolean;
+  /**
+   * Aktive Angriffsachsen (Frontabschnitte), aus denen der Anmarsch beim Spawn
+   * zufällig zieht. Default: alle Abschnitte des Sektors (Greybox; die
+   * „~2 aktiv solo"-Auswahl je Spielerzahl macht der Wave-Director in AP4-04).
+   */
+  aktiveAchsen?: readonly string[];
 }
 
 export function createSim(
@@ -220,19 +250,6 @@ export function createSim(
   const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
   const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
 
-  const spawnEnemyById = (defId: string, pos: Vec3, hpFaktor = 1): void => {
-    const def = gegnerDefs[defId];
-    if (!def) {
-      return;
-    }
-    enemies.push(spawnEnemy(def, nextEnemyId, pos, hpFaktor));
-    nextEnemyId += 1;
-  };
-
-  for (const s of options.enemies ?? []) {
-    spawnEnemyById(s.defId, s.pos);
-  }
-
   const player = {
     pos: { x: spawn.x, y: spawn.y, z: spawn.z },
     vel: { x: 0, y: 0, z: 0 },
@@ -240,6 +257,93 @@ export function createSim(
     pitch: 0,
     onGround: false,
   };
+
+  // --- Nav (AP4-02) ---------------------------------------------------------
+  // Eigene Graph-Kopie: die Kanten-Offen-Flags sind pro Sim veränderlich, die
+  // exportierte `sektorGreybox` darf nicht mutiert werden.
+  const sektorMeta = (level as Partial<SektorData>).meta;
+  const navGraph: NavGraph | undefined = sektorMeta
+    ? {
+        knoten: sektorMeta.navGraph.knoten,
+        kanten: sektorMeta.navGraph.kanten.map((k) => ({ ...k })),
+      }
+    : undefined;
+  const verloreneAbschnitte = new Set<string>();
+  const abschnittRng = createRng((seed ^ 0x3c3c3c3c) >>> 0);
+  const aktiveAchsen: readonly string[] =
+    options.aktiveAchsen ?? sektorMeta?.frontAbschnitte.map((a) => a.id) ?? [];
+  const navKontext: NavKontext | undefined = navGraph
+    ? { graph: navGraph, verloren: verloreneAbschnitte }
+    : undefined;
+
+  const setKanteOffen = (von: string, nach: string, offen: boolean): void => {
+    if (!navGraph) {
+      return;
+    }
+    for (const k of navGraph.kanten) {
+      if (
+        (k.von === von && k.nach === nach) ||
+        (k.von === nach && k.nach === von)
+      ) {
+        k.offen = offen;
+      }
+    }
+  };
+  const HINTEN_KANTE: Record<string, readonly [string, string]> = {
+    A: ["front-A", "parados-A"],
+    B: ["front-B", "graben-mund"],
+    C: ["front-C", "parados-C"],
+  };
+  const setAbschnittVerloren = (id: string, verloren: boolean): void => {
+    if (verloren) {
+      verloreneAbschnitte.add(id);
+    } else {
+      verloreneAbschnitte.delete(id);
+    }
+    const paar = HINTEN_KANTE[id];
+    if (paar) {
+      setKanteOffen(paar[0], paar[1], verloren);
+    }
+  };
+
+  const waehleAbschnitt = (): string => {
+    if (aktiveAchsen.length === 0) {
+      return "";
+    }
+    const i = abschnittRng.int(0, aktiveAchsen.length - 1);
+    return aktiveAchsen[i] ?? aktiveAchsen[0] ?? "";
+  };
+
+  const spawnEnemyById = (
+    defId: string,
+    pos: Vec3,
+    hpFaktor = 1,
+    abschnitt?: string,
+  ): void => {
+    const def = gegnerDefs[defId];
+    if (!def) {
+      return;
+    }
+    const a = abschnitt ?? waehleAbschnitt();
+    let p = pos;
+    // Infiltration: verlorener Abschnitt → verdeckter Verstärkungs-Knoten,
+    // aber nie im offenen Feld im Sichtkegel des Spielers.
+    if (a !== "" && verloreneAbschnitte.has(a) && navGraph) {
+      const rk = navGraph.knoten.find((k) => k.id === `reinforcement-${a}`);
+      if (
+        rk &&
+        !(rk.zone === "feld" && imSichtkegel(player.pos, player.yaw, rk.pos))
+      ) {
+        p = rk.pos;
+      }
+    }
+    enemies.push(spawnEnemy(def, nextEnemyId, p, hpFaktor, a));
+    nextEnemyId += 1;
+  };
+
+  for (const s of options.enemies ?? []) {
+    spawnEnemyById(s.defId, s.pos, 1, s.abschnitt);
+  }
 
   const resetWeapon = (): void => {
     weapon.imLauf = weaponDef.magazin;
@@ -384,6 +488,7 @@ export function createSim(
       !combat.tot,
       (menge) => applyDamage(combat, menge, "nahkampf"),
       dt,
+      navKontext,
     );
 
     // Wave-Director: spawnt neue Gegner (erst ab nächstem Tick aktiv).
@@ -436,6 +541,8 @@ export function createSim(
             zustand: e.zustand,
             defId: e.def.id,
             letzterTreffer: e.letzterTreffer,
+            abschnitt: e.abschnitt,
+            zielKnoten: e.ziel,
           }),
         ),
       ),
@@ -453,6 +560,9 @@ export function createSim(
     tick: step,
     getState: snapshot,
     applyDamage: (menge, quelle) => applyDamage(combat, menge, quelle),
-    spawnEnemy: spawnEnemyById,
+    spawnEnemy: (defId, pos, abschnitt) =>
+      spawnEnemyById(defId, pos, 1, abschnitt),
+    _setKanteOffen: setKanteOffen,
+    _setAbschnittVerloren: setAbschnittVerloren,
   };
 }

@@ -9,7 +9,14 @@
 // Kein Gameplay-Verhalten — nur die Bühne.
 import type { Vec3 } from "../sim/math";
 import type { Aabb, LevelBox } from "../sim/collision";
-import type { SektorData, SektorMeta } from "../sim/sektor";
+import type {
+  NavGraph,
+  NavKante,
+  NavKnoten,
+  SektorData,
+  SektorMeta,
+  ZonenId,
+} from "../sim/sektor";
 import { modul, GRABEN_SOHLE } from "./module";
 
 function raw(center: Vec3, size: Vec3): LevelBox {
@@ -39,22 +46,25 @@ const boxes: LevelBox[] = [
 
   // === Vorderes Labyrinth (Stub) — Oberflächengelände + versetzte Wälle ====
   raw({ x: 0, y: -0.5, z: 34.5 }, { x: 50, y: 1, z: 37 }), // Boden (deckt Feindzone mit)
-  // Vier versetzte Wälle (keine sauberen Gassen, KONZEPT.md §3 / Sparring R2).
-  raw({ x: 8, y: 0.7, z: 44 }, { x: 28, y: 2.2, z: 1.5 }),
-  raw({ x: -8, y: 0.7, z: 38 }, { x: 28, y: 2.2, z: 1.5 }),
-  raw({ x: 9, y: 0.7, z: 30 }, { x: 26, y: 2.2, z: 1.5 }),
-  raw({ x: -9, y: 0.7, z: 23 }, { x: 26, y: 2.2, z: 1.5 }),
-  // Trichter-Reste als Kanalisierungs-Boxen.
-  raw({ x: -16, y: 0.3, z: 26 }, { x: 3.5, y: 1.2, z: 3.5 }),
-  raw({ x: 17, y: 0.3, z: 34 }, { x: 3.5, y: 1.2, z: 3.5 }),
-  // Landmark — Panzerwrack-Hulk, Fixpunkt fürs Auge.
-  raw({ x: 0, y: 1.5, z: 41 }, { x: 5, y: 5, z: 5 }),
+  // Drei versetzte Wälle mit ~4 m Versatz-Lücke (Wall 1/3 Lücke Ost, Wall 2
+  // Lücke West) — leichtes Kanalisieren für den Nav-Graphen (AP4-02), kein
+  // Irrgarten (KONZEPT.md §3 / Sparring R2: „keine sauberen Gassen").
+  raw({ x: -13, y: 0.7, z: 42 }, { x: 22, y: 2.2, z: 1.5 }),
+  raw({ x: 11, y: 0.7, z: 33 }, { x: 26, y: 2.2, z: 1.5 }),
+  raw({ x: -13, y: 0.7, z: 24 }, { x: 22, y: 2.2, z: 1.5 }),
+  // Trichter-Reste als Kanalisierungs-Boxen (abseits der Route).
+  raw({ x: -20, y: 0.3, z: 29 }, { x: 3, y: 1.2, z: 3 }),
+  raw({ x: 20, y: 0.3, z: 38 }, { x: 3, y: 1.2, z: 3 }),
+  // Landmark — Beobachtungsturm-Ruine am Nordrand des Labyrinths, Fixpunkt
+  // fürs Auge (schmal + hoch, damit es keine Nav-Gasse zunagelt).
+  raw({ x: 0, y: 2, z: 45 }, { x: 2.4, y: 6, z: 2.4 }),
 
   // === Frontlinie =========================================================
   raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: 13.65 }, { x: 50, y: 1, z: 6.7 }), // Grabensohle
-  ...modul("parapet", { x: -8, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt A
+  // Parapet je Abschnitt; ~5 m Sap-Lücken an den Abschnittsgrenzen + offene Enden.
+  ...modul("parapet", { x: -11, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt A
   ...modul("parapet", { x: 6, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt B
-  ...modul("parapet", { x: 20, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt C
+  ...modul("parapet", { x: 23, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt C
   // Parados (Rückwand) — Lücken für 2 Rampen + die Verbindungsgraben-Mündung.
   raw({ x: -21.5, y: -0.6, z: 10.7 }, { x: 7, y: 2.4, z: 0.5 }),
   raw({ x: -8.5, y: -0.6, z: 10.7 }, { x: 11, y: 2.4, z: 0.5 }),
@@ -100,6 +110,117 @@ const boxes: LevelBox[] = [
     laenge: 3.5,
   }),
 ];
+
+// ---------------------------------------------------------------------------
+// Nav-Graph (AP4-02) — handgepflegt entlang der begehbaren Route
+// ---------------------------------------------------------------------------
+
+function nk(
+  id: string,
+  x: number,
+  z: number,
+  zone: ZonenId,
+  y = AUF_FELD,
+): NavKnoten {
+  return { id, pos: { x, y, z }, zone };
+}
+
+const navKnoten: NavKnoten[] = [
+  // Anmarsch (Nordrand des Labyrinths — die zwei schrägen Korridore)
+  nk("anmarsch-west", -10, 44, "labyrinth"),
+  nk("anmarsch-ost", 10, 44, "labyrinth"),
+  // Labyrinth-Serpentine durch die drei Wall-Lücken (1/3 Ost, 2 West)
+  nk("lab-tor1", 2, 40, "labyrinth"),
+  nk("lab-tor2", -8, 31, "labyrinth"),
+  nk("lab-tor3", 2, 23, "labyrinth"),
+  nk("lab-vorfront", 0, 19, "labyrinth"),
+  // Verdeckte Verstärkungs-Knoten (Infiltration; aktiv bei „Abschnitt verloren")
+  nk("reinforcement-A", -20, 30, "labyrinth"),
+  nk("reinforcement-B", 6, 37, "labyrinth"),
+  nk("reinforcement-C", 20, 30, "labyrinth"),
+  // Front — Sap-Zugänge, Grabenknoten, Bresche-Kontaktpunkte
+  nk("sap-ab", -8.5, 16, "frontlinie", -0.6),
+  nk("sap-bc", 8.5, 16, "frontlinie", -0.6),
+  nk("front-A", -14, 13, "frontlinie", IN_GRABEN),
+  nk("front-B", 0, 13, "frontlinie", IN_GRABEN),
+  nk("front-C", 14, 13, "frontlinie", IN_GRABEN),
+  nk("bresche-A", -14, 16, "frontlinie", -0.4),
+  nk("bresche-B", 0, 16, "frontlinie", -0.4),
+  nk("bresche-C", 14, 16, "frontlinie", -0.4),
+  // Rückwege: Parados-Rampen, Feld, Verbindungsgraben, Home
+  nk("parados-A", -16, 11, "frontlinie", IN_GRABEN),
+  nk("parados-C", 16, 11, "frontlinie", IN_GRABEN),
+  nk("graben-mund", 0, 10, "verbindungsgraben", IN_GRABEN),
+  nk("feld-links", -14, -2, "feld"),
+  nk("feld-rechts", 14, -2, "feld"),
+  nk("graben-mitte", 0, -6, "verbindungsgraben", IN_GRABEN),
+  nk("graben-sued", 0, -18, "verbindungsgraben", IN_GRABEN),
+  nk("home-graben", 0, -22, "homeline", IN_GRABEN),
+  nk("home-feld-links", -18, -21, "homeline"),
+  nk("home-feld-rechts", 18, -21, "homeline"),
+  nk("home-ziel", 0, -30, "homeline", IN_GRABEN),
+];
+
+const auf = (von: string, nach: string): NavKante => ({
+  von,
+  nach,
+  offen: true,
+});
+const zu = (von: string, nach: string): NavKante => ({
+  von,
+  nach,
+  offen: false,
+});
+
+const navKanten: NavKante[] = [
+  // Anmarsch → Labyrinth-Serpentine
+  auf("anmarsch-west", "lab-tor1"),
+  auf("anmarsch-ost", "lab-tor1"),
+  auf("lab-tor1", "lab-tor2"),
+  auf("lab-tor2", "lab-tor3"),
+  auf("lab-tor3", "lab-vorfront"),
+  // Verstärkungs-Knoten an den Graphen hängen (immer offen — sind im Labyrinth)
+  auf("reinforcement-A", "lab-tor2"),
+  auf("reinforcement-A", "lab-tor3"),
+  auf("reinforcement-B", "lab-tor1"),
+  auf("reinforcement-B", "lab-tor2"),
+  auf("reinforcement-C", "lab-tor3"),
+  auf("reinforcement-C", "lab-tor2"),
+  // Labyrinth → Front (Sap-Lücken; immer offen)
+  auf("lab-vorfront", "sap-ab"),
+  auf("lab-vorfront", "sap-bc"),
+  auf("sap-ab", "front-A"),
+  auf("sap-ab", "front-B"),
+  auf("sap-bc", "front-B"),
+  auf("sap-bc", "front-C"),
+  auf("front-A", "front-B"),
+  auf("front-B", "front-C"),
+  // Bresche-Kontakte: an den Graben gehängt; die Kante Labyrinth→Bresche ist
+  // zu und öffnet erst, wenn AP4-03 das Parapet aufreißt.
+  auf("front-A", "bresche-A"),
+  auf("front-B", "bresche-B"),
+  auf("front-C", "bresche-C"),
+  zu("bresche-A", "lab-vorfront"),
+  zu("bresche-B", "lab-vorfront"),
+  zu("bresche-C", "lab-vorfront"),
+  // Front → hinten: die drei Tore (starten zu; AP4-03 öffnet sie beim Fall)
+  zu("front-A", "parados-A"),
+  zu("front-B", "graben-mund"),
+  zu("front-C", "parados-C"),
+  // Hinten: Feld / Verbindungsgraben / Home (Gelände immer begehbar)
+  auf("parados-A", "feld-links"),
+  auf("parados-C", "feld-rechts"),
+  auf("feld-links", "home-feld-links"),
+  auf("feld-rechts", "home-feld-rechts"),
+  auf("graben-mund", "graben-mitte"),
+  auf("graben-mitte", "graben-sued"),
+  auf("graben-sued", "home-graben"),
+  auf("home-graben", "home-ziel"),
+  auf("home-feld-links", "home-ziel"),
+  auf("home-feld-rechts", "home-ziel"),
+];
+
+const navGraph: NavGraph = { knoten: navKnoten, kanten: navKanten };
 
 // ---------------------------------------------------------------------------
 // Semantische Metadaten
@@ -151,20 +272,21 @@ const meta: SektorMeta = {
     },
   ],
   feindAnmarsch: [
-    { x: -22, y: AUF_FELD, z: 48 },
-    { x: 22, y: AUF_FELD, z: 48 },
+    { x: -10, y: AUF_FELD, z: 44 },
+    { x: 10, y: AUF_FELD, z: 44 },
   ],
   homeZugaenge: [
     { id: "verbindungsgraben", pos: { x: 0, y: IN_GRABEN, z: -20 } },
     { id: "feld-links", pos: { x: -20, y: AUF_FELD, z: -20 } },
     { id: "feld-rechts", pos: { x: 20, y: AUF_FELD, z: -20 } },
   ],
-  landmark: { x: 0, y: 0, z: 41 },
+  landmark: { x: 0, y: 0, z: 45 },
   spielerSpawn: [
     { x: 0, y: -1.4, z: 13 },
     { x: -12, y: -1.4, z: 13 },
     { x: 12, y: -1.4, z: 13 },
   ],
+  navGraph,
 };
 
 // TODO(Rückfrage): Der Verbindungsgraben ist im Greybox gerade ausgeführt; die
