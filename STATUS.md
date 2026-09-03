@@ -58,8 +58,9 @@ angesagt.
 7. Maßstab — Laufzeit Front → Home-Line?
 8. Lesbarkeit — Minikarte/Kompass ja/nein, oder nur Landmarken + Grabenschilder?
 
-**Externes KI-Sparring:** `SPARRING.md` — self-contained Briefing zum Weitergeben
-an ChatGPT / andere Claudes / Gemini, um Design/Tech/Backlog gegenzuchecken.
+**Externes KI-Sparring:** `SPARRING.md` (aktuelle Fassung, **v2 — Map-Straw-Man**,
+2026-09-03, Antworten ausstehend) · `SPARRING-LOG.md` (Chronik) ·
+`SPARRING-ANTWORTEN.md` (Antworten v1 + Konvergenz-Analyse).
 
 ## Spieltest-Feedback (2026-09-03, AP2)
 
@@ -98,6 +99,11 @@ an ChatGPT / andere Claudes / Gemini, um Design/Tech/Backlog gegenzuchecken.
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-03** — Map-Design-Runde gestartet. Statt offener Fragerunde ein
+  **Straw-Man** (Planer-Vorschlag zu allen 8 Leitfragen) formuliert und als
+  `SPARRING.md` v2 an die externen KIs gegeben — konkreter Vorschlag zum Zerlegen
+  statt Brainstorm. Antworten → `SPARRING-ANTWORTEN.md`, dann Design-Runde mit dem
+  Nutzer. Bisherige Briefings in `SPARRING-LOG.md` archiviert.
 - **2026-09-03** — Doku-System aufgesetzt gegen Kontextverlust: `STATUS.md`
   (dies), `CHANGELOG.md`, `WORKFLOW.md` (inkl. Onboarding-Prompts für frische
   Planer- **und** Worker-Sessions), `tickets/erledigt/` (Audit-Trail: Spec +
