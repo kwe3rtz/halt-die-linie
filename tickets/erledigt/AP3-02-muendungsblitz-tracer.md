@@ -1,6 +1,6 @@
 # AP3-02 — Mündungsblitz & Tracer korrigieren
 
-**Status:** review
+**Status:** erledigt · `366ebe9` · reviewed 2026-09-03
 **Arbeitspaket:** 3 · **Branch:** `arbeitspaket-3`
 **Feedback-Bezug:** Spieltest — „der Tracer ging manchmal random in irgendeine
 Richtung, ein heller Strich quer über den Bildschirm".
@@ -52,8 +52,8 @@ Richtung. Die Sim liefert die belastbaren Werte:
 
 ## Bericht — AP3-02
 
-COMMIT: <wird beim Merge/Archiv ergänzt> (Branch `arbeitspaket-3`)
-CI: grün / grün (Hash in der Nachricht an die Planer-Session)
+COMMIT: `366ebe9` (Branch `arbeitspaket-3`)
+CI: CI = success, Pages Preview = success — beide auf `366ebe9`.
 TODO(Rückfrage): keine neuen.
 
 Checks: typecheck / lint / format:check / test:coverage / build — alle grün.
@@ -125,3 +125,18 @@ Headless Chrome (SwiftShader) via CDP, `npm run dev`: App bootet fehlerfrei
 Artefakte im Blickfeld; Fadenkreuz bleibt mittig. Der 50-ms-Effekt selbst ist
 im Standbild nicht zuverlässig einzufangen — Tracer-Geometrie ist über den
 Sim-Test + die Near-Plane-Analyse abgesichert.
+
+---
+
+## Review — AP3-02 · 2026-09-03
+
+Verdikt: **grünes Licht**.
+Geprüft: lokal typecheck/lint/format/test grün (98 Tests), CI grün auf `366ebe9`,
+Coverage src/sim 97,9 %. Render-Diff gelesen — Ursachenanalyse (Near-Plane-
+Clipping des `LinesMesh`-Vertex an `shot.von` ≈ Kameraposition) ist korrekt und
+sauber behoben: Tracer startet 0,6 m vor dem Auge auf dem Strahl (entlang der
+Blickachse unsichtbar), Mündungsblitz als Welt-Mesh auf `von + richtung·0,6`,
+Effekt nach dem Kamera-Update. `ShotEvent.richtung` = `dirFromYawPitch`
+(eingefroren), Sim-Test prüft die Konsistenz. Point-blank-Guards vernünftig.
+Anmerkungen: Die 3 Abweichungen sind alle vertretbar.
+Folge-Ticket: AP3-03.

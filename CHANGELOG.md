@@ -6,6 +6,10 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · in Arbeit
 
+- **AP3-02** · `366ebe9` · **Mündungsblitz & Tracer korrigiert.**
+  Ursache war Near-Plane-Clipping (Tracer-Start auf der Kameraposition).
+  `ShotEvent.richtung` (normierte Hitscan-Richtung) dazu; Tracer startet 0,6 m
+  vor dem Auge auf dem Strahl, Mündungsblitz als Welt-Mesh. 98 Tests.
 - **AP3-01** · `9f28022` · **Fadenkreuz & Trefferbestätigung.**
   `src/ui/hud.ts` — dünnes CSS-„+" exakt mittig, Hitmarker (4 Speichen, ~120 ms)
   nur bei Gegner-Treffern, kräftiger bei tödlichem Treffer;
