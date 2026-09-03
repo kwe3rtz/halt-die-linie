@@ -98,10 +98,16 @@ export interface EnemyView {
 
 export interface ShotEvent {
   tick: number;
-  /** Mündung / Augpunkt. */
+  /** Augpunkt im Moment des Schusses (= Schuss-Ursprung des Hitscans). */
   von: Vec3;
   /** Trefferpunkt bzw. Punkt in maximaler Reichweite. */
   nach: Vec3;
+  /**
+   * Normierte Schuss-Richtung (`dirFromYawPitch(yaw, pitch)`) — dieselbe
+   * Richtung, die der Hitscan nutzt. Der Renderer setzt Tracer/Mündungsblitz
+   * damit auf, ohne eigene Geometrie-Annahmen.
+   */
+  richtung: Vec3;
   treffer: boolean;
   /** Der Schuss traf einen Gegner (nicht nur Level-Geometrie). */
   gegnerTreffer: boolean;
@@ -351,6 +357,7 @@ export function createSim(
           tick: tickCount,
           von: Object.freeze({ ...eye }),
           nach: Object.freeze(nach),
+          richtung: Object.freeze({ ...dir }),
           treffer: shot.treffer !== undefined,
           gegnerTreffer,
           toedlich,

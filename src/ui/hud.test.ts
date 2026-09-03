@@ -25,6 +25,7 @@ const schuss = (
   tick: 1,
   von: { x: 0, y: 0, z: 0 },
   nach: { x: 0, y: 0, z: 1 },
+  richtung: { x: 0, y: 0, z: 1 },
   treffer: true,
   gegnerTreffer: true,
   toedlich: false,

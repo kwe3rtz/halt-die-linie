@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand, type LevelData } from "./index";
-import { add, scale, vec3 } from "./math";
+import { add, dirFromYawPitch, length, scale, vec3 } from "./math";
 import { createRng } from "./rng";
 
 const DT = 1 / 60;
@@ -183,6 +183,41 @@ describe("first-person controller — weapon", () => {
     expect(s.lastShot?.tick).toBe(1);
     // die Wand bei z ~ 4.5 wird getroffen
     expect(s.lastShot?.treffer).toBe(true);
+  });
+
+  it("lastShot trägt Ursprung, Richtung und Endpunkt konsistent zum Hitscan", () => {
+    const sim = createSim(1, testWorld);
+    // Nach rechts und leicht nach unten schauen, dann feuern.
+    sim.tick(command({ look: { dx: 300, dy: 120 } }), DT);
+    sim.tick(command({ fire: true }), DT);
+    const s = sim.getState();
+    const shot = s.lastShot;
+    expect(shot).not.toBeNull();
+    if (!shot) return;
+
+    // Ursprung = Augpunkt (Fußpunkt + Augenhöhe 1.6).
+    expect(shot.von.x).toBeCloseTo(s.player.pos.x, 5);
+    expect(shot.von.y).toBeCloseTo(s.player.pos.y + 1.6, 5);
+    expect(shot.von.z).toBeCloseTo(s.player.pos.z, 5);
+
+    // Richtung = dieselbe wie der Hitscan (dirFromYawPitch), normiert.
+    const erwartet = dirFromYawPitch(s.player.yaw, s.player.pitch);
+    expect(shot.richtung.x).toBeCloseTo(erwartet.x, 6);
+    expect(shot.richtung.y).toBeCloseTo(erwartet.y, 6);
+    expect(shot.richtung.z).toBeCloseTo(erwartet.z, 6);
+    expect(length(shot.richtung)).toBeCloseTo(1, 6);
+
+    // nach - von ist parallel zur Richtung (Endpunkt liegt auf dem Strahl).
+    const delta = {
+      x: shot.nach.x - shot.von.x,
+      y: shot.nach.y - shot.von.y,
+      z: shot.nach.z - shot.von.z,
+    };
+    const dist = length(delta);
+    expect(dist).toBeGreaterThan(0);
+    expect(delta.x / dist).toBeCloseTo(shot.richtung.x, 4);
+    expect(delta.y / dist).toBeCloseTo(shot.richtung.y, 4);
+    expect(delta.z / dist).toBeCloseTo(shot.richtung.z, 4);
   });
 
   it("leert das Magazin über einzelne Klicks und lädt mit R nach", () => {

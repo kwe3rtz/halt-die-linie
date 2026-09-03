@@ -72,7 +72,7 @@ export function createRenderer(
   camera.minZ = 0.1;
   camera.fov = 1.15;
 
-  // Grobes Viewmodel + Mündungsblitz, als Kamera-Kinder positioniert.
+  // Grobes Viewmodel, als Kamera-Kind positioniert.
   const viewmodelMat = new StandardMaterial("viewmodel", scene);
   viewmodelMat.diffuseColor = new Color3(0.14, 0.14, 0.16);
   viewmodelMat.specularColor = new Color3(0, 0, 0);
@@ -86,15 +86,20 @@ export function createRenderer(
   viewmodel.position.set(0.17, -0.15, 0.95);
   viewmodel.isPickable = false;
 
+  // Mündungsblitz: kurzlebiger Welt-Quader auf dem Schuss-Strahl, vor der Kamera
+  // platziert (keine Viewmodel-/Kamera-Kind-Geometrie — die war die Fehlerquelle).
   const muzzleMat = new StandardMaterial("muzzle", scene);
   muzzleMat.emissiveColor = new Color3(1, 0.86, 0.5);
   muzzleMat.disableLighting = true;
-  const muzzle = MeshBuilder.CreateBox("muzzleFlash", { size: 0.06 }, scene);
+  const muzzle = MeshBuilder.CreateBox("muzzleFlash", { size: 0.09 }, scene);
   muzzle.material = muzzleMat;
-  muzzle.parent = camera;
-  muzzle.position.set(0.17, -0.15, 1.15);
   muzzle.isPickable = false;
   muzzle.isVisible = false;
+
+  // Abstand des Tracer-Starts / Mündungsblitzes vom Augpunkt entlang des Strahls.
+  // Groß genug, dass die Linie nie an der Near-Plane (minZ 0.1) beschnitten wird —
+  // genau der Bug „heller Strich quer über den Bildschirm".
+  const MUZZLE_ABSTAND = 0.6;
 
   let lastShotTick = -1;
   let effectUntil = 0;
@@ -292,25 +297,45 @@ export function createRenderer(
       );
 
       // „Letzter Schuss"-Signal: Mündungsblitz + kurzlebige Tracer-Linie.
+      // Alles aus den belastbaren Sim-Werten (`von` = Augpunkt beim Schuss,
+      // `richtung` = Hitscan-Richtung, `nach` = Trefferpunkt/Reichweitenende) —
+      // der Renderer rechnet keine eigene Herkunft aus. Läuft nach dem
+      // Kamera-Update, die Weltmatrizen sind also aktuell.
       const shot = state.lastShot;
       const now = performance.now();
       if (shot && shot.tick !== lastShotTick) {
         lastShotTick = shot.tick;
         effectUntil = now + SHOT_EFFECT_MS;
-        muzzle.isVisible = true;
-        tracer?.dispose();
-        tracer = MeshBuilder.CreateLines(
-          "tracer",
-          {
-            points: [
-              new Vector3(shot.von.x, shot.von.y, shot.von.z),
-              new Vector3(shot.nach.x, shot.nach.y, shot.nach.z),
-            ],
-          },
-          scene,
+
+        const von = new Vector3(shot.von.x, shot.von.y, shot.von.z);
+        const dir = new Vector3(
+          shot.richtung.x,
+          shot.richtung.y,
+          shot.richtung.z,
         );
-        tracer.color = new Color3(1, 0.9, 0.65);
-        tracer.isPickable = false;
+        const nach = new Vector3(shot.nach.x, shot.nach.y, shot.nach.z);
+        const gesamt = Vector3.Distance(von, nach);
+        // Tracer beginnt ein Stück vor dem Auge auf dem Strahl (nie an der
+        // Near-Plane), endet exakt am Trefferpunkt.
+        const startAbstand = Math.min(MUZZLE_ABSTAND, gesamt * 0.5);
+        const start = von.add(dir.scale(startAbstand));
+
+        muzzle.position.copyFrom(von.add(dir.scale(MUZZLE_ABSTAND)));
+        muzzle.isVisible = gesamt > MUZZLE_ABSTAND * 0.5;
+
+        tracer?.dispose();
+        tracer =
+          gesamt > 0.2
+            ? MeshBuilder.CreateLines(
+                "tracer",
+                { points: [start, nach] },
+                scene,
+              )
+            : null;
+        if (tracer) {
+          tracer.color = new Color3(1, 0.9, 0.65);
+          tracer.isPickable = false;
+        }
       } else if (now > effectUntil) {
         clearShotEffect();
       }
