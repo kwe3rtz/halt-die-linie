@@ -26,6 +26,14 @@ const EYE_HEIGHT = 1.6;
 const ENEMY_RADIUS = 0.35;
 const ENEMY_HEIGHT = 1.8;
 
+// Render-Reihenfolge (Babylon leert den Tiefenpuffer vor jeder Gruppe > 0):
+//  0 = Welt, Gegner, Tracer     — normale Tiefenprüfung
+//  1 = Viewmodel + Mündungsblitz — eigener Tiefenraum, liegt immer über der Welt
+//  2 = Bildschirm-Effekt (Schaden/Tod) — ganz oben, dimmt auch die Waffe
+const GROUP_WORLD = 0;
+const GROUP_VIEWMODEL = 1;
+const GROUP_SCREENFX = 2;
+
 export interface Renderer {
   sync(state: Readonly<SimState>, alpha: number): void;
   dispose(): void;
@@ -72,6 +80,11 @@ export function createRenderer(
   camera.minZ = 0.1;
   camera.fov = 1.15;
 
+  // Tiefenpuffer vor Gruppe 1 (Viewmodel) und 2 (Screen-FX) leeren, damit das
+  // Viewmodel nie in Wänden steckt und der Screen-FX zuverlässig obenauf liegt.
+  scene.setRenderingAutoClearDepthStencil(GROUP_VIEWMODEL, true, true, true);
+  scene.setRenderingAutoClearDepthStencil(GROUP_SCREENFX, true, true, true);
+
   // Grobes Viewmodel, als Kamera-Kind positioniert.
   const viewmodelMat = new StandardMaterial("viewmodel", scene);
   viewmodelMat.diffuseColor = new Color3(0.14, 0.14, 0.16);
@@ -85,6 +98,7 @@ export function createRenderer(
   viewmodel.parent = camera;
   viewmodel.position.set(0.17, -0.15, 0.95);
   viewmodel.isPickable = false;
+  viewmodel.renderingGroupId = GROUP_VIEWMODEL;
 
   // Mündungsblitz: kurzlebiger Welt-Quader auf dem Schuss-Strahl, vor der Kamera
   // platziert (keine Viewmodel-/Kamera-Kind-Geometrie — die war die Fehlerquelle).
@@ -95,6 +109,9 @@ export function createRenderer(
   muzzle.material = muzzleMat;
   muzzle.isPickable = false;
   muzzle.isVisible = false;
+  // Wie das Viewmodel über der Welt — sonst steckt der Blitz beim Schuss aus
+  // nächster Nähe in der Wand, in die man feuert.
+  muzzle.renderingGroupId = GROUP_VIEWMODEL;
 
   // Abstand des Tracer-Starts / Mündungsblitzes vom Augpunkt entlang des Strahls.
   // Groß genug, dass die Linie nie an der Near-Plane (minZ 0.1) beschnitten wird —
@@ -125,7 +142,7 @@ export function createRenderer(
   screenFx.parent = camera;
   screenFx.position.set(0, 0, 0.25);
   screenFx.isPickable = false;
-  screenFx.renderingGroupId = 1;
+  screenFx.renderingGroupId = GROUP_SCREENFX;
 
   const DAMAGE_FLASH_MS = 320;
   let prevHp = -1;
@@ -260,6 +277,7 @@ export function createRenderer(
     );
     mesh.position.set(box.center.x, box.center.y, box.center.z);
     mesh.material = box.center.y > 0.25 ? parapetMat : groundMat;
+    mesh.renderingGroupId = GROUP_WORLD;
     return mesh;
   });
 
