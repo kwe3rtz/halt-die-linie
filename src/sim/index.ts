@@ -16,6 +16,13 @@ import {
   reload,
   type WeaponState,
 } from "./weapon";
+import {
+  advancePlayerCombat,
+  applyDamage,
+  createPlayerCombat,
+  respawnCombat,
+  type PlayerCombat,
+} from "./player";
 
 export type { Vec3 } from "./math";
 export type { LevelBox, LevelData, CollisionWorld, Aabb } from "./collision";
@@ -31,6 +38,9 @@ export interface SimState {
     /** Auf-/Ab-Blick, Radiant. Positiv = nach oben, geklemmt auf ±~89°. */
     pitch: number;
     onGround: boolean;
+    hp: number;
+    maxHp: number;
+    tot: boolean;
     /** Waffenzustand für HUD/Render. */
     weapon: {
       defId: string;
@@ -75,6 +85,11 @@ export interface InputCommand {
 export interface Sim {
   tick: (cmd: InputCommand, dt: number) => void;
   getState: () => Readonly<SimState>;
+  /**
+   * Fügt dem Spieler Schaden zu. Externer/Test-Eingang; ab AP2-03 rufen die
+   * Gegner intern `applyDamage` auf dem Kampfzustand auf.
+   */
+  applyDamage: (menge: number, quelle?: string) => void;
 }
 
 // First-Person-Controller — Platzhalterwerte, Balancing kommt später.
@@ -125,6 +140,7 @@ export function createSim(
   let firePrev = false;
   let lastShot: Readonly<ShotEvent> | null = null;
   const weapon: WeaponState = createWeaponState(weaponDef);
+  const combat: PlayerCombat = createPlayerCombat();
 
   const player = {
     pos: { x: spawn.x, y: spawn.y, z: spawn.z },
@@ -134,35 +150,59 @@ export function createSim(
     onGround: false,
   };
 
+  const resetWeapon = (): void => {
+    weapon.imLauf = weaponDef.magazin;
+    weapon.reserve = weaponDef.reserve;
+    weapon.cooldown = 0;
+    weapon.reloadRest = 0;
+    weapon.reloading = false;
+  };
+
+  const respawnPlayer = (): void => {
+    player.pos = { x: spawn.x, y: spawn.y, z: spawn.z };
+    player.vel = { x: 0, y: 0, z: 0 };
+    player.yaw = 0;
+    player.pitch = 0;
+    resetWeapon();
+    respawnCombat(combat);
+  };
+
   const step = (cmd: InputCommand, dt: number): void => {
     tickCount += 1;
+    const alive = !combat.tot;
 
-    // Blickrichtung aus dem Maus-Delta.
-    player.yaw += cmd.look.dx * LOOK_SENSITIVITY;
-    player.pitch = clamp(
-      player.pitch - cmd.look.dy * LOOK_SENSITIVITY,
-      -PITCH_LIMIT,
-      PITCH_LIMIT,
-    );
+    if (alive) {
+      // Blickrichtung aus dem Maus-Delta.
+      player.yaw += cmd.look.dx * LOOK_SENSITIVITY;
+      player.pitch = clamp(
+        player.pitch - cmd.look.dy * LOOK_SENSITIVITY,
+        -PITCH_LIMIT,
+        PITCH_LIMIT,
+      );
+    }
 
-    // Gewünschte horizontale Geschwindigkeit relativ zu yaw.
-    const sinY = Math.sin(player.yaw);
-    const cosY = Math.cos(player.yaw);
-    let wishX = cosY * cmd.move.x + sinY * cmd.move.y;
-    let wishZ = -sinY * cmd.move.x + cosY * cmd.move.y;
-    const wishLen = Math.hypot(wishX, wishZ);
-    if (wishLen > 1) {
-      wishX /= wishLen;
-      wishZ /= wishLen;
+    // Gewünschte horizontale Geschwindigkeit relativ zu yaw (0 im Tod).
+    let wishX = 0;
+    let wishZ = 0;
+    if (alive) {
+      const sinY = Math.sin(player.yaw);
+      const cosY = Math.cos(player.yaw);
+      wishX = cosY * cmd.move.x + sinY * cmd.move.y;
+      wishZ = -sinY * cmd.move.x + cosY * cmd.move.y;
+      const wishLen = Math.hypot(wishX, wishZ);
+      if (wishLen > 1) {
+        wishX /= wishLen;
+        wishZ /= wishLen;
+      }
+      if (player.onGround && cmd.buttons.jump) {
+        player.vel.y = JUMP_SPEED;
+      }
     }
     const speed = cmd.buttons.sprint ? SPRINT_SPEED : WALK_SPEED;
     player.vel.x = wishX * speed;
     player.vel.z = wishZ * speed;
 
-    if (player.onGround && cmd.buttons.jump) {
-      player.vel.y = JUMP_SPEED;
-    }
-
+    // Integration + Kollision laufen immer (Schwerkraft gilt auch für die Leiche).
     const moved = moveCapsule(
       world,
       player.pos,
@@ -180,39 +220,46 @@ export function createSim(
       player.vel = { x: 0, y: 0, z: 0 };
     }
 
-    // Waffe: Timer, Nachladen, Feuern.
+    // Waffen-Timer laufen immer; Nachladen/Feuern nur lebendig.
     advanceWeapon(weapon, weaponDef, dt);
-    if (cmd.buttons.reload) {
-      reload(weapon, weaponDef);
+    if (alive) {
+      if (cmd.buttons.reload) {
+        reload(weapon, weaponDef);
+      }
+      const flanke = cmd.buttons.fire && !firePrev;
+      const eye: Vec3 = {
+        x: player.pos.x,
+        y: player.pos.y + PLAYER_EYE,
+        z: player.pos.z,
+      };
+      const dir = dirFromYawPitch(player.yaw, player.pitch);
+      const shot = fire(weapon, world, eye, dir, weaponDef, {
+        gedrueckt: cmd.buttons.fire,
+        flanke,
+      });
+      if (shot.schuss) {
+        const reichweite = weaponDef.handling.reichweiteMax;
+        const nach: Vec3 = shot.treffer
+          ? shot.treffer.punkt
+          : {
+              x: eye.x + dir.x * reichweite,
+              y: eye.y + dir.y * reichweite,
+              z: eye.z + dir.z * reichweite,
+            };
+        lastShot = Object.freeze({
+          tick: tickCount,
+          von: Object.freeze({ ...eye }),
+          nach: Object.freeze(nach),
+          treffer: shot.treffer !== undefined,
+        });
+      }
     }
-    const flanke = cmd.buttons.fire && !firePrev;
+    // Flanke nie über den Tod hinweg aufstauen.
     firePrev = cmd.buttons.fire;
 
-    const eye: Vec3 = {
-      x: player.pos.x,
-      y: player.pos.y + PLAYER_EYE,
-      z: player.pos.z,
-    };
-    const dir = dirFromYawPitch(player.yaw, player.pitch);
-    const shot = fire(weapon, world, eye, dir, weaponDef, {
-      gedrueckt: cmd.buttons.fire,
-      flanke,
-    });
-    if (shot.schuss) {
-      const reichweite = weaponDef.handling.reichweiteMax;
-      const nach: Vec3 = shot.treffer
-        ? shot.treffer.punkt
-        : {
-            x: eye.x + dir.x * reichweite,
-            y: eye.y + dir.y * reichweite,
-            z: eye.z + dir.z * reichweite,
-          };
-      lastShot = Object.freeze({
-        tick: tickCount,
-        von: Object.freeze({ ...eye }),
-        nach: Object.freeze(nach),
-        treffer: shot.treffer !== undefined,
-      });
+    // Tod / Respawn.
+    if (advancePlayerCombat(combat, dt)) {
+      respawnPlayer();
     }
   };
 
@@ -225,6 +272,9 @@ export function createSim(
         yaw: player.yaw,
         pitch: player.pitch,
         onGround: player.onGround,
+        hp: combat.hp,
+        maxHp: combat.maxHp,
+        tot: combat.tot,
         weapon: Object.freeze({
           defId: weapon.defId,
           imLauf: weapon.imLauf,
@@ -238,5 +288,6 @@ export function createSim(
   return {
     tick: step,
     getState: snapshot,
+    applyDamage: (menge, quelle) => applyDamage(combat, menge, quelle),
   };
 }

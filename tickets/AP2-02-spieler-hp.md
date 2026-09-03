@@ -1,6 +1,6 @@
 # AP2-02 — Spieler-HP, Schaden, Tod/Respawn
 
-**Status:** offen
+**Status:** erledigt
 **Arbeitspaket:** 2 · **Branch:** `arbeitspaket-2`
 **Abhängigkeiten:** AP2-01
 **Vorbedingung:** `AUFGABEN.md` gelesen. Goldene Regel gilt.

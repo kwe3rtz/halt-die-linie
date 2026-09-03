@@ -101,6 +101,26 @@ export function createRenderer(
     tracer = null;
   };
 
+  // Bildschirm-Effekt: roter Flash bei Schaden, Abdunkeln im Tod.
+  const screenFxMat = new StandardMaterial("screenFx", scene);
+  screenFxMat.disableLighting = true;
+  screenFxMat.emissiveColor = new Color3(0.7, 0, 0);
+  screenFxMat.alpha = 0;
+  const screenFx = MeshBuilder.CreatePlane(
+    "screenFx",
+    { size: 4, sideOrientation: 2 /* DOUBLESIDE */ },
+    scene,
+  );
+  screenFx.material = screenFxMat;
+  screenFx.parent = camera;
+  screenFx.position.set(0, 0, 0.25);
+  screenFx.isPickable = false;
+  screenFx.renderingGroupId = 1;
+
+  const DAMAGE_FLASH_MS = 320;
+  let prevHp = -1;
+  let damageFlashUntil = 0;
+
   const groundMat = new StandardMaterial("ground", scene);
   groundMat.diffuseColor = new Color3(0.46, 0.43, 0.37);
   groundMat.specularColor = new Color3(0, 0, 0);
@@ -176,6 +196,21 @@ export function createRenderer(
       } else if (now > effectUntil) {
         clearShotEffect();
       }
+
+      // Schadens-Flash / Tod-Abdunkeln.
+      const hp = state.player.hp;
+      if (prevHp >= 0 && hp < prevHp) {
+        damageFlashUntil = now + DAMAGE_FLASH_MS;
+      }
+      prevHp = hp;
+      if (state.player.tot) {
+        screenFxMat.emissiveColor.set(0.02, 0.02, 0.03);
+        screenFxMat.alpha = 0.62;
+      } else {
+        screenFxMat.emissiveColor.set(0.7, 0, 0);
+        screenFxMat.alpha =
+          Math.max(0, (damageFlashUntil - now) / DAMAGE_FLASH_MS) * 0.4;
+      }
     },
     dispose: () => {
       window.removeEventListener("resize", resize);
@@ -185,6 +220,8 @@ export function createRenderer(
       viewmodel.dispose();
       muzzle.material?.dispose();
       muzzle.dispose();
+      screenFx.material?.dispose();
+      screenFx.dispose();
       for (const mesh of meshes) {
         mesh.material?.dispose();
         mesh.dispose();

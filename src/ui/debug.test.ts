@@ -11,6 +11,9 @@ const sampleData: DebugData = {
     yaw: 0.35,
     pitch: -0.1,
     onGround: true,
+    hp: 100,
+    maxHp: 100,
+    tot: false,
     weapon: {
       defId: "langgewehr-m98",
       imLauf: 5,
