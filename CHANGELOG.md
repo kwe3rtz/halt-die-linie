@@ -4,6 +4,14 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · in Arbeit
+
+- **AP3-01** · `9f28022` · **Fadenkreuz & Trefferbestätigung.**
+  `src/ui/hud.ts` — dünnes CSS-„+" exakt mittig, Hitmarker (4 Speichen, ~120 ms)
+  nur bei Gegner-Treffern, kräftiger bei tödlichem Treffer;
+  `prefers-reduced-motion`, im Tod ausgeblendet. `ShotEvent` um `gegnerTreffer`
+  + `toedlich` (Bool-Flags, keine Verhaltensänderung). 97 Tests.
+
 ## Arbeitspaket 2 — Erster Kampf-Loop · Branch `arbeitspaket-2` · komplett
 
 - **AP2-05** · `4a4e7b1` · **Nachschub-Zähler & minimales HUD.**

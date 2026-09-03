@@ -1,6 +1,6 @@
 # AP3-01 — Fadenkreuz & Trefferbestätigung
 
-**Status:** review
+**Status:** erledigt · `9f28022` · reviewed 2026-09-03
 **Arbeitspaket:** 3 · **Branch:** `arbeitspaket-3`
 **Feedback-Bezug:** Spieltest — „kein Crosshair, wusste nicht wohin ich schieße".
 
@@ -35,8 +35,8 @@ einen Gegner trifft. Rein visuell — keine Sim-Änderung außer ggf. einem
 
 ## Bericht — AP3-01
 
-COMMIT: <wird beim Merge/Archiv ergänzt> (Branch `arbeitspaket-3`)
-CI: grün / grün (Hash in der Nachricht an die Planer-Session)
+COMMIT: `9f28022` (Branch `arbeitspaket-3`)
+CI: CI = success, Pages Preview = success — beide auf `9f28022`.
 TODO(Rückfrage): keine neuen.
 
 Checks: typecheck / lint / format:check / test:coverage / build — alle grün.
@@ -92,3 +92,21 @@ Manuell geprüft (headless Chrome, SwiftShader, `npm run dev`): Fadenkreuz sitzt
 mittig auf 1280×800 exakt auf dem Canvas-Mittelpunkt, dünn und dezent, unter dem
 F3-Overlay, über dem Canvas. Hitmarker/tödlich nur über die jsdom-Tests geprüft
 (braucht Pointer-Lock + Gegner-Treffer, headless nicht steuerbar).
+
+---
+
+## Review — AP3-01 · 2026-09-03
+
+Verdikt: **grünes Licht**.
+Geprüft: lokal typecheck/lint/format/test grün (97 Tests), CI grün auf
+`9f28022`, Coverage src/sim 97,66 %. Sim-Diff gelesen — `ShotEvent` +
+`gegnerTreffer`/`toedlich` (reine Bool-Flags, `toedlich` aus `damageEnemy`),
+Reihenfolge sauber vor `Object.freeze`, keine Verhaltensänderung an Schaden/
+Nachschub. HUD-Fadenkreuz CSS-only, erbt `pointer-events:none` + z-Index,
+`prefers-reduced-motion` respektiert, Timer in `dispose()` abgeräumt.
+Anmerkungen: Die 4 Abweichungen sind alle vertretbar (Fadenkreuz im HUD-Root,
+Ausblenden im Tod). **Hinweis für AP3-02:** `ShotEvent` trägt bereits `von` +
+`nach` (Ursprung + Endpunkt) — die im AP3-02-Ticket vermutete Sim-Erweiterung
+ist damit größtenteils schon da; AP3-02 ist überwiegend ein Renderer-Job (Tracer
+zwischen `von` und `nach` statt aus der Viewmodel-Position).
+Folge-Ticket: AP3-02.

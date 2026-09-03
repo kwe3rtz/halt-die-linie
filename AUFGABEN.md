@@ -588,7 +588,7 @@ Bericht an die Ticket-Datei, pushen, CI, Meldung an den Planer, warten.
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP3-01 | Fadenkreuz & Trefferbestätigung | offen |
+| AP3-01 | Fadenkreuz & Trefferbestätigung | ✅ `erledigt/` (`9f28022`) |
 | AP3-02 | Mündungsblitz & Tracer korrigieren | offen |
 | AP3-03 | Viewmodel steckt nicht mehr in Wänden | offen |
 | AP3-04 | Gegner-Lebensbalken aus jedem Blickwinkel | offen |

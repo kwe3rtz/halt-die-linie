@@ -22,7 +22,7 @@ Fixes aus dem ersten Spieltest. Branch `arbeitspaket-3` von `main`.
 
 | Ticket | Status |
 |---|---|
-| AP3-01 Fadenkreuz & Trefferbestätigung | offen |
+| AP3-01 Fadenkreuz & Trefferbestätigung | ✅ `erledigt/` |
 | AP3-02 Mündungsblitz & Tracer korrigieren | offen |
 | AP3-03 Viewmodel steckt nicht mehr in Wänden | offen |
 | AP3-04 Gegner-Lebensbalken aus jedem Blickwinkel | offen |
