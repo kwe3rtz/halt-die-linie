@@ -14,6 +14,7 @@ const sampleData: DebugData = {
     hp: 100,
     maxHp: 100,
     tot: false,
+    respawnRest: 0,
     weapon: {
       defId: "langgewehr-m98",
       imLauf: 5,

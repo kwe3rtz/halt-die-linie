@@ -329,3 +329,56 @@ describe("first-person controller — wave director", () => {
     expect(run()).toEqual(run());
   });
 });
+
+// Golden-/Replay-Test (AUFGABEN.md-Konvention): Seed + fixe Kommandosequenz ->
+// identischer End-State. Fängt sowohl Nichtdeterminismus als auch stille
+// Verhaltensänderungen (Golden-Anker) ab.
+describe("golden replay", () => {
+  const world: LevelData = {
+    ...testWorld,
+    enemySpawnPoints: [{ x: 0, y: 1, z: 18 }],
+  };
+
+  function script(): InputCommand[] {
+    const out: InputCommand[] = [];
+    for (let i = 0; i < 360; i += 1) {
+      out.push(
+        command({
+          move: { x: i % 4 === 0 ? -1 : 0, y: i % 3 === 0 ? 1 : 0 },
+          look: { dx: i % 15 === 0 ? 30 : 0, dy: i % 25 === 0 ? -12 : 0 },
+          fire: i % 7 === 0,
+          reload: i % 90 === 45,
+          jump: i % 120 === 30,
+        }),
+      );
+    }
+    return out;
+  }
+
+  function replay() {
+    const sim = createSim(20260903, world, { waves: true });
+    for (const cmd of script()) sim.tick(cmd, DT);
+    return sim.getState();
+  }
+
+  it("liefert bei zwei Läufen exakt denselben State", () => {
+    expect(replay()).toEqual(replay());
+  });
+
+  it("trifft den Golden-Anker (bricht bei Verhaltensänderung)", () => {
+    const s = replay();
+    expect(s.tick).toBe(360);
+    expect(s.player.pos.x).toBeCloseTo(1.7787, 3);
+    expect(s.player.pos.z).toBeCloseTo(4.149, 3);
+    expect(s.player.yaw).toBeCloseTo(1.584, 3);
+    expect(s.player.pitch).toBeCloseTo(0.396, 3);
+    expect(s.player.hp).toBe(100);
+    expect(s.player.weapon.imLauf).toBe(0);
+    expect(s.player.weapon.reserve).toBe(45);
+    expect(s.wave.phase).toBe("welle");
+    expect(s.wave.welle).toBe(1);
+    expect(s.wave.angriffskraftRest).toBe(57);
+    expect(s.enemies.length).toBe(3);
+    expect(s.nachschub).toBe(0);
+  });
+});

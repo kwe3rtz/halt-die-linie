@@ -60,6 +60,8 @@ export interface SimState {
     hp: number;
     maxHp: number;
     tot: boolean;
+    /** Sekunden bis zum Respawn (0, solange lebendig). */
+    respawnRest: number;
     /** Waffenzustand für HUD/Render. */
     weapon: {
       defId: string;
@@ -70,13 +72,14 @@ export interface SimState {
   };
   /** Gegner, eingefroren nach außen (wie `player`). */
   enemies: readonly EnemyView[];
-  /** Einsatz-Währung. Zähler/HUD kommen in AP2-05; die Gutschrift läuft hier. */
+  /** Einsatz-Währung (`KONZEPT.md` §7). Gutschrift pro Kill. */
   nachschub: number;
-  /** Wave-Director-Stand (HUD liest das in AP2-05). */
+  /** Wave-Director-Stand fürs HUD. */
   wave: {
     welle: number;
     phase: WavePhase;
     angriffskraftRest: number;
+    angriffskraftMax: number;
   };
   /** Letzter abgegebener Schuss (Signal für Tracer/Mündungsblitz). */
   lastShot: ShotEvent | null;
@@ -194,6 +197,7 @@ export function createSim(
   const weapon: WeaponState = createWeaponState(weaponDef);
   const combat: PlayerCombat = createPlayerCombat();
   const wave: WaveState = createWaveState();
+  const angriffskraftMax = wave.angriffskraft;
   const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
   const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
 
@@ -389,6 +393,7 @@ export function createSim(
         hp: combat.hp,
         maxHp: combat.maxHp,
         tot: combat.tot,
+        respawnRest: combat.respawnRest,
         weapon: Object.freeze({
           defId: weapon.defId,
           imLauf: weapon.imLauf,
@@ -414,6 +419,7 @@ export function createSim(
         welle: wave.welle,
         phase: wave.phase,
         angriffskraftRest: wave.angriffskraft,
+        angriffskraftMax,
       }),
       lastShot,
     });
