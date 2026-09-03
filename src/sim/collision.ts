@@ -20,6 +20,11 @@ export interface LevelData {
   boxes: readonly LevelBox[];
   /** Mögliche Startpositionen (Fußpunkt des Spielers). */
   spawnPoints: readonly Vec3[];
+  /**
+   * Mögliche Gegner-Startpositionen (Wave-Director). Fehlt sie, fällt die Sim
+   * auf `spawnPoints` zurück.
+   */
+  enemySpawnPoints?: readonly Vec3[];
 }
 
 /** Achsenparalleler Kasten über Min/Max-Ecken. */
@@ -159,4 +164,133 @@ export function moveCapsule(
   }
 
   return { pos: next, vel: v, onGround };
+}
+
+export interface RayHit {
+  /** Weltpunkt des Treffers. */
+  punkt: Vec3;
+  /** Entfernung vom Ursprung entlang der (normalisierten) Richtung. */
+  distanz: number;
+}
+
+/**
+ * Hitscan: nächster Schnittpunkt eines Strahls mit den statischen AABBs.
+ * `richtung` muss normalisiert sein. Liefert `undefined`, wenn innerhalb von
+ * `maxDistanz` nichts getroffen wird. Slab-Verfahren pro Box; Strahlen, die
+ * innerhalb einer Box starten, werden ignoriert (Eintritts-`t` < 0).
+ */
+export function raycast(
+  world: CollisionWorld,
+  origin: Vec3,
+  richtung: Vec3,
+  maxDistanz: number,
+): RayHit | undefined {
+  let nearest = maxDistanz;
+  let hit = false;
+
+  for (const box of world.boxes) {
+    let tNear = 0;
+    let tFar = maxDistanz;
+
+    const axes: Array<[number, number, number, number]> = [
+      [origin.x, richtung.x, box.minX, box.maxX],
+      [origin.y, richtung.y, box.minY, box.maxY],
+      [origin.z, richtung.z, box.minZ, box.maxZ],
+    ];
+
+    let miss = false;
+    for (const [o, d, lo, hi] of axes) {
+      if (Math.abs(d) < 1e-9) {
+        if (o < lo || o > hi) {
+          miss = true;
+          break;
+        }
+        continue;
+      }
+      let t1 = (lo - o) / d;
+      let t2 = (hi - o) / d;
+      if (t1 > t2) {
+        [t1, t2] = [t2, t1];
+      }
+      tNear = Math.max(tNear, t1);
+      tFar = Math.min(tFar, t2);
+      if (tNear > tFar) {
+        miss = true;
+        break;
+      }
+    }
+
+    if (miss || tNear <= 0 || tNear >= nearest) {
+      continue;
+    }
+    nearest = tNear;
+    hit = true;
+  }
+
+  if (!hit) {
+    return undefined;
+  }
+  return {
+    punkt: {
+      x: origin.x + richtung.x * nearest,
+      y: origin.y + richtung.y * nearest,
+      z: origin.z + richtung.z * nearest,
+    },
+    distanz: nearest,
+  };
+}
+
+/**
+ * Hitscan gegen einen stehenden Zylinder (Näherung für eine Gegner-Kapsel:
+ * Achse senkrecht, `feet` = Fußpunkt, Höhe `height`, Radius `radius`).
+ * Liefert die Trefferdistanz `t` oder `undefined`. `richtung` muss normalisiert
+ * sein. Trichter durch die Deckflächen wird nicht behandelt (für Schüsse auf
+ * Augenhöhe irrelevant).
+ */
+export function raycastCylinder(
+  origin: Vec3,
+  richtung: Vec3,
+  feet: Vec3,
+  radius: number,
+  height: number,
+  maxDistanz: number,
+): number | undefined {
+  const ox = origin.x - feet.x;
+  const oz = origin.z - feet.z;
+  const a = richtung.x * richtung.x + richtung.z * richtung.z;
+  const c = ox * ox + oz * oz - radius * radius;
+
+  let t: number;
+  if (a < 1e-9) {
+    // Strahl läuft senkrecht — nur ein Treffer, wenn er in der Säule startet.
+    if (c > 0) {
+      return undefined;
+    }
+    t = 0;
+  } else {
+    const b = 2 * (ox * richtung.x + oz * richtung.z);
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) {
+      return undefined;
+    }
+    const sq = Math.sqrt(disc);
+    const tEnter = (-b - sq) / (2 * a);
+    const tExit = (-b + sq) / (2 * a);
+    if (tEnter >= 0) {
+      t = tEnter;
+    } else if (tExit >= 0) {
+      t = tExit;
+    } else {
+      return undefined;
+    }
+  }
+
+  if (t > maxDistanz) {
+    return undefined;
+  }
+  const y = origin.y + richtung.y * t;
+  if (y < feet.y || y > feet.y + height) {
+    return undefined;
+  }
+  return t;
 }

@@ -35,3 +35,17 @@ export function normalize(v: Vec3): Vec3 {
 export function dot(a: Vec3, b: Vec3): number {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
+
+/**
+ * Blickrichtung als Einheitsvektor aus `yaw`/`pitch` (Radiant).
+ * yaw 0 = +Z, yaw +π/2 = +X; pitch 0 = waagerecht, pitch > 0 = nach oben.
+ * Konsistent mit der yaw-relativen Bewegung in `src/sim/index.ts`.
+ */
+export function dirFromYawPitch(yaw: number, pitch: number): Vec3 {
+  const cp = Math.cos(pitch);
+  return {
+    x: Math.sin(yaw) * cp,
+    y: Math.sin(pitch),
+    z: Math.cos(yaw) * cp,
+  };
+}

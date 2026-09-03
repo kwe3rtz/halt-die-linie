@@ -556,9 +556,41 @@ Kommt nach Arbeitspaket 1, wenn Code da ist, der davon profitiert:
 - **ADRs** (`docs/adr/NNNN-*.md`) — leichte Architektur-Entscheidungs-Notizen,
   falls `KONZEPT.md` §10 / `TECHNIK.md` nicht mehr reichen.
 
-## Arbeitspaket 2 und folgende
+## Arbeitspaket 2 — Erster Kampf-Loop
 
-Wird nachgetragen, sobald Arbeitspaket 1 steht und die offenen Design-Punkte
-(prozedurale Erzeugung, Nachschub-Ökonomie) geklärt sind. Voraussichtliche
-Richtung: Waffen-Feuerlogik + Munitionshandling, dann ein erster Gegnertyp mit
-simplem Verhalten, dann der Wave-Director.
+**Ziel:** Aus „durch den Boxen-Graben laufen" wird „Gegner in Wellen abwehren".
+Der erste echte Gameplay-Loop, auf dem bestehenden Test-Graben. Alle Zahlen sind
+Platzhalter — Balancing kommt später.
+
+Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket-1`).
+
+**Ticket-Dateien liegen in [`tickets/`](tickets/), erledigte in
+`tickets/erledigt/`.** Ablauf: siehe [`WORKFLOW.md`](WORKFLOW.md).
+
+| Nr | Ticket | Status |
+|---|---|---|
+| AP2-01 | Waffen-Feuerlogik & Munition | ✅ `erledigt/` (`35fe077`) |
+| AP2-02 | Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` (`c3cd6ab`) |
+| AP2-03 | Erster Gegner: Linieninfanterie | ✅ `erledigt/` (`30c70eb`) |
+| AP2-04 | Wave-Director | ✅ `erledigt/` (`719537d`) |
+| AP2-05 | Nachschub-Zähler & minimales HUD | ✅ `erledigt/` (`4a4e7b1`) |
+
+**Arbeitspaket 2 ist komplett.** PR `arbeitspaket-2` → `main` offen.
+
+**Reihenfolge einhalten.** Commit-Message beginnt mit der Ticketnummer
+(`AP2-04 …`). Ein Commit pro Ticket, `Status:`-Zeile der Ticket-Datei
+aktualisieren, den **Bericht** (Vorlage in `WORKFLOW.md`) unten an die
+Ticket-Datei hängen — alles im selben Commit. Dann pushen (CI grün), STOPP und
+Meldung an den Planer.
+
+**Ausdrücklich NICHT in Arbeitspaket 2:** mehrere Waffen/Gegnertypen ·
+Gegner-Fernkampf (Linieninfanterie ist in AP2 Nahkampf-only) · KI-Trupps ·
+Platzierungen/Bauen · prozedurale Erzeugung · Rückzugs-/Home-Line-Logik ·
+Zeit-Finale · Klassen-Fähigkeiten · Tag/Nacht · Sound · Art über Boxen/Kapseln
+hinaus · Netcode.
+
+## Arbeitspaket 3+ (Skizze)
+
+Nach AP2 und der Design-Runde „prozedurale Sektor-Erzeugung": mehrere Gegner des
+Tag-Rosters + Gegner-Fernkampf, dann der dreistufige Sektor (Frontlinie /
+Verbindungsgraben / Home-Line) mit Rückzugslogik, dann Klassen + Fähigkeiten.

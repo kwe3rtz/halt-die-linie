@@ -13,6 +13,7 @@ const NEUTRAL: InputCommand = {
     interact: false,
     ability: false,
     jump: false,
+    reload: false,
   },
 };
 

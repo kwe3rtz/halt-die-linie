@@ -11,6 +11,16 @@ const sampleData: DebugData = {
     yaw: 0.35,
     pitch: -0.1,
     onGround: true,
+    hp: 100,
+    maxHp: 100,
+    tot: false,
+    respawnRest: 0,
+    weapon: {
+      defId: "langgewehr-m98",
+      imLauf: 5,
+      reserve: 45,
+      reloading: false,
+    },
   },
   command: {
     move: { x: 0, y: 1 },
@@ -22,6 +32,7 @@ const sampleData: DebugData = {
       interact: false,
       ability: false,
       jump: false,
+      reload: false,
     },
   },
 };

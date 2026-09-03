@@ -10,6 +10,8 @@ interface CommandParts {
   look?: { dx: number; dy: number };
   sprint?: boolean;
   jump?: boolean;
+  fire?: boolean;
+  reload?: boolean;
 }
 
 function command(parts: CommandParts = {}): InputCommand {
@@ -17,21 +19,22 @@ function command(parts: CommandParts = {}): InputCommand {
     move: parts.move ?? { x: 0, y: 0 },
     look: parts.look ?? { dx: 0, dy: 0 },
     buttons: {
-      fire: false,
+      fire: parts.fire ?? false,
       aim: false,
       sprint: parts.sprint ?? false,
       interact: false,
       ability: false,
       jump: parts.jump ?? false,
+      reload: parts.reload ?? false,
     },
   };
 }
 
-// Kleiner Testgraben: Boden (Oberkante y = 0), eine Wand bei z = 4.5..5.5.
+// Kleiner Testgraben: Boden (Oberkante y = 0), eine hohe Wand bei z = 4.5..5.5.
 const testWorld: LevelData = {
   boxes: [
     { center: { x: 0, y: -0.5, z: 0 }, size: { x: 40, y: 1, z: 40 } },
-    { center: { x: 0, y: 1, z: 5 }, size: { x: 40, y: 2, z: 1 } },
+    { center: { x: 0, y: 2, z: 5 }, size: { x: 40, y: 4, z: 1 } },
   ],
   spawnPoints: [{ x: 0, y: 1, z: 0 }],
 };
@@ -162,5 +165,220 @@ describe("first-person controller", () => {
       sim.tick(command(), DT);
     }
     expect(sim.getState().player.pos.y).toBeGreaterThan(-40);
+  });
+});
+
+describe("first-person controller — weapon", () => {
+  it("linksklick feuert einen Schuss (Repetierer: nur Flanke) und meldet lastShot", () => {
+    const sim = createSim(1, testWorld);
+    const startAmmo = sim.getState().player.weapon.imLauf;
+
+    // Taste halten: erster Tick = Flanke -> ein Schuss, danach kein weiterer.
+    for (let i = 0; i < 40; i += 1) {
+      sim.tick(command({ fire: true }), DT);
+    }
+    const s = sim.getState();
+    expect(s.player.weapon.imLauf).toBe(startAmmo - 1);
+    expect(s.lastShot).not.toBeNull();
+    expect(s.lastShot?.tick).toBe(1);
+    // die Wand bei z ~ 4.5 wird getroffen
+    expect(s.lastShot?.treffer).toBe(true);
+  });
+
+  it("leert das Magazin über einzelne Klicks und lädt mit R nach", () => {
+    const sim = createSim(1, testWorld);
+    const def = sim.getState().player.weapon;
+    // 5 Klicks (Loslassen dazwischen für die Flanke), Cooldown auslaufen lassen.
+    for (let k = 0; k < def.imLauf + 2; k += 1) {
+      sim.tick(command({ fire: true }), DT);
+      for (let i = 0; i < 100; i += 1) {
+        sim.tick(command(), DT);
+      }
+    }
+    expect(sim.getState().player.weapon.imLauf).toBe(0);
+
+    const reserveVor = sim.getState().player.weapon.reserve;
+    for (let i = 0; i < 200; i += 1) {
+      sim.tick(command({ reload: true }), DT);
+    }
+    const w = sim.getState().player.weapon;
+    expect(w.imLauf).toBeGreaterThan(0);
+    expect(w.reserve).toBeLessThan(reserveVor);
+    expect(w.reloading).toBe(false);
+  });
+
+  it("kein Feuern während eines nicht abgeschlossenen Nachladens", () => {
+    const sim = createSim(1, testWorld);
+    for (let i = 0; i < 5; i += 1) {
+      sim.tick(command({ fire: true }), DT);
+      for (let j = 0; j < 100; j += 1) sim.tick(command(), DT);
+    }
+    expect(sim.getState().player.weapon.imLauf).toBe(0);
+
+    sim.tick(command({ reload: true }), DT); // Nachladen startet
+    const shotBefore = sim.getState().lastShot?.tick ?? 0;
+    sim.tick(command({ fire: true }), DT); // bricht Ladestreifen ab, kein Schuss
+    expect(sim.getState().lastShot?.tick ?? 0).toBe(shotBefore);
+    expect(sim.getState().player.weapon.reloading).toBe(false);
+  });
+});
+
+describe("first-person controller — enemies", () => {
+  const clickAndWait = (sim: ReturnType<typeof createSim>) => {
+    sim.tick(command({ fire: true }), DT);
+    for (let i = 0; i < 90; i += 1) sim.tick(command(), DT);
+  };
+
+  it("Gegner marschiert an und fügt in Reichweite Schaden zu", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: 0, y: 0, z: 3 } }],
+    });
+    expect(sim.getState().enemies.length).toBe(1);
+
+    for (let i = 0; i < 400; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.player.hp).toBeLessThan(s.player.maxHp);
+    expect(s.enemies[0]?.zustand).toBe("angriff");
+  });
+
+  it("Raycast-Feuer tötet den Gegner, er verschwindet, Nachschub steigt", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: 0, y: 0, z: 4 } }],
+    });
+    expect(sim.getState().nachschub).toBe(0);
+
+    // langgewehr basisSchaden 85 -> 2 Treffer töten (hp 100)
+    for (let k = 0; k < 4; k += 1) {
+      clickAndWait(sim);
+      if (sim.getState().enemies.length === 0) break;
+    }
+
+    // Leiche kurz liegen lassen
+    for (let i = 0; i < 200; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.enemies.length).toBe(0);
+    expect(s.nachschub).toBeGreaterThan(0);
+  });
+
+  it("mehrere Gegner werden verwaltet (kein Hardcode auf 1)", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [
+        { defId: "linieninfanterie", pos: { x: -3, y: 0, z: 8 } },
+        { defId: "linieninfanterie", pos: { x: 3, y: 0, z: 8 } },
+      ],
+    });
+    expect(sim.getState().enemies.length).toBe(2);
+    sim.spawnEnemy("linieninfanterie", { x: 0, y: 0, z: 10 });
+    expect(sim.getState().enemies.length).toBe(3);
+    sim.spawnEnemy("gibtsnicht", { x: 0, y: 0, z: 1 });
+    expect(sim.getState().enemies.length).toBe(3); // unbekannt -> No-op
+  });
+
+  it("Gegner-State ist eingefroren", () => {
+    const sim = createSim(1, testWorld, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: 0, y: 0, z: 6 } }],
+    });
+    sim.tick(command(), DT);
+    const e = sim.getState().enemies[0];
+    expect(() => {
+      (e as { hp: number }).hp = 1;
+    }).toThrow();
+  });
+});
+
+describe("first-person controller — wave director", () => {
+  const waveWorld: LevelData = {
+    ...testWorld,
+    enemySpawnPoints: [{ x: 0, y: 1, z: 20 }],
+  };
+
+  it("ohne waves: kein Director, keine Gegner", () => {
+    const sim = createSim(1, waveWorld);
+    for (let i = 0; i < 600; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.enemies.length).toBe(0);
+    expect(s.wave.phase).toBe("aufbau");
+    expect(s.wave.welle).toBe(0);
+  });
+
+  it("mit waves: nach der Aufbauphase spawnt Welle 1", () => {
+    const sim = createSim(1, waveWorld, { waves: true });
+    expect(sim.getState().wave.phase).toBe("aufbau");
+
+    // Aufbau 3 s
+    for (let i = 0; i < 200; i += 1) sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.wave.phase).toBe("welle");
+    expect(s.wave.welle).toBe(1);
+    expect(s.enemies.length).toBeGreaterThan(0);
+    expect(s.wave.angriffskraftRest).toBeLessThan(60);
+  });
+
+  it("deterministisch: gleicher Seed -> gleicher Wellenverlauf", () => {
+    const run = () => {
+      const sim = createSim(7, waveWorld, { waves: true });
+      for (let i = 0; i < 500; i += 1) sim.tick(command(), DT);
+      const s = sim.getState();
+      return {
+        phase: s.wave.phase,
+        welle: s.wave.welle,
+        ak: s.wave.angriffskraftRest,
+        gegner: s.enemies.map((e) => [e.id, e.pos.x, e.pos.z]),
+      };
+    };
+    expect(run()).toEqual(run());
+  });
+});
+
+// Golden-/Replay-Test (AUFGABEN.md-Konvention): Seed + fixe Kommandosequenz ->
+// identischer End-State. Fängt sowohl Nichtdeterminismus als auch stille
+// Verhaltensänderungen (Golden-Anker) ab.
+describe("golden replay", () => {
+  const world: LevelData = {
+    ...testWorld,
+    enemySpawnPoints: [{ x: 0, y: 1, z: 18 }],
+  };
+
+  function script(): InputCommand[] {
+    const out: InputCommand[] = [];
+    for (let i = 0; i < 360; i += 1) {
+      out.push(
+        command({
+          move: { x: i % 4 === 0 ? -1 : 0, y: i % 3 === 0 ? 1 : 0 },
+          look: { dx: i % 15 === 0 ? 30 : 0, dy: i % 25 === 0 ? -12 : 0 },
+          fire: i % 7 === 0,
+          reload: i % 90 === 45,
+          jump: i % 120 === 30,
+        }),
+      );
+    }
+    return out;
+  }
+
+  function replay() {
+    const sim = createSim(20260903, world, { waves: true });
+    for (const cmd of script()) sim.tick(cmd, DT);
+    return sim.getState();
+  }
+
+  it("liefert bei zwei Läufen exakt denselben State", () => {
+    expect(replay()).toEqual(replay());
+  });
+
+  it("trifft den Golden-Anker (bricht bei Verhaltensänderung)", () => {
+    const s = replay();
+    expect(s.tick).toBe(360);
+    expect(s.player.pos.x).toBeCloseTo(1.7787, 3);
+    expect(s.player.pos.z).toBeCloseTo(4.149, 3);
+    expect(s.player.yaw).toBeCloseTo(1.584, 3);
+    expect(s.player.pitch).toBeCloseTo(0.396, 3);
+    expect(s.player.hp).toBe(100);
+    expect(s.player.weapon.imLauf).toBe(0);
+    expect(s.player.weapon.reserve).toBe(45);
+    expect(s.wave.phase).toBe("welle");
+    expect(s.wave.welle).toBe(1);
+    expect(s.wave.angriffskraftRest).toBe(57);
+    expect(s.enemies.length).toBe(3);
+    expect(s.nachschub).toBe(0);
   });
 });

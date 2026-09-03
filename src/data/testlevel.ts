@@ -54,4 +54,12 @@ export const testLevel: LevelData = {
     { x: 0, y: 1, z: 10 },
     { x: 3, y: 1, z: 9 },
   ],
+  // Gegner spawnen in der Parapet-Lücke (x -2..2), von wo der gerade Weg zum
+  // Spieler frei ist (es gibt in AP2 noch kein Pathing).
+  enemySpawnPoints: [
+    { x: 0, y: 1, z: 15.5 },
+    { x: -1.5, y: 1, z: 16.5 },
+    { x: 1.5, y: 1, z: 16.5 },
+    { x: 0, y: 1, z: 18 },
+  ],
 };
