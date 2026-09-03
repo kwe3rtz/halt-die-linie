@@ -1,15 +1,23 @@
 # tickets/
 
-Eine Datei pro Ticket ab Arbeitspaket 2. Gemeinsame Regeln, Konventionen und die
-Ticket-Übersicht stehen in [`../AUFGABEN.md`](../AUFGABEN.md) — **zuerst lesen**.
+Eine Datei pro Ticket ab Arbeitspaket 2. Gemeinsame Regeln und Konventionen:
+[`../AUFGABEN.md`](../AUFGABEN.md). Ablauf: [`../WORKFLOW.md`](../WORKFLOW.md).
 
-Jede Datei hat eine `Status:`-Zeile (`offen` / `in arbeit` / `review` /
-`erledigt`), die beim Abschluss im selben Commit aktualisiert wird.
+- **`tickets/AP*.md`** — offene Ticket-Specs. `Status:`-Zeile im Kopf
+  (`offen` / `in arbeit` / `review`).
+- **`tickets/erledigt/AP*.md`** — abgeschlossene Tickets. Enthält die Spec-
+  Kurzfassung + den Worker-Bericht + den Review-Block. Das ist der Audit-Trail:
+  „was wurde in diesem Ticket gemacht und wie wurde es abgenommen".
+
+Wenn ein Ticket grünes Licht bekommt, verschiebt der Planer es per `git mv`
+hierher und ergänzt Bericht + Review.
 
 ## Arbeitspaket 2 — Erster Kampf-Loop
 
-1. `AP2-01-waffen-feuerlogik.md`
-2. `AP2-02-spieler-hp.md`
-3. `AP2-03-gegner-linieninfanterie.md`
-4. `AP2-04-wave-director.md`
-5. `AP2-05-nachschub-hud.md`
+| Ticket | Status |
+|---|---|
+| AP2-01 Waffen-Feuerlogik & Munition | ✅ `erledigt/` |
+| AP2-02 Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` |
+| AP2-03 Erster Gegner: Linieninfanterie | ✅ `erledigt/` |
+| AP2-04 Wave-Director | offen |
+| AP2-05 Nachschub-Zähler & minimales HUD | offen |

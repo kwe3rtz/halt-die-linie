@@ -564,20 +564,22 @@ Platzhalter — Balancing kommt später.
 
 Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket-1`).
 
-**Ticket-Dateien liegen in [`tickets/`](tickets/).** Jede Datei hat eine
-`Status:`-Zeile — die KI aktualisiert sie beim Abschluss (im selben Commit).
+**Ticket-Dateien liegen in [`tickets/`](tickets/), erledigte in
+`tickets/erledigt/`.** Ablauf: siehe [`WORKFLOW.md`](WORKFLOW.md).
 
-| Nr | Ticket | Datei | Status |
-|---|---|---|---|
-| AP2-01 | Waffen-Feuerlogik & Munition | `tickets/AP2-01-waffen-feuerlogik.md` | erledigt |
-| AP2-02 | Spieler-HP, Schaden, Tod/Respawn | `tickets/AP2-02-spieler-hp.md` | erledigt |
-| AP2-03 | Erster Gegner: Linieninfanterie | `tickets/AP2-03-gegner-linieninfanterie.md` | erledigt |
-| AP2-04 | Wave-Director | `tickets/AP2-04-wave-director.md` | offen |
-| AP2-05 | Nachschub-Zähler & minimales HUD | `tickets/AP2-05-nachschub-hud.md` | offen |
+| Nr | Ticket | Status |
+|---|---|---|
+| AP2-01 | Waffen-Feuerlogik & Munition | ✅ `erledigt/` (`35fe077`) |
+| AP2-02 | Spieler-HP, Schaden, Tod/Respawn | ✅ `erledigt/` (`c3cd6ab`) |
+| AP2-03 | Erster Gegner: Linieninfanterie | ✅ `erledigt/` (`30c70eb`) |
+| AP2-04 | Wave-Director | offen |
+| AP2-05 | Nachschub-Zähler & minimales HUD | offen |
 
 **Reihenfolge einhalten.** Commit-Message beginnt mit der Ticketnummer
-(`AP2-01 …`). Ein Commit pro Ticket, danach pushen (CI muss grün bleiben),
-STOPP und Bericht.
+(`AP2-04 …`). Ein Commit pro Ticket, `Status:`-Zeile der Ticket-Datei
+aktualisieren, den **Bericht** (Vorlage in `WORKFLOW.md`) unten an die
+Ticket-Datei hängen — alles im selben Commit. Dann pushen (CI grün), STOPP und
+Meldung an den Planer.
 
 **Ausdrücklich NICHT in Arbeitspaket 2:** mehrere Waffen/Gegnertypen ·
 Gegner-Fernkampf (Linieninfanterie ist in AP2 Nahkampf-only) · KI-Trupps ·

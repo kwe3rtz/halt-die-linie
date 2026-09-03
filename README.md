@@ -13,9 +13,10 @@ Frontlinie, Verbindungsgraben, Home-Line —, fechtender Rückzug nach hinten.
 
 ## Status
 
-**Arbeitspaket 1 — Fundament & Kern-Infrastruktur.** Der Konzeptkern ist in
-**[`KONZEPT.md`](KONZEPT.md)** festgehalten, Tech-Stack & Architektur in
-**[`TECHNIK.md`](TECHNIK.md)**, das Aufgabenboard in
+Aktueller Stand, offene Fäden und Entscheidungs-Log: **[`STATUS.md`](STATUS.md)**.
+
+Der Konzeptkern ist in **[`KONZEPT.md`](KONZEPT.md)** festgehalten, Tech-Stack &
+Architektur in **[`TECHNIK.md`](TECHNIK.md)**, das Aufgabenboard in
 **[`AUFGABEN.md`](AUFGABEN.md)**.
 
 Das frühere Tower-Defense-Skelett liegt archiviert unter
@@ -25,10 +26,14 @@ Das frühere Tower-Defense-Skelett liegt archiviert unter
 
 | Pfad           | Inhalt                                                                                |
 | -------------- | ------------------------------------------------------------------------------------- |
+| `STATUS.md`    | Stand, offene Fäden, Entscheidungs-Log · **hier anfangen**                            |
+| `CHANGELOG.md` | Kuratiert, ein Eintrag pro Ticket                                                     |
+| `WORKFLOW.md`  | Arbeitsweise: Ticket-Loop, Rollen, Bericht-Vorlage, Dokumenten-Karte                  |
 | `KONZEPT.md`   | Maßgebliches Konzeptdokument — was das Spiel ist, was beschlossen/offen/verworfen ist |
 | `TECHNIK.md`   | Tech-Stack, Architektur-Prinzipien                                                    |
 | `WAFFEN.md`    | Waffenmodell, v1-Arsenal, WW1-Rohrecherche                                            |
-| `AUFGABEN.md`  | Aufgabenboard für die VS Code KI — Arbeitspakete, Tickets, Konventionen               |
+| `AUFGABEN.md`  | Regeln, Konventionen, Arbeitspaket-Übersicht                                          |
+| `tickets/`     | Ticket-Specs (offen) · `tickets/erledigt/` = Audit-Trail                              |
 | `BACKLOG.md`   | Bewusst zurückgestellte Ideen für später                                              |
 | `prototyp-td/` | Archivierter TD-Prototyp, nur noch Referenz                                           |
 
