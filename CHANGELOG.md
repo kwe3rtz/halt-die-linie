@@ -6,6 +6,10 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · in Arbeit
 
+- **AP3-03** · `4999c6e` · **Viewmodel steckt nicht mehr in Wänden.**
+  Depth-getrennter Render-Pass (`src/render/index.ts`): drei Rendering-Gruppen
+  (Welt / Viewmodel+Mündungsblitz / Screen-FX), Tiefenpuffer vor Gruppe 1 & 2
+  geleert. Reiner Renderer-Job. 98 Tests.
 - **AP3-02** · `366ebe9` · **Mündungsblitz & Tracer korrigiert.**
   Ursache war Near-Plane-Clipping (Tracer-Start auf der Kameraposition).
   `ShotEvent.richtung` (normierte Hitscan-Richtung) dazu; Tracer startet 0,6 m

@@ -1,6 +1,6 @@
 # AP3-03 — Viewmodel steckt nicht mehr in Wänden
 
-**Status:** review
+**Status:** erledigt · `4999c6e` · reviewed 2026-09-03
 **Arbeitspaket:** 3 · **Branch:** `arbeitspaket-3`
 **Feedback-Bezug:** Spieltest — „wenn ich mit der Waffe in eine Wand gucke,
 verschwindet die Waffe in der Wand".
@@ -40,8 +40,8 @@ Ansatz A umsetzen, außer es spricht etwas dagegen (dann `// TODO(Rückfrage)`).
 
 ## Bericht — AP3-03
 
-COMMIT: <wird beim Merge/Archiv ergänzt> (Branch `arbeitspaket-3`)
-CI: grün / grün (Hash in der Nachricht an die Planer-Session)
+COMMIT: `4999c6e` (Branch `arbeitspaket-3`)
+CI: CI = success, Pages Preview = success — beide auf `4999c6e`.
 TODO(Rückfrage): keine neuen.
 
 Checks: typecheck / lint / format:check / test:coverage / build — alle grün.
@@ -99,3 +99,20 @@ den Parapet gefahren (Position 11.55 / 14.15, Blick frontal in die Wand):
 - Gegner-HP-Balken (Billboard, Gruppe 0) und Welt-Tiefensortierung unverändert
   korrekt; HUD/Fadenkreuz/Wellen-Leiste unberührt. 0 Konsolen-Errors/Exceptions
   über alle Testläufe.
+
+---
+
+## Review — AP3-03 · 2026-09-03
+
+Verdikt: **grünes Licht**.
+Geprüft: alle Checks grün (98 Tests, Renderer-only), CI grün auf `4999c6e`.
+Render-Diff gelesen — Ansatz A sauber umgesetzt: drei Rendering-Gruppen (0 Welt/
+Gegner/HP-Balken/Tracer · 1 Viewmodel+Mündungsblitz · 2 Screen-FX),
+`setRenderingAutoClearDepthStencil` vor Gruppe 1 und 2. Standard-FPS-Lösung,
+kein zweites Kamera-Objekt, keine Sim-Berührung. Tracer bewusst in Gruppe 0
+(soll verdeckt werden), Mündungsblitz mit ins Viewmodel (sonst Clip in der
+beschossenen Wand — Folge aus AP3-02).
+Anmerkungen: Die 3 Abweichungen sind alle vertretbar und gut begründet.
+Vorher/Nachher-Screenshots vom Worker an den Nutzer.
+Folge-Ticket: AP3-04 (HP-Balken — HP-Balken liegen jetzt explizit in Gruppe 0,
+das stört den AP3-04-Fix nicht).
