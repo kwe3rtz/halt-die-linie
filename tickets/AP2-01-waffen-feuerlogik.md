@@ -1,6 +1,6 @@
 # AP2-01 — Waffen-Feuerlogik & Munition
 
-**Status:** offen
+**Status:** erledigt
 **Arbeitspaket:** 2 · **Branch:** `arbeitspaket-2`
 **Abhängigkeiten:** AP1 komplett (`src/sim`, `src/data/schema.ts`, `src/render`)
 **Vorbedingung:** `AUFGABEN.md` (Arbeitsweise + Konventionen) gelesen. Goldene

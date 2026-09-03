@@ -569,7 +569,7 @@ Branch: `arbeitspaket-2` (von `main` nach dem AP1-Merge, sonst von `arbeitspaket
 
 | Nr | Ticket | Datei | Status |
 |---|---|---|---|
-| AP2-01 | Waffen-Feuerlogik & Munition | `tickets/AP2-01-waffen-feuerlogik.md` | offen |
+| AP2-01 | Waffen-Feuerlogik & Munition | `tickets/AP2-01-waffen-feuerlogik.md` | erledigt |
 | AP2-02 | Spieler-HP, Schaden, Tod/Respawn | `tickets/AP2-02-spieler-hp.md` | offen |
 | AP2-03 | Erster Gegner: Linieninfanterie | `tickets/AP2-03-gegner-linieninfanterie.md` | offen |
 | AP2-04 | Wave-Director | `tickets/AP2-04-wave-director.md` | offen |

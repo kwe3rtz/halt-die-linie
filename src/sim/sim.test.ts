@@ -10,6 +10,8 @@ interface CommandParts {
   look?: { dx: number; dy: number };
   sprint?: boolean;
   jump?: boolean;
+  fire?: boolean;
+  reload?: boolean;
 }
 
 function command(parts: CommandParts = {}): InputCommand {
@@ -17,21 +19,22 @@ function command(parts: CommandParts = {}): InputCommand {
     move: parts.move ?? { x: 0, y: 0 },
     look: parts.look ?? { dx: 0, dy: 0 },
     buttons: {
-      fire: false,
+      fire: parts.fire ?? false,
       aim: false,
       sprint: parts.sprint ?? false,
       interact: false,
       ability: false,
       jump: parts.jump ?? false,
+      reload: parts.reload ?? false,
     },
   };
 }
 
-// Kleiner Testgraben: Boden (Oberkante y = 0), eine Wand bei z = 4.5..5.5.
+// Kleiner Testgraben: Boden (Oberkante y = 0), eine hohe Wand bei z = 4.5..5.5.
 const testWorld: LevelData = {
   boxes: [
     { center: { x: 0, y: -0.5, z: 0 }, size: { x: 40, y: 1, z: 40 } },
-    { center: { x: 0, y: 1, z: 5 }, size: { x: 40, y: 2, z: 1 } },
+    { center: { x: 0, y: 2, z: 5 }, size: { x: 40, y: 4, z: 1 } },
   ],
   spawnPoints: [{ x: 0, y: 1, z: 0 }],
 };
@@ -162,5 +165,60 @@ describe("first-person controller", () => {
       sim.tick(command(), DT);
     }
     expect(sim.getState().player.pos.y).toBeGreaterThan(-40);
+  });
+});
+
+describe("first-person controller — weapon", () => {
+  it("linksklick feuert einen Schuss (Repetierer: nur Flanke) und meldet lastShot", () => {
+    const sim = createSim(1, testWorld);
+    const startAmmo = sim.getState().player.weapon.imLauf;
+
+    // Taste halten: erster Tick = Flanke -> ein Schuss, danach kein weiterer.
+    for (let i = 0; i < 40; i += 1) {
+      sim.tick(command({ fire: true }), DT);
+    }
+    const s = sim.getState();
+    expect(s.player.weapon.imLauf).toBe(startAmmo - 1);
+    expect(s.lastShot).not.toBeNull();
+    expect(s.lastShot?.tick).toBe(1);
+    // die Wand bei z ~ 4.5 wird getroffen
+    expect(s.lastShot?.treffer).toBe(true);
+  });
+
+  it("leert das Magazin über einzelne Klicks und lädt mit R nach", () => {
+    const sim = createSim(1, testWorld);
+    const def = sim.getState().player.weapon;
+    // 5 Klicks (Loslassen dazwischen für die Flanke), Cooldown auslaufen lassen.
+    for (let k = 0; k < def.imLauf + 2; k += 1) {
+      sim.tick(command({ fire: true }), DT);
+      for (let i = 0; i < 100; i += 1) {
+        sim.tick(command(), DT);
+      }
+    }
+    expect(sim.getState().player.weapon.imLauf).toBe(0);
+
+    const reserveVor = sim.getState().player.weapon.reserve;
+    for (let i = 0; i < 200; i += 1) {
+      sim.tick(command({ reload: true }), DT);
+    }
+    const w = sim.getState().player.weapon;
+    expect(w.imLauf).toBeGreaterThan(0);
+    expect(w.reserve).toBeLessThan(reserveVor);
+    expect(w.reloading).toBe(false);
+  });
+
+  it("kein Feuern während eines nicht abgeschlossenen Nachladens", () => {
+    const sim = createSim(1, testWorld);
+    for (let i = 0; i < 5; i += 1) {
+      sim.tick(command({ fire: true }), DT);
+      for (let j = 0; j < 100; j += 1) sim.tick(command(), DT);
+    }
+    expect(sim.getState().player.weapon.imLauf).toBe(0);
+
+    sim.tick(command({ reload: true }), DT); // Nachladen startet
+    const shotBefore = sim.getState().lastShot?.tick ?? 0;
+    sim.tick(command({ fire: true }), DT); // bricht Ladestreifen ab, kein Schuss
+    expect(sim.getState().lastShot?.tick ?? 0).toBe(shotBefore);
+    expect(sim.getState().player.weapon.reloading).toBe(false);
   });
 });

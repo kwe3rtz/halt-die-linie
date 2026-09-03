@@ -17,7 +17,8 @@ export type InputAction =
   | "sprint"
   | "interact"
   | "ability"
-  | "jump";
+  | "jump"
+  | "reload";
 
 /** Aktion → `KeyboardEvent.code`. Datengetrieben, zur Laufzeit umbelegbar. */
 export type KeyBindings = Record<InputAction, string>;
@@ -31,6 +32,7 @@ export const defaultBindings: KeyBindings = {
   interact: "KeyE",
   ability: "KeyQ",
   jump: "Space",
+  reload: "KeyR",
 };
 
 /**
@@ -149,6 +151,7 @@ export function createInput(target: HTMLElement): Input {
           interact: pressedKeys.has(bindings.interact),
           ability: pressedKeys.has(bindings.ability),
           jump: pressedKeys.has(bindings.jump),
+          reload: pressedKeys.has(bindings.reload),
         },
       };
       lookDx = 0;

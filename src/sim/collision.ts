@@ -160,3 +160,77 @@ export function moveCapsule(
 
   return { pos: next, vel: v, onGround };
 }
+
+export interface RayHit {
+  /** Weltpunkt des Treffers. */
+  punkt: Vec3;
+  /** Entfernung vom Ursprung entlang der (normalisierten) Richtung. */
+  distanz: number;
+}
+
+/**
+ * Hitscan: nächster Schnittpunkt eines Strahls mit den statischen AABBs.
+ * `richtung` muss normalisiert sein. Liefert `undefined`, wenn innerhalb von
+ * `maxDistanz` nichts getroffen wird. Slab-Verfahren pro Box; Strahlen, die
+ * innerhalb einer Box starten, werden ignoriert (Eintritts-`t` < 0).
+ */
+export function raycast(
+  world: CollisionWorld,
+  origin: Vec3,
+  richtung: Vec3,
+  maxDistanz: number,
+): RayHit | undefined {
+  let nearest = maxDistanz;
+  let hit = false;
+
+  for (const box of world.boxes) {
+    let tNear = 0;
+    let tFar = maxDistanz;
+
+    const axes: Array<[number, number, number, number]> = [
+      [origin.x, richtung.x, box.minX, box.maxX],
+      [origin.y, richtung.y, box.minY, box.maxY],
+      [origin.z, richtung.z, box.minZ, box.maxZ],
+    ];
+
+    let miss = false;
+    for (const [o, d, lo, hi] of axes) {
+      if (Math.abs(d) < 1e-9) {
+        if (o < lo || o > hi) {
+          miss = true;
+          break;
+        }
+        continue;
+      }
+      let t1 = (lo - o) / d;
+      let t2 = (hi - o) / d;
+      if (t1 > t2) {
+        [t1, t2] = [t2, t1];
+      }
+      tNear = Math.max(tNear, t1);
+      tFar = Math.min(tFar, t2);
+      if (tNear > tFar) {
+        miss = true;
+        break;
+      }
+    }
+
+    if (miss || tNear <= 0 || tNear >= nearest) {
+      continue;
+    }
+    nearest = tNear;
+    hit = true;
+  }
+
+  if (!hit) {
+    return undefined;
+  }
+  return {
+    punkt: {
+      x: origin.x + richtung.x * nearest,
+      y: origin.y + richtung.y * nearest,
+      z: origin.z + richtung.z * nearest,
+    },
+    distanz: nearest,
+  };
+}

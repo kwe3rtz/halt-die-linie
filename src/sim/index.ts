@@ -1,4 +1,5 @@
 import type { Vec3 } from "./math";
+import { dirFromYawPitch } from "./math";
 import { createRng } from "./rng";
 import {
   createCollisionWorld,
@@ -6,6 +7,15 @@ import {
   type CollisionWorld,
   type LevelData,
 } from "./collision";
+import { standardWaffe } from "../data/waffen";
+import type { WeaponDef } from "../data/schema";
+import {
+  advanceWeapon,
+  createWeaponState,
+  fire,
+  reload,
+  type WeaponState,
+} from "./weapon";
 
 export type { Vec3 } from "./math";
 export type { LevelBox, LevelData, CollisionWorld, Aabb } from "./collision";
@@ -21,7 +31,25 @@ export interface SimState {
     /** Auf-/Ab-Blick, Radiant. Positiv = nach oben, geklemmt auf ±~89°. */
     pitch: number;
     onGround: boolean;
+    /** Waffenzustand für HUD/Render. */
+    weapon: {
+      defId: string;
+      imLauf: number;
+      reserve: number;
+      reloading: boolean;
+    };
   };
+  /** Letzter abgegebener Schuss (Signal für Tracer/Mündungsblitz). */
+  lastShot: ShotEvent | null;
+}
+
+export interface ShotEvent {
+  tick: number;
+  /** Mündung / Augpunkt. */
+  von: Vec3;
+  /** Trefferpunkt bzw. Punkt in maximaler Reichweite. */
+  nach: Vec3;
+  treffer: boolean;
 }
 
 /**
@@ -40,6 +68,7 @@ export interface InputCommand {
     interact: boolean;
     ability: boolean;
     jump: boolean;
+    reload: boolean;
   };
 }
 
@@ -51,6 +80,7 @@ export interface Sim {
 // First-Person-Controller — Platzhalterwerte, Balancing kommt später.
 const PLAYER_RADIUS = 0.35;
 const PLAYER_HEIGHT = 1.8;
+const PLAYER_EYE = 1.6;
 const WALK_SPEED = 4.5;
 const SPRINT_SPEED = 7.0;
 const JUMP_SPEED = 7.2;
@@ -77,12 +107,26 @@ function pickSpawn(level: LevelData, seed: number): Vec3 {
   return { x: chosen.x, y: chosen.y, z: chosen.z };
 }
 
-export function createSim(seed: number, level: LevelData = EMPTY_LEVEL): Sim {
+export interface SimOptions {
+  /** Startwaffe des Spielers. Default: `standardWaffe` aus `src/data`. */
+  weapon?: WeaponDef;
+}
+
+export function createSim(
+  seed: number,
+  level: LevelData = EMPTY_LEVEL,
+  options: SimOptions = {},
+): Sim {
   const world: CollisionWorld = createCollisionWorld(level);
   const spawn = pickSpawn(level, seed);
+  const weaponDef = options.weapon ?? standardWaffe;
 
   let tickCount = 0;
-  const player: SimState["player"] = {
+  let firePrev = false;
+  let lastShot: Readonly<ShotEvent> | null = null;
+  const weapon: WeaponState = createWeaponState(weaponDef);
+
+  const player = {
     pos: { x: spawn.x, y: spawn.y, z: spawn.z },
     vel: { x: 0, y: 0, z: 0 },
     yaw: 0,
@@ -135,6 +179,41 @@ export function createSim(seed: number, level: LevelData = EMPTY_LEVEL): Sim {
       player.pos = { x: spawn.x, y: spawn.y, z: spawn.z };
       player.vel = { x: 0, y: 0, z: 0 };
     }
+
+    // Waffe: Timer, Nachladen, Feuern.
+    advanceWeapon(weapon, weaponDef, dt);
+    if (cmd.buttons.reload) {
+      reload(weapon, weaponDef);
+    }
+    const flanke = cmd.buttons.fire && !firePrev;
+    firePrev = cmd.buttons.fire;
+
+    const eye: Vec3 = {
+      x: player.pos.x,
+      y: player.pos.y + PLAYER_EYE,
+      z: player.pos.z,
+    };
+    const dir = dirFromYawPitch(player.yaw, player.pitch);
+    const shot = fire(weapon, world, eye, dir, weaponDef, {
+      gedrueckt: cmd.buttons.fire,
+      flanke,
+    });
+    if (shot.schuss) {
+      const reichweite = weaponDef.handling.reichweiteMax;
+      const nach: Vec3 = shot.treffer
+        ? shot.treffer.punkt
+        : {
+            x: eye.x + dir.x * reichweite,
+            y: eye.y + dir.y * reichweite,
+            z: eye.z + dir.z * reichweite,
+          };
+      lastShot = Object.freeze({
+        tick: tickCount,
+        von: Object.freeze({ ...eye }),
+        nach: Object.freeze(nach),
+        treffer: shot.treffer !== undefined,
+      });
+    }
   };
 
   const snapshot = (): Readonly<SimState> =>
@@ -146,7 +225,14 @@ export function createSim(seed: number, level: LevelData = EMPTY_LEVEL): Sim {
         yaw: player.yaw,
         pitch: player.pitch,
         onGround: player.onGround,
+        weapon: Object.freeze({
+          defId: weapon.defId,
+          imLauf: weapon.imLauf,
+          reserve: weapon.reserve,
+          reloading: weapon.reloading,
+        }),
       }),
+      lastShot,
     });
 
   return {
