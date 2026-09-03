@@ -617,7 +617,7 @@ Branch: `arbeitspaket-4` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien in
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP4-01 | Sektor-Geometrie (das „H") als Daten + Renderer | offen |
+| AP4-01 | Sektor-Geometrie (das „H") als Daten + Renderer | ✅ `erledigt/` (`a0badbf`) |
 | AP4-02 | Feind-Navigation: semantischer Graph | offen |
 | AP4-03 | Frontabschnitte: Besitz, Bresche, Fall | offen |
 | AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | offen |

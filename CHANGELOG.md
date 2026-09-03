@@ -4,6 +4,20 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · in Arbeit
+
+- **AP4-01** · `a0badbf` · **Sektor-Geometrie (das „H") als Daten + Renderer.**
+  `src/data/module.ts` (Rasterbaukasten `RASTER = 4`, `modul(typ, at, drehung,
+  opt)` → `LevelBox[]`: grabengerade/-knick, parapet mit zweistufigem Feuertritt
+  ohne Sprung, unterstand, rampe, kartengrenze; vertikale Greybox-Kennwerte).
+  `src/data/sektor.ts` (`sektorGreybox: SektorData` — das H aus KONZEPT §3, 74
+  Quader: Kartengrenze, Frontlinie A/B/C, Labyrinth-Stub + Landmark, offenes
+  Feld, gerader Verbindungsgraben, Home-Line mit 3 Unterständen). `src/sim/
+  sektor.ts` (`SektorData extends LevelData` + `SektorMeta`; reine Helfer
+  `zoneAt`/`abschnittAt`, kein Babylon). Renderer färbt je Zone + Landmark-Akzent.
+  `main.ts` fährt den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
+  116 Tests (+16), Coverage src/sim 98,58 %.
+
 ## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · komplett
 
 - **AP3-05** · `d21cc08` · **Gegner stapeln sich nicht mehr ineinander.**

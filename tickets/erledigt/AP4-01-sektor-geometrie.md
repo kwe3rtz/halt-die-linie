@@ -1,6 +1,6 @@
 # AP4-01 — Sektor-Geometrie (das „H") als Daten + Renderer
 
-**Status:** review
+**Status:** erledigt · `a0badbf` · reviewed 2026-09-03
 **Arbeitspaket:** 4 · **Branch:** `arbeitspaket-4`
 **Referenz:** `KONZEPT.md` §3 (Grundriss, Zonen, Maßstab kompakt halten),
 `TECHNIK.md` (eine Datenquelle für Render + Sim), `src/data/testlevel.ts` (Vorbild).
@@ -226,3 +226,52 @@ Tests: 116 (15 Dateien, +16) · Coverage src/sim: **98,58 %** · Bundle ~6,87 MB
   an achsenparallelen Wänden hängen). Die Substanz deckt `sektor.test.ts` ab
   (Landen auf der Sohle an jedem Spawn, 900-Tick-Marsch ohne Weltverlust,
   Gegner-Anmarsch). **Bitte beim nächsten Spieltest einmal quer durchlaufen.**
+
+---
+
+## Review — AP4-01 · 2026-09-03
+
+Verdikt: **grünes Licht**.
+
+Geprüft: lokal typecheck / lint / format:check / test:coverage / build alle grün
+(116 Tests, +16; Coverage src/sim 98,58 %, `src/sim/sektor.ts` 100 %). CI +
+Pages-Preview grün auf `a0badbf`. Golden-/Replay-Test unverändert grün (nutzt
+Inline-Testlevel). Gelesen: `src/data/module.ts` (Rasterbaukasten, reine
+Funktionen, nur `Vec3`/`LevelBox`-Typen aus `src/sim`), `src/data/sektor.ts`
+(das H, 74 Quader + Meta), `src/sim/sektor.ts` (Typen + `zoneAt`/`abschnittAt`,
+kein Babylon/Zufall/Zeit — goldene Regel gehalten), `src/render/index.ts`
+(Zonen-Material via `zoneAt`, sauber disposed; `zoneAt` aus `src/sim`
+re-exportiert = richtige Import-Richtung), `src/main.ts` (`sektorGreybox` in Sim
++ Renderer).
+
+Anmerkungen (nicht blockierend):
+
+1. **`feindAnmarsch` = 2 Punkte** (Ticket nannte 3–5). Deckt sich mit dem
+   Nutzer-Map-Plan (2 schräge Ecken) — der Kandidaten-Pool + Director-Auswahl
+   kommt in AP4-02. Ok.
+2. **Landmark-Hulk bekommt `grenzeMat`** (dunkel), weil `center.y + size.y/2 > 2`.
+   Der leuchtende Pfosten darüber kompensiert. Kosmetik → AP4-05.
+3. **`spawnPoints`/`enemySpawnPoints` `toBe`-identisch mit den Meta-Arrays** —
+   bewusst, Test hält es fest. Wenn AP4-02 den Anmarsch dynamisch macht, hier
+   entkoppeln.
+4. `grabenknick` gebaut + getestet, im Greybox ungenutzt — bewusst für
+   AP4-02/04 (Connector-Knicke) + Generator. Ok.
+
+Zu den 4 `TODO(Rückfrage)` — Planer-Entscheidung:
+
+1. **Feuertritt-Marge ~0,1 m** — so lassen, beim Spieltest gegenchecken. Der
+   Worker hat headless bestätigt, dass man übers Parapet sieht. Wenn es sich eng
+   anfühlt: `PARAPET_OBERKANTE` leicht senken (Datenänderung, kein Struktur-
+   eingriff).
+2. **Verbindungsgraben gerade** — ok für AP4-01. Knicke + Nischen +
+   Sprengbarriere gehören zu **AP4-04** (Rückzugs-Mechanik); `grabenknick` steht
+   bereit.
+3. **Feld-Tiefe ~31 m** — ok, Greybox-Startwert, passt zu „kompakt halten".
+4. **Feindzone nicht gesperrt** — ok, Zutritts-Sperre ist Gameplay (**AP4-02**).
+
+Nebenbefund (Planer-Seite): `README.md` war seit den Sparring-Commits kaputt
+formatiert und ließ `format:check`/CI auf `main` rot laufen (`f8dfe54`). Der
+Worker hat `prettier --write README.md` mitgenommen — richtig so; ich ziehe die
+Formatierung zusätzlich direkt auf `main` nach.
+
+Folge-Ticket: **AP4-02** (Feind-Navigation: semantischer Graph).

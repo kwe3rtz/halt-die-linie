@@ -15,9 +15,9 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   Generator später.
 - **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). Spielbar: FP-Shooter auf
   dem Boxen-Testgraben, Wellen aus Nahkampf-Infanterie.
-- **Als Nächstes:** **AP4 „Verteidigung in der Tiefe"** — spezifiziert
-  (`tickets/AP4-01…05`), Branch `arbeitspaket-4` steht. Worker kann AP4-01
-  starten.
+- **Als Nächstes:** **AP4 „Verteidigung in der Tiefe"** läuft auf
+  `arbeitspaket-4`. **AP4-01** (Sektor-Geometrie, das „H") ✅ reviewed +
+  archiviert (`a0badbf`). Worker baut **AP4-02** (Feind-Navigation).
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -39,8 +39,11 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP4 „Verteidigung in der Tiefe"** bauen — Worker im Ticket-Loop, AP4-01 →
-   AP4-05 der Reihe nach. Branch `arbeitspaket-4`. Kickoff-Prompt: `WORKFLOW.md`.
+1. **AP4 „Verteidigung in der Tiefe"** bauen — Worker (`ki-game-99`) im
+   Ticket-Loop. AP4-01 ✅ (`a0badbf`). Jetzt AP4-02 → AP4-05 der Reihe nach.
+   Branch `arbeitspaket-4`. Beim nächsten Spieltest: einmal quer durch alle 6
+   Zonen des H laufen (headless ging nicht), Feuertritt-Marge (~0,1 m über
+   Parapet) gegenchecken.
 2. Nach AP4: Spieltest des Kern-Bogens (Front halten → verlieren → zurückfallen →
    Home-Line). Trägt der Moment, geht es weiter.
 3. Danach: „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
