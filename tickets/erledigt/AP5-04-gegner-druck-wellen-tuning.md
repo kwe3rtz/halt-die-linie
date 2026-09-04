@@ -1,6 +1,6 @@
 # AP5-04 — Gegner-Druck & Wellen-Eskalation
 
-**Status:** review
+**Status:** erledigt · `525716a` · reviewed 2026-09-04
 **Arbeitspaket:** 5 (Boxhead-Kern) · **Branch:** `arbeitspaket-5` (von `main`)
 **Referenz:** Zweiter Spieltest 2026-09-04 (Nutzer-Feedback), `src/sim/wave.ts`
 (Wave-Director), `src/sim/enemies.ts` (Bewegungs-/Zielverhalten,
@@ -324,4 +324,86 @@ Gegner gleichzeitig kommen als je zuvor (vorher maximal 8–9).
 - `festVersuche` wird nie zurückgesetzt: ein Gegner, dem der Watchdog früher
   zweimal half, despawnt beim dritten Hänger Minuten später sofort. Ein
   Abklingen wäre sinnvoll (Politur).
+
+## Review — AP5-04 · 2026-09-04
+
+**Grünes Licht — letztes AP5-Ticket, damit ist Arbeitspaket 5 komplett.**
+
+Lokal nachvollzogen: `git pull` auf `arbeitspaket-5`, `typecheck`/`lint`/
+`format:check` grün, `test:coverage` 284/284 grün (Coverage src/sim
+98,58 %), `build` grün. CI + Pages Preview auf GitHub beide `success`
+(`33875188411`/`33875188532`).
+
+Das ist die mit Abstand größte AP5-Änderung und trotzdem sauber begründet:
+die **Ausgangsmessung vor dem Tuning** (headless Simulator mit
+idealisiertem Schützen) liefert genau die Erklärung fürs Spieltest-Feedback
+— Budget 60 bei Uhr-Preis 3/Kill ist arithmetisch nach ~20 Gegnern leer,
+„Eskalation" war mit den alten Zahlen gar nicht erreichbar. Das ist der
+Unterschied zwischen Tuning nach Bauchgefühl und Tuning mit Diagnose — genau
+richtig für ein Ticket, dessen Akzeptanzkriterium „spürbar mehr Gegner
+gleichzeitig" ist.
+
+**Wave-Director-Diff** (`wave.ts`) gelesen: Budget 150, Wellenkurve 5+3,
+gestaffelter Spawn-Takt mit Jitter, kürzere Pause, größere Reservewellen —
+alle als benannte, exportierte Konstanten/Helfer (`wellenGroesse`,
+`spawnIntervall`), gute Testbarkeit, `einsatz.ts`/`front.ts` unangetastet
+wie im Ticket verlangt.
+
+**Die drei Verhaltenskorrekturen (c)** habe ich mir besonders genau
+angeschaut, weil sie über reines Zahlen-Tuning hinausgehen. Bewertung:
+gerechtfertigt, gleiche Kategorie wie die AP4-06-Audit-Fixes — echte Bugs im
+Bestand, die bei niedriger Dichte selten genug waren, um nicht aufzufallen,
+und die ein Wave-Tuning ohne sie sinnlos gemacht hätten (Gegner kleben an
+Wänden statt Druck zu erzeugen). Jeder der drei Fixes ist eine Reparatur
+einer bestehenden Regel, keine neue Verhaltensweise — die Engstellen-Ebene
+war immer als „senkrecht zum Anmarsch" gedacht (AP4-06), sie war nur falsch
+berechnet für abknickende Pfade; die Kniehöhe-Vereinheitlichung nutzt exakt
+die Konstante, die der Watchdog schon hatte; „am Ziel weiter navigieren" ist
+das, was der Watchdog ohnehin nach 4 s tat, nur ohne den Wandkontakt davor.
+Die Gegenprobe-Methodik (Worktree gegen alten Code, zusätzlich gegen neuen
+Code mit nur der alten Engstellen-Ebene, um die drei Fixes einzeln
+zuzuordnen) ist genau die Sorgfalt, die ich hier sehen will.
+
+**Golden-Anker:** alle drei bewusst neu baseliniert, mit Kommentar direkt am
+`expect()` (nicht nur im Ticket-Bericht) — das ist wichtig, damit die
+Begründung bei der nächsten Änderung noch am richtigen Ort steht. Diff in
+`sim.test.ts` geprüft: die Zahlen passen zur Ursache (Budget 60→150 erklärt
+57→148/58→148/59→149 exakt; Welle 1 hat jetzt 5 statt 4 Gegner, deshalb
+56→145 mit einem Gegner mehr; die neuen Positionen sind durch Tempo-/Spur-
+Streuung erklärt, Abschnitts-Zuweisung der ersten vier Gegner bewusst
+unverändert, weil ein eigener Rng-Strom für die Streuung verwendet wird,
+nicht `waveRng`/`abschnittRng`). Kein Fall, in dem eine Zahl „einfach
+nachgezogen" wurde, ohne dass die Änderung sie erklärt.
+
+**Nav-Datenkorrektur** (`home-feld-links/-rechts` an den Rampenfuß, als
+Engstelle markiert) ist die dritte in Folge, die ein Ticket in diesem
+Bereich nebenbei findet (nach den 3 aus AP4-06 und den Bresche-Positionen
+aus AP5-02/03) — der Begehbarkeitstest aus AP4-06 zahlt sich hier wieder
+aus, indem er die verschobenen Kanten mitprüft.
+
+Testabdeckung: `wave-eskalation.test.ts` mit dem kompletten Einsatz als
+Regressionstest (Wellenzahlen exakt, Peak, 0 Despawns, Zeitbudget) ist
+genau die richtige Flughöhe für ein Tuning-Ticket — sie hätte eine künftige
+Zahlenänderung, die wieder „zu wenig Druck" produziert, gefangen. Die
+`enemies.test.ts`-Erweiterungen decken jeden der drei Verhaltensfixes
+einzeln mit einer fallenden Gegenprobe ab.
+
+**Visueller Nachweis:** Playwright-Lauf mit demselben idealisierten Schützen
+im echten Renderer, F3-Zeile „gegner N lebend" jetzt als Messinstrument,
+Screenshot 02 stichprobenartig angeschaut — 13 Gegner im Frontgraben A/B,
+HUD „Welle 4 · Angriff", Spieler bei 90/100 HP, deckt sich exakt mit der
+Tabelle im Bericht. 0 Konsolenfehler, fps stabil auch bei Peak-Last.
+
+**Für den dritten Spieltest wichtig:** die vier Merkposten (Solo-Balance ab
+Welle 4, Totzeit je Welle, Finale-Pacing, `festVersuche` ohne Abklingen)
+sind der richtige Fahrplan für die Nachjustierung — bewusst nicht in diesem
+Ticket gelöst, weil es entweder Zahlen sind, die erst der Spieltest
+beantwortet, oder Regeländerungen, die eigene Ticket-Entscheidungen
+brauchen. Besonders der Respawn-Punkt-Hinweis (Todesspirale am
+Front-Spawn) ist ein guter Kandidat für die erste Politur-Runde nach dem
+Spieltest.
+
+**Damit ist Arbeitspaket 5 „Boxhead-Kern" komplett** (AP5-01…04, alle
+reviewed). Nächster Schritt ist der dritte Spieltest mit dem Nutzer — kein
+weiteres Ticket automatisch angeschlossen.
 

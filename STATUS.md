@@ -23,9 +23,10 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   **Boxhead**. Neues **Arbeitspaket 5 „Boxhead-Kern"** spezifiziert (4
   Tickets, `tickets/AP5-*`), AP4-System bleibt bestehen, wird aber vorerst
   nicht weiter ausgebaut.
-- **Als Nächstes:** AP5-01/02/03 fertig reviewed. **AP5-04** (letztes AP5-
-  Ticket, Gegner-Druck & Wellen-Eskalation) ist spezifiziert und bereit —
-  danach dritter Spieltest, kein weiteres Ticket automatisch angeschlossen.
+- **Code:** **Arbeitspaket 5 „Boxhead-Kern" ist vollständig komplett**
+  (AP5-01…04, alle reviewed, 284 Tests, Coverage src/sim 98,58 %) — noch auf
+  Branch `arbeitspaket-5`, noch nicht nach `main` gemergt.
+- **Als Nächstes:** dritter Spieltest mit dem Nutzer — trägt der Loop jetzt?
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar

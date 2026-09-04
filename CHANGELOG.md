@@ -4,7 +4,31 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
-## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
+## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren) · komplett
+
+- **AP5-04** · `525716a` · **Gegner-Druck & Wellen-Eskalation.** Diagnose vor
+  dem Tuning (headless Simulator mit idealisiertem Schützen) erklärt das
+  Spieltest-Feedback exakt: Budget 60 bei 3 Uhr-Zermürbung/Front-Kill ist nach
+  ~20 Gegnern arithmetisch leer, Eskalation war unerreichbar. Fix in
+  `src/sim/wave.ts`: `START_ANGRIFFSKRAFT` 60→150, Wellenkurve 5+3 statt 4+2
+  (5·8·11·14·17), Spawn-Takt staffelt sich 1,4s→0,6s mit ±25 % Jitter, Pause
+  5s→3s, Reservewellen 6+3 statt 3+2 — Uhr/Front/Bresche (`einsatz.ts`/
+  `front.ts`) unangetastet. `src/sim/enemies.ts`: individuelles Marschtempo
+  (±15 %) + stufenlose Marschspur (ersetzt das feste `id % 7`-Raster) lassen
+  Gegnerketten sich auffächern statt im Gleichschritt zu laufen. Dabei
+  sichtbar geworden und mit Trace + Test + Gegenprobe behoben: drei latente
+  Nav-Bugs, die bei niedriger Dichte selten genug waren, um nicht aufzufallen
+  (Engstellen-Ebene falsch orientiert bei abknickenden Pfaden, Nahkampf-Sicht
+  auf Augen- statt Kniehöhe lief in Parapets, kein Re-Pathing am Zielknoten
+  außer Reichweite) — Watchdog-Despawns 7/84 → 0/84 über fünf Seeds. Ergebnis
+  (Seed 1): Peak 9→14 gleichzeitige Gegner, Kontaktzeit an der Front 28%→70%.
+  Visuell im echten Renderer geprüft (Playwright, Screenshots in
+  `tickets/erledigt/AP5-04-screenshots/`). Golden-Anker bewusst neu
+  baseliniert (Kommentar direkt am Test, Zahlen durch die Budget-/Wellen-
+  Änderung erklärt). 284 Tests (+15), Coverage src/sim 98,58 %.
+
+**Arbeitspaket 5 komplett** (AP5-01…04, alle reviewed). Als Nächstes: dritter
+Spieltest.
 
 - **AP5-03** · `ba631af` · **Kartengrenze öffnen.** Die Sektor-Umrandung
   wirkte wie eine geschlossene Box (sichtbare 6-m-Sperrwände). Lösung: die
