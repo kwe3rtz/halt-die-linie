@@ -39,6 +39,28 @@ export interface EnemyEntity {
   stillstand: number;
   /** Bisherige Watchdog-Eingriffe: 1 = Pfad neu, 2 = Relokation, 3 = Despawn. */
   festVersuche: number;
+  /**
+   * Individuelles Marschtempo als Faktor auf `BASIS_TEMPO × def.tempo`
+   * (AP5-04, `1 ± TEMPO_STREUUNG`): die Kette zieht sich im Anmarsch
+   * auseinander statt im Gleichschritt zu laufen.
+   */
+  tempoFaktor: number;
+  /**
+   * Seitliche Marschspur −1..1 (AP5-04): Anteil an `SPREIZUNG_MAX`, um den der
+   * Gegner im Transit neben der Wegpunkt-Linie läuft. Ersetzt das feste
+   * `id % 7`-Raster aus AP4-02 durch eine stufenlose Spur.
+   */
+  spur: number;
+}
+
+/**
+ * Würfelwerte 0..1 für die individuelle Streuung eines Gegners (AP5-04). Der
+ * Aufrufer zieht sie aus seinem `Rng` (goldene Regel: Zufall nur injiziert);
+ * ohne Angabe läuft der Gegner mit Normaltempo auf der alten `id % 7`-Spur.
+ */
+export interface GegnerStreuung {
+  tempo: number;
+  spur: number;
 }
 
 export const ENEMY_RADIUS = 0.35;
@@ -47,21 +69,27 @@ export const NAHKAMPF_REICHWEITE = 1.6;
 export const NACHSCHUB_PRO_KILL = 5;
 
 const BASIS_TEMPO = 2.6; // m/s bei EnemyDef.tempo = 1 (Platzhalter)
+/** Tempo-Streuung je Gegner: Faktor 1 ± dieser Anteil (AP5-04, Platzhalter). */
+export const TEMPO_STREUUNG = 0.15;
 const ANGRIFF_INTERVALL = 1.1; // s zwischen Nahkampftreffern
 const LEICHE_LIEGEZEIT = 1.4; // s
 
 // Nav (AP4-02).
-const AUGE = 1.55; // Augenhöhe für Sichtlinien-Checks
 const WEGPUNKT_RADIUS = 3.0; // ab hier gilt ein Wegpunkt als erreicht (Ecken schneiden)
 const WEGPUNKT_RADIUS_ENG = 1.4; // Engstellen (Sap-Lücke, Bresche) genau treffen
-const WEGPUNKT_SPREIZUNG = 0.8; // seitl. Versatz je Gegner (× -3..3) gegen Stau
+/**
+ * Max. seitlicher Versatz zur Wegpunkt-Linie im Transit (× `spur` −1..1) gegen
+ * Stau — dieselbe Hüllkurve wie das alte `id % 7`-Raster (±3 × 0,8 m), nur
+ * stufenlos belegt (AP5-04). Breiter zielt an den 2,6-m-Breschen vorbei.
+ */
+export const SPREIZUNG_MAX = 2.4;
 // Im Graben (Fußpunkt unter der Geländeoberkante) ist der Versatz gekappt:
 // der Verbindungsgraben ist 3,6 m breit, ±2,4 m Versatz zielte in die Wand
 // (AP4-06). Greybox-Heuristik über die Höhe; sauber wäre eine Korridorbreite
 // am Knoten — TODO(Rückfrage): mit dem Generator als Knoten-/Kanten-Datum.
 const GRABEN_Y = -0.5;
 const SPREIZUNG_GRABEN_MAX = 1.0;
-const NAHKAMPF_SICHT = 6; // in dieser Nähe + Sichtlinie: direkt auf den Spieler
+const NAHKAMPF_SICHT = 6; // in dieser Nähe + begehbarer Sichtlinie: direkt auf den Spieler
 const MARSCH_SEPARATION = 0.35; // Separation ist im Fern-Anmarsch schwächer
 
 // Stuck-Watchdog (AP4-06, Audit H2). Ein Gegner, der laufen will, aber nicht
@@ -72,7 +100,12 @@ const MARSCH_SEPARATION = 0.35; // Separation ist im Fern-Anmarsch schwächer
 export const FEST_ZEIT = 4;
 /** Unter diesem Anteil des Soll-Wegs je Tick gilt „kein Fortschritt". */
 const FEST_MIN_FORTSCHRITT = 0.2;
-/** Höhe über dem Fußpunkt für die Erreichbarkeits-Sichtlinie (Kniehöhe: Wände blocken, Stufen nicht). */
+/**
+ * Höhe über dem Fußpunkt für die Erreichbarkeits-Sichtlinie (Kniehöhe: Wände
+ * blocken, Stufen nicht). Seit AP5-04 auch für die Nahkampf-Sicht: auf
+ * Augenhöhe sah ein Gegner den Spieler über das Parapet hinweg im Graben und
+ * lief geradewegs in die Wand — bis der Watchdog ihn nach 12 s despawnte.
+ */
 const KNIE = 0.3;
 
 /** Nav-Kontext, den `updateEnemies` je Tick bekommt (fehlt → gerader Weg). */
@@ -101,8 +134,18 @@ export function spawnEnemy(
   pos: Vec3,
   hpFaktor = 1,
   abschnitt = "",
+  streuung?: GegnerStreuung,
 ): EnemyEntity {
   const hp = Math.round(def.hp * hpFaktor);
+  const tempoFaktor =
+    streuung === undefined
+      ? 1
+      : 1 - TEMPO_STREUUNG + 2 * TEMPO_STREUUNG * streuung.tempo;
+  // Alte AP4-02-Spur (7 feste Bahnen, ±2,4 m bei 0,8 m Raster = ±0,8 Anteil).
+  const spur =
+    streuung === undefined
+      ? (((id % 7) - 3) * 0.8) / SPREIZUNG_MAX
+      : 2 * streuung.spur - 1;
   return {
     id,
     pos: { x: pos.x, y: pos.y, z: pos.z },
@@ -120,6 +163,8 @@ export function spawnEnemy(
     pfadIndex: 0,
     stillstand: 0,
     festVersuche: 0,
+    tempoFaktor,
+    spur,
   };
 }
 
@@ -283,14 +328,33 @@ function wegpunkt(e: EnemyEntity, graph: NavGraph): Vec3 | undefined {
     // hinter sich hat (Ebenen-Test) — sonst schneidet er beim Abbiegen die
     // Ecke und rutscht an der Wand neben der Lücke fest.
     if (knoten.engstelle === true) {
+      // Ebene der Engstelle = senkrecht zur Anmarschrichtung (vorheriger
+      // Wegpunkt → Engstelle). AP4-06 nahm die Richtung zum *nächsten*
+      // Wegpunkt; knickt der Pfad an der Engstelle ab (bresche-B → front-B
+      // liegt 45° schräg), galt ein Gegner schon 1,4 m schräg *vor* der Wand
+      // als „durch" und steuerte den nächsten Punkt quer durchs Parapet an
+      // (AP5-04, sichtbar geworden durch die gestreuten Marschspuren). Ohne
+      // Vorgänger (Pfadstart) bleibt die Richtung zum nächsten Wegpunkt.
+      const vorherId = e.pfad[e.pfadIndex - 1];
       const naechsteId = e.pfad[e.pfadIndex + 1];
+      const vorher = vorherId
+        ? graph.knoten.find((k) => k.id === vorherId)
+        : undefined;
       const naechste = naechsteId
         ? graph.knoten.find((k) => k.id === naechsteId)
         : undefined;
+      const richtung = vorher
+        ? { x: knoten.pos.x - vorher.pos.x, z: knoten.pos.z - vorher.pos.z }
+        : naechste
+          ? {
+              x: naechste.pos.x - knoten.pos.x,
+              z: naechste.pos.z - knoten.pos.z,
+            }
+          : undefined;
       const passiert =
-        !naechste ||
-        (e.pos.x - knoten.pos.x) * (naechste.pos.x - knoten.pos.x) +
-          (e.pos.z - knoten.pos.z) * (naechste.pos.z - knoten.pos.z) >=
+        richtung === undefined ||
+        (e.pos.x - knoten.pos.x) * richtung.x +
+          (e.pos.z - knoten.pos.z) * richtung.z >=
           0;
       if (dist < WEGPUNKT_RADIUS_ENG && passiert) {
         e.pfadIndex += 1;
@@ -374,16 +438,33 @@ export function updateEnemies(
     }
 
     // Direktes Anmarsch-/Nahkampf-Verhalten, wenn kein Graph, der Zielknoten
-    // erreicht ist, oder der Spieler nah und in grober Sichtlinie steht.
-    const amZiel = !nav || e.pfadIndex >= e.pfad.length;
-    const direkt =
-      amZiel ||
-      (dist <= NAHKAMPF_SICHT &&
-        sichtlinie(
-          world,
-          { x: e.pos.x, y: e.pos.y + AUGE, z: e.pos.z },
-          { x: playerPos.x, y: playerPos.y + AUGE, z: playerPos.z },
-        ));
+    // erreicht ist, oder der Spieler nah und auf Kniehöhe frei erreichbar ist.
+    const nah =
+      dist <= NAHKAMPF_SICHT &&
+      sichtlinie(
+        world,
+        { x: e.pos.x, y: e.pos.y + KNIE, z: e.pos.z },
+        { x: playerPos.x, y: playerPos.y + KNIE, z: playerPos.z },
+      );
+    let amZiel = !nav || e.pfadIndex >= e.pfad.length;
+    if (nav && amZiel && !nah) {
+      // Am strategischen Ziel, Spieler außer Reichweite: weiter über den
+      // Graphen zum Knoten beim Spieler statt Luftlinie durch die nächste Wand
+      // (AP5-04). Genau das tat bisher erst der Watchdog nach 4 s Stillstand —
+      // mit 12 s Wandkontakt bis zum Despawn. Ohne Graph-Weg (z. B. Front
+      // steht, Spieler hinten) bleibt es bei der Luftlinie wie bisher.
+      const hier = naechsterKnoten(nav.graph, e.pos);
+      const dort = naechsterKnoten(nav.graph, playerPos);
+      if (hier !== dort && e.pfad[e.pfad.length - 1] !== dort) {
+        const pfad = kuerzesterPfad(nav.graph, hier, dort);
+        if (pfad.length > 1) {
+          e.pfad = pfad;
+          e.pfadIndex = 0;
+          amZiel = false;
+        }
+      }
+    }
+    const direkt = amZiel || nah;
 
     const marschModus = nav !== undefined && !direkt;
 
@@ -405,11 +486,11 @@ export function updateEnemies(
           const rx = wp.x - e.pos.x;
           const rz = wp.z - e.pos.z;
           const rl = Math.hypot(rx, rz);
-          // Deterministischer seitlicher Versatz je Gegner: fächert die Kette
-          // während des Transits auf (gegen Stau), läuft zum Wegpunkt hin aber
-          // wieder zusammen — sonst zielt der Versatz neben die enge Sap-Lücke.
-          const roh =
-            ((e.id % 7) - 3) * WEGPUNKT_SPREIZUNG * Math.min(1, rl / 8);
+          // Deterministischer seitlicher Versatz je Gegner (seine `spur`):
+          // fächert die Kette während des Transits auf (gegen Stau), läuft zum
+          // Wegpunkt hin aber wieder zusammen — sonst zielt der Versatz neben
+          // die enge Sap-Lücke.
+          const roh = e.spur * SPREIZUNG_MAX * Math.min(1, rl / 8);
           const seit =
             e.pos.y < GRABEN_Y
               ? Math.max(
@@ -424,7 +505,7 @@ export function updateEnemies(
       const zdx = zielX - e.pos.x;
       const zdz = zielZ - e.pos.z;
       const zd = Math.hypot(zdx, zdz);
-      const speed = BASIS_TEMPO * e.def.tempo;
+      const speed = BASIS_TEMPO * e.def.tempo * e.tempoFaktor;
       if (zd > 1e-6) {
         e.vel.x = (zdx / zd) * speed;
         e.vel.z = (zdz / zd) * speed;
@@ -493,7 +574,7 @@ export function updateEnemies(
 
     // Watchdog (AP4-06): will der Gegner laufen, kommt aber nicht vom Fleck?
     if (nav && e.zustand === "anmarsch") {
-      const soll = BASIS_TEMPO * e.def.tempo * dt;
+      const soll = BASIS_TEMPO * e.def.tempo * e.tempoFaktor * dt;
       const ist = Math.hypot(moved.pos.x - e.pos.x, moved.pos.z - e.pos.z);
       e.stillstand = ist < FEST_MIN_FORTSCHRITT * soll ? e.stillstand + dt : 0;
     } else {

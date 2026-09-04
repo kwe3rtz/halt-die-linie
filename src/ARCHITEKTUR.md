@@ -233,6 +233,34 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   (Sumpf-Ton) und legt linearen Dunst in Himmelsfarbe darüber (`fogStart` 60 m,
   `fogEnd` 190 m — jenseits der längsten Sichtlinie im Sektor). Zonen, Nav-
   Graph, Breschen und Spielfeldmaße unverändert (Test in `sektor.test.ts`).
+- **AP5-04 Gegner-Druck & Wellen-Eskalation.** Erste echte Tuning-Iteration,
+  kein neues System. _Wave-Director_ (`wave.ts`): Wellengröße
+  `wellenGroesse(w) = 5 + 3·(w−1)`, Spawn-Takt `spawnIntervall(w)` fällt von
+  1,4 s je Welle um 0,15 s bis 0,6 s, dazu ±25 % Jitter aus dem Director-Rng;
+  Pause 3 s; Start-Angriffskraft 150 (vorher 60 — bei unverändertem Uhr-Preis
+  von 3 je Front-Kill trägt das fünf volle Wellen 5·8·11·14·17, an der Home-
+  Line entsprechend mehr); Reservewellen 6 (+3 je `verlaengern`). _Linien-
+  infanterie_ (`enemies.ts`): je Gegner `tempoFaktor` (1 ± 15 %) und eine
+  stufenlose Marschspur `spur` (−1..1 × `SPREIZUNG_MAX` 2,4 m — dieselbe
+  Hüllkurve wie das alte `id % 7`-Raster), beides als Würfelwerte aus einem
+  eigenen `gegnerRng` in `createSim` (`GegnerStreuung`), Tests ohne Angabe
+  bekommen das alte Verhalten. Drei Korrekturen am bestehenden Verhalten, die
+  durch mehr Gegner und die gestreuten Spuren sichtbar wurden: (1) die
+  Engstellen-Ebene liegt senkrecht zur **Anmarschrichtung** (vorher: Richtung
+  zum nächsten Wegpunkt — bei abknickendem Pfad wie `bresche-B → front-B`
+  galt ein Gegner schräg vor der Wand schon als „durch"); (2) die Nahkampf-
+  Sicht prüft auf **Kniehöhe** wie die Erreichbarkeits-Sichtlinie des
+  Watchdogs (auf Augenhöhe sah ein Gegner den Spieler über das Parapet und
+  lief in die Wand); (3) am Zielknoten mit Spieler außer Reichweite wird
+  sofort über den Graphen zum Knoten beim Spieler weiternavigiert (vorher
+  Luftlinie durch die nächste Wand, bis der Watchdog nach 4 s dasselbe tat).
+  Nav-Daten: `home-feld-links/-rechts` liegen jetzt als Engstellen am
+  **Rampenfuß** (±20, −23,5) statt oben an der Rampenkante — von der Sohle aus
+  galten sie sonst im 3-m-Radius als erreicht, der nächste Wegpunkt lag quer
+  hinter dem Home-Parapet. F3-Overlay zeigt die lebenden Gegner. Regressions-
+  netze: `wave-eskalation.test.ts` (große Welle ohne Watchdog durchs
+  Labyrinth, Streuung zieht die Kette auseinander, ganzer Einsatz mit
+  idealisiertem Schützen), Verhaltens-Tests in `enemies.test.ts`.
 
 ## Bundle-Größe
 

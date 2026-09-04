@@ -54,6 +54,7 @@ const loop = createLoop({
       fps: frame.fps,
       player: state.player,
       command: frame.command,
+      lebendeGegner: state.enemies.filter((e) => e.zustand !== "tot").length,
     });
     hud.update({
       hp: state.player.hp,

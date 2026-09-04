@@ -253,8 +253,14 @@ const navKnoten: NavKnoten[] = [
   nk("graben-mitte", 0, -6, "verbindungsgraben", IN_GRABEN),
   nk("graben-sued", 0, -18, "verbindungsgraben", IN_GRABEN),
   nk("home-graben", 0, -22, "homeline", IN_GRABEN),
-  nk("home-feld-links", -18, -21, "homeline"),
-  nk("home-feld-rechts", 18, -21, "homeline"),
+  // Flankenrampen Feld ↔ Home-Graben: Knoten am Rampenfuß auf der Sohle und
+  // Engstelle (AP5-04). Vorher lagen sie oben an der Rampenkante (±18, −21,
+  // Feldniveau): vom Grabenboden aus galten sie im 3-m-Radius als „erreicht",
+  // und der nächste Wegpunkt (feld-*) lag dann quer hinter dem Home-Parapet —
+  // Gegner, die von der Home-Line zurück nach vorn wollten, hingen am
+  // Feuertritt fest, bis der Watchdog sie despawnte.
+  eng(nk("home-feld-links", -20, -23.5, "homeline", IN_GRABEN)),
+  eng(nk("home-feld-rechts", 20, -23.5, "homeline", IN_GRABEN)),
   nk("home-ziel", 0, -30, "homeline", IN_GRABEN),
 ];
 

@@ -360,6 +360,10 @@ export function createSim(
   }
   const angriffskraftMax = wave.angriffskraft;
   const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
+  // Individuelle Tempo-/Spur-Streuung je Gegner (AP5-04) aus einem eigenen
+  // Strom, damit weder die Spawnpunkt-Wahl (`waveRng`) noch die Abschnitts-
+  // Zuweisung (`abschnittRng`) verschoben werden.
+  const gegnerRng = createRng((seed ^ 0x2b2b2b2b) >>> 0);
   const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
 
   const player = {
@@ -583,7 +587,12 @@ export function createSim(
         p = rk.pos;
       }
     }
-    enemies.push(spawnEnemy(def, nextEnemyId, p, hpFaktor, a));
+    enemies.push(
+      spawnEnemy(def, nextEnemyId, p, hpFaktor, a, {
+        tempo: gegnerRng.next(),
+        spur: gegnerRng.next(),
+      }),
+    );
     nextEnemyId += 1;
   };
 

@@ -476,8 +476,10 @@ describe("Greybox-Sektor — Einsatzbogen & die Uhr (AP4-04)", () => {
     // Gleich viele Kills (Nachschub = 5/Kill), aber steht zieht mehr Angriffskraft.
     expect(sSteht.nachschub).toBeGreaterThan(0);
     expect(sSteht.nachschub).toBe(sFiel.nachschub);
-    const abbauSteht = 60 - sSteht.wave.angriffskraftRest;
-    const abbauFiel = 60 - sFiel.wave.angriffskraftRest;
+    const abbauSteht =
+      sSteht.wave.angriffskraftMax - sSteht.wave.angriffskraftRest;
+    const abbauFiel =
+      sFiel.wave.angriffskraftMax - sFiel.wave.angriffskraftRest;
     expect(abbauSteht).toBeGreaterThan(abbauFiel);
     expect(abbauSteht).toBeCloseTo(abbauFiel * 2, 0);
   });
@@ -622,13 +624,24 @@ describe("Greybox-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
     // Kante offen, aber Bresche zu (kein Kollider aus) → wie Audit H1 vor dem Fix.
     sim._setKanteOffen("bresche-B", "lab-vorfront", true);
     sim.spawnEnemy("linieninfanterie", { x: -3, y: 0.2, z: 21 }, "B");
+    // Die geschlossene Bresche (x = −3 ± 1,3, Wand um z = 16) darf nie
+    // durchquert werden. Dass der Gegner nach dem Watchdog-Eingriff über die
+    // Sap-Lücke (x = −8,5) in den Graben findet, ist erlaubt — deshalb wird
+    // die Bresche-Spur geprüft, nicht bloß „z bleibt nördlich" (AP5-04).
+    let durchDieBresche = false;
     let minZ = Infinity;
     for (let i = 0; i < 60 * 8; i += 1) {
       sim.tick(command(), DT);
       const e = sim.getState().enemies[0];
-      if (e) minZ = Math.min(minZ, e.pos.z);
+      if (!e) continue;
+      minZ = Math.min(minZ, e.pos.z);
+      if (Math.abs(e.pos.x + 3) < 1.3 + 0.35 && e.pos.z < 16.2) {
+        durchDieBresche = true;
+      }
     }
-    expect(minZ).toBeGreaterThan(16.2);
+    expect(durchDieBresche).toBe(false);
+    // Direkt vor der Wand kommt er nicht weiter als bis zur Wandfläche.
+    expect(minZ).toBeGreaterThan(15.5);
   });
 
   it("H4: nach 'gewonnen' friert der Director ein; E extrahiert (vorbei, gewonnen bleibt)", () => {
