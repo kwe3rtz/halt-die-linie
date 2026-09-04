@@ -12,6 +12,8 @@ function command(
     y: number;
     fire: boolean;
     dx: number;
+    interact: boolean;
+    ability: boolean;
   }> = {},
 ): InputCommand {
   return {
@@ -21,8 +23,8 @@ function command(
       fire: parts.fire ?? false,
       aim: false,
       sprint: false,
-      interact: false,
-      ability: false,
+      interact: parts.interact ?? false,
+      ability: parts.ability ?? false,
       jump: false,
       reload: false,
     },
@@ -550,5 +552,185 @@ describe("Greybox-Sektor — Einsatzbogen & die Uhr (AP4-04)", () => {
     sim.tick(command(), DT);
     expect(sim.getState().einsatz.ergebnis).toBe("verloren");
     expect(sim.getState().einsatz.phase).toBe("vorbei");
+  });
+});
+
+// AP4-06: die Bresche ist ein echtes Loch, die Finale-Entscheidung eine Eingabe.
+describe("Greybox-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
+  const { meta } = sektorGreybox;
+
+  it("H1: Gegner strömen durch die offene Bresche und kommen hinter der Front an — für A, B und C", () => {
+    for (const ab of meta.frontAbschnitte) {
+      // Seed so wählen, dass der Spieler NICHT in diesem Abschnitt spawnt —
+      // sonst wechselt der Gegner an der Bresche in den Nahkampf-Beeline.
+      const seed = [1, 2, 3, 4, 5, 6].find(
+        (sd) =>
+          abschnittAt(
+            meta,
+            createSim(sd, sektorGreybox).getState().player.pos,
+          ) !== ab.id,
+      );
+      expect(seed).toBeDefined();
+      const sim = createSim(seed ?? 1, sektorGreybox, {
+        aktiveAchsen: [ab.id],
+      });
+      // Abschnitt gefallen: alle Breschen offen, Nav-Kanten nach hinten offen.
+      sim._setAbschnittVerloren(ab.id, true);
+      // Gegner startet vor der Front im Labyrinth (lab-vorfront) und zielt auf home-ziel.
+      sim.spawnEnemy("linieninfanterie", { x: 0, y: 0.2, z: 21 }, ab.id);
+      const brescheKnoten = meta.navGraph.knoten.find(
+        (k) => k.id === `bresche-${ab.id}`,
+      );
+      expect(brescheKnoten).toBeDefined();
+      let minZ = Infinity;
+      let durchDieBresche = false;
+      for (let i = 0; i < 60 * 45; i += 1) {
+        sim.tick(command(), DT);
+        const e = sim.getState().enemies[0];
+        if (!e) break;
+        minZ = Math.min(minZ, e.pos.z);
+        if (
+          brescheKnoten &&
+          Math.hypot(
+            e.pos.x - brescheKnoten.pos.x,
+            e.pos.z - brescheKnoten.pos.z,
+          ) < 1.0
+        ) {
+          durchDieBresche = true;
+        }
+        if (minZ < 5) break;
+      }
+      const e = sim.getState().enemies[0];
+      expect(e?.zielKnoten, ab.id).toBe("home-ziel");
+      expect(durchDieBresche, `${ab.id}: nie an der Bresche vorbei`).toBe(true);
+      // Tatsächlich hinter der Front: im Feld / Verbindungsgraben (z < 8).
+      expect(minZ, `${ab.id}: minZ`).toBeLessThan(8);
+    }
+  });
+
+  it("H1: eine geschlossene Bresche bleibt eine Wand (Gegenprobe)", () => {
+    const sim = createSim(1, sektorGreybox, { aktiveAchsen: ["B"] });
+    // Kante offen, aber Bresche zu (kein Kollider aus) → wie Audit H1 vor dem Fix.
+    sim._setKanteOffen("bresche-B", "lab-vorfront", true);
+    sim.spawnEnemy("linieninfanterie", { x: -3, y: 0.2, z: 21 }, "B");
+    let minZ = Infinity;
+    for (let i = 0; i < 60 * 8; i += 1) {
+      sim.tick(command(), DT);
+      const e = sim.getState().enemies[0];
+      if (e) minZ = Math.min(minZ, e.pos.z);
+    }
+    expect(minZ).toBeGreaterThan(16.2);
+  });
+
+  it("H4: nach 'gewonnen' friert der Director ein; E extrahiert (vorbei, gewonnen bleibt)", () => {
+    const sim = createSim(3, sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 3,
+    });
+    const dreheUndFeuere = (i: number) => command({ dx: 40, fire: i % 45 < 2 });
+    let i = 0;
+    for (
+      ;
+      i < 30000 && sim.getState().einsatz.ergebnis !== "gewonnen";
+      i += 1
+    ) {
+      sim.tick(dreheUndFeuere(i), DT);
+    }
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+    expect(sim.getState().einsatz.phase).toBe("finale");
+
+    // 40 s weiter ohne Entscheidung: keine neuen Gegner-Ids, Ergebnis bleibt.
+    const maxId = () =>
+      sim.getState().enemies.reduce((m, e) => Math.max(m, e.id), 0);
+    const idVorher = maxId();
+    let idMax = idVorher;
+    for (let k = 0; k < 60 * 40; k += 1) {
+      sim.tick(dreheUndFeuere(i + k), DT);
+      idMax = Math.max(idMax, maxId());
+    }
+    expect(idMax).toBe(idVorher);
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+
+    // Home-Verlust nach dem Gewinn kippt nichts mehr.
+    sim._setAbschnittVerloren("H-West", true);
+    sim._setAbschnittVerloren("H-Ost", true);
+    sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+
+    // E (interact) → Einsatz beendet, gewonnen.
+    sim.tick(command({ interact: true }), DT);
+    expect(sim.getState().einsatz.phase).toBe("vorbei");
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+  });
+
+  it("H4: Q (ability) verlängert — zweiter Countdown, Director läuft weiter", () => {
+    const sim = createSim(3, sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 3,
+    });
+    for (let i = 0; i < 110 * 60; i += 1) sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+    // Gehaltene Taste zündet nur einmal (Flanke).
+    for (let i = 0; i < 30; i += 1) sim.tick(command({ ability: true }), DT);
+    const s = sim.getState();
+    expect(s.einsatz.phase).toBe("finale");
+    expect(s.einsatz.ergebnis).toBe("offen");
+    expect(s.einsatz.finaleRest).toBeGreaterThan(44);
+    expect(s.einsatz.finaleRest).toBeLessThanOrEqual(45);
+  });
+
+  it("H4: vor 'gewonnen' sind E und Q wirkungslos", () => {
+    const sim = createSim(1, sektorGreybox, { waves: true });
+    for (let i = 0; i < 300; i += 1) sim.tick(command(), DT);
+    sim.tick(command({ interact: true }), DT);
+    sim.tick(command({ ability: true }), DT);
+    expect(sim.getState().einsatz.phase).toBe("wellen");
+    expect(sim.getState().einsatz.ergebnis).toBe("offen");
+  });
+});
+
+// AP4-06 H2: ein unerreichbar platzierter Gegner blockiert den Wellen-Loop nicht.
+describe("Greybox-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
+  it("eingemauerte Spawns werden despawnt (Angriffskraft zurück), der Director schaltet weiter", () => {
+    // Sektor-Kopie mit einer geschlossenen Kammer im Labyrinth als einzigem
+    // Gegner-Spawn — kein Weg hinaus.
+    const kammer = { x: -18, z: 37 };
+    const wand = (cx: number, cz: number, sx: number, sz: number) => ({
+      center: { x: cx, y: 1.2, z: cz },
+      size: { x: sx, y: 2.4, z: sz },
+    });
+    const level = {
+      ...sektorGreybox,
+      boxes: [
+        ...sektorGreybox.boxes,
+        wand(kammer.x, kammer.z + 2, 4.4, 0.4),
+        wand(kammer.x, kammer.z - 2, 4.4, 0.4),
+        wand(kammer.x + 2, kammer.z, 0.4, 4.4),
+        wand(kammer.x - 2, kammer.z, 0.4, 4.4),
+      ],
+      enemySpawnPoints: [{ x: kammer.x, y: 0.2, z: kammer.z }],
+    };
+    const sim = createSim(1, level, {
+      waves: true,
+      startAngriffskraft: 2,
+      aktiveAchsen: [], // kein Abschnitt → keine Relokation, nur Despawn
+    });
+    let sahGegner = false;
+    let sahPause = false;
+    let ak = 0;
+    for (let i = 0; i < 60 * 60; i += 1) {
+      sim.tick(command(), DT);
+      const s = sim.getState();
+      if (s.enemies.length > 0) sahGegner = true;
+      if (s.wave.phase === "pause") sahPause = true;
+      ak = s.wave.angriffskraftRest;
+      if (sahPause) break;
+    }
+    expect(sahGegner).toBe(true);
+    // Beide Spawns sind verschwunden, die Angriffskraft ist zurückgeschrieben
+    // und der Director ist nicht auf „lebendeGegner === 0" hängen geblieben.
+    expect(sim.getState().enemies.length).toBe(0);
+    expect(ak).toBe(2);
+    expect(sahPause).toBe(true);
   });
 });

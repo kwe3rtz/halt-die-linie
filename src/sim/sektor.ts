@@ -44,6 +44,13 @@ export interface NavKnoten {
   id: string;
   pos: Vec3;
   zone: ZonenId;
+  /**
+   * Engstelle (Sap-Lücke, Bresche, Grabenmündung, Parados-Rampe): muss vom
+   * Gegner exakt durchlaufen werden — enger Wegpunkt-Radius und erst
+   * „erreicht", wenn er sie in Richtung des nächsten Wegpunkts passiert hat
+   * (AP4-06). Ohne Flag darf ein Gegner die Ecke schneiden.
+   */
+  engstelle?: boolean;
 }
 
 /**
@@ -114,6 +121,15 @@ export interface SektorMeta {
  */
 export interface SektorData extends LevelData {
   meta: SektorMeta;
+}
+
+/**
+ * Etikett des Parapet-Segments an der `index`-ten Bresche eines Abschnitts
+ * (AP4-06). Dieselbe Konvention nutzen Daten (`LevelBox.tag`), Sim
+ * (`setKolliderAktiv`) und Renderer (Segment ausblenden).
+ */
+export function brescheTag(abschnittId: string, index: number): string {
+  return `bresche:${abschnittId}:${index}`;
 }
 
 /** Punkt-in-AABB, nur X/Z — Zonen und Abschnitte sind Säulen über die Höhe. */

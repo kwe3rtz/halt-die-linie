@@ -17,10 +17,44 @@ import type {
   SektorMeta,
   ZonenId,
 } from "../sim/sektor";
-import { modul, GRABEN_SOHLE } from "./module";
+import { brescheTag } from "../sim/sektor";
+import {
+  modul,
+  GRABEN_SOHLE,
+  BRESCHE_BREITE,
+  type ParapetLuecke,
+} from "./module";
 
 function raw(center: Vec3, size: Vec3): LevelBox {
   return { center, size };
+}
+
+// --- Breschen (AP4-03/06): EINE Quelle für Geometrie (getaggte Parapet-
+//     Segmente) und Meta (`parapetBreschen`). Die Sim schaltet das Segment ab,
+//     sobald die Bresche offen ist — dann ist die Bresche ein echtes Loch. ---
+const BRESCHEN_A: Vec3[] = [{ x: -14, y: -0.4, z: 16 }];
+const BRESCHEN_B: Vec3[] = [
+  { x: -3, y: -0.4, z: 16 },
+  { x: 3, y: -0.4, z: 16 },
+];
+const BRESCHEN_C: Vec3[] = [{ x: 14, y: -0.4, z: 16 }];
+const BRESCHEN_H_WEST: Vec3[] = [{ x: -9, y: -0.4, z: -20 }];
+const BRESCHEN_H_OST: Vec3[] = [{ x: 9, y: -0.4, z: -20 }];
+
+/**
+ * Lücken für `modul("parapet", at, 90, …)`: bei 90° zeigt die lokale
+ * Längsachse nach −X (`drehXZ`), also `z_lokal = at.x − x_welt`.
+ */
+function breschenLuecken(
+  id: string,
+  at: Vec3,
+  breschen: readonly Vec3[],
+): ParapetLuecke[] {
+  return breschen.map((b, i) => ({
+    z: at.x - b.x,
+    breite: BRESCHE_BREITE,
+    tag: brescheTag(id, i),
+  }));
 }
 
 function aabb(minX: number, minZ: number, maxX: number, maxZ: number): Aabb {
@@ -62,9 +96,19 @@ const boxes: LevelBox[] = [
   // === Frontlinie =========================================================
   raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: 13.65 }, { x: 50, y: 1, z: 6.7 }), // Grabensohle
   // Parapet je Abschnitt; ~5 m Sap-Lücken an den Abschnittsgrenzen + offene Enden.
-  ...modul("parapet", { x: -11, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt A
-  ...modul("parapet", { x: 6, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt B
-  ...modul("parapet", { x: 23, y: 0, z: 16 }, 90, { laenge: 12 }), // Abschnitt C
+  // Die Bresche-Stellen sind eigene, schaltbare Segmente (AP4-06).
+  ...modul("parapet", { x: -11, y: 0, z: 16 }, 90, {
+    laenge: 12,
+    luecken: breschenLuecken("A", { x: -11, y: 0, z: 16 }, BRESCHEN_A),
+  }), // Abschnitt A
+  ...modul("parapet", { x: 6, y: 0, z: 16 }, 90, {
+    laenge: 12,
+    luecken: breschenLuecken("B", { x: 6, y: 0, z: 16 }, BRESCHEN_B),
+  }), // Abschnitt B
+  ...modul("parapet", { x: 23, y: 0, z: 16 }, 90, {
+    laenge: 12,
+    luecken: breschenLuecken("C", { x: 23, y: 0, z: 16 }, BRESCHEN_C),
+  }), // Abschnitt C
   // Parados (Rückwand) — Lücken für 2 Rampen + die Verbindungsgraben-Mündung.
   raw({ x: -21.5, y: -0.6, z: 10.7 }, { x: 7, y: 2.4, z: 0.5 }),
   raw({ x: -8.5, y: -0.6, z: 10.7 }, { x: 11, y: 2.4, z: 0.5 }),
@@ -91,8 +135,18 @@ const boxes: LevelBox[] = [
   raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: -28 }, { x: 50, y: 1, z: 16 }), // Grabensohle
   // Nach Norden gerichtetes Parapet über die Mitte — Lücke für den Graben,
   // Flanken offen (Feld-Zugänge links/rechts).
-  ...modul("parapet", { x: -2, y: 0, z: -20 }, 90, { laenge: 14 }),
-  ...modul("parapet", { x: 16, y: 0, z: -20 }, 90, { laenge: 14 }),
+  ...modul("parapet", { x: -2, y: 0, z: -20 }, 90, {
+    laenge: 14,
+    luecken: breschenLuecken(
+      "H-West",
+      { x: -2, y: 0, z: -20 },
+      BRESCHEN_H_WEST,
+    ),
+  }),
+  ...modul("parapet", { x: 16, y: 0, z: -20 }, 90, {
+    laenge: 14,
+    luecken: breschenLuecken("H-Ost", { x: 16, y: 0, z: -20 }, BRESCHEN_H_OST),
+  }),
   // Flankenrampen Feld → Home-Graben.
   ...modul("rampe", { x: -20, y: 0, z: -20 }, 180, { laenge: 4, breite: 4 }),
   ...modul("rampe", { x: 20, y: 0, z: -20 }, 180, { laenge: 4, breite: 4 }),
@@ -125,6 +179,11 @@ function nk(
   return { id, pos: { x, y, z }, zone };
 }
 
+/** Engstelle (AP4-06): exakt durchlaufen, keine Ecke schneiden. */
+function eng(k: NavKnoten): NavKnoten {
+  return { ...k, engstelle: true };
+}
+
 const navKnoten: NavKnoten[] = [
   // Anmarsch (Nordrand des Labyrinths — die zwei schrägen Korridore)
   nk("anmarsch-west", -10, 44, "labyrinth"),
@@ -134,23 +193,36 @@ const navKnoten: NavKnoten[] = [
   nk("lab-tor2", -8, 31, "labyrinth"),
   nk("lab-tor3", 2, 23, "labyrinth"),
   nk("lab-vorfront", 0, 19, "labyrinth"),
-  // Verdeckte Verstärkungs-Knoten (Infiltration; aktiv bei „Abschnitt verloren")
-  nk("reinforcement-A", -20, 30, "labyrinth"),
+  // Verdeckte Verstärkungs-Knoten (Infiltration; aktiv bei „Abschnitt verloren").
+  // reinforcement-A liegt frei nördlich des Trichter-Rests bei (−20, 29)
+  // (AP4-06: der Begehbarkeits-Test fand den alten Knoten im Trichter-Quader).
+  nk("reinforcement-A", -20, 33, "labyrinth"),
   nk("reinforcement-B", 6, 37, "labyrinth"),
   nk("reinforcement-C", 20, 30, "labyrinth"),
-  // Front — Sap-Zugänge, Grabenknoten, Bresche-Kontaktpunkte
-  nk("sap-ab", -8.5, 16, "frontlinie", -0.6),
-  nk("sap-bc", 8.5, 16, "frontlinie", -0.6),
+  // Front — Sap-Zugänge und Bresche-Kontaktpunkte liegen auf Geländeniveau
+  // (der Feind tritt von der Oberfläche in die Lücke und fällt in den Graben),
+  // Grabenknoten auf der Sohle.
+  eng(nk("sap-ab", -8.5, 16, "frontlinie")),
+  eng(nk("sap-bc", 8.5, 16, "frontlinie")),
   nk("front-A", -14, 13, "frontlinie", IN_GRABEN),
   nk("front-B", 0, 13, "frontlinie", IN_GRABEN),
   nk("front-C", 14, 13, "frontlinie", IN_GRABEN),
-  nk("bresche-A", -14, 16, "frontlinie", -0.4),
-  nk("bresche-B", 0, 16, "frontlinie", -0.4),
-  nk("bresche-C", 14, 16, "frontlinie", -0.4),
-  // Rückwege: Parados-Rampen, Feld, Verbindungsgraben, Home
-  nk("parados-A", -16, 11, "frontlinie", IN_GRABEN),
-  nk("parados-C", 16, 11, "frontlinie", IN_GRABEN),
-  nk("graben-mund", 0, 10, "verbindungsgraben", IN_GRABEN),
+  // Je Abschnitt EIN Bresche-Knoten, auf der ersten Bresche des Abschnitts
+  // (AP4-06: der Begehbarkeits-Test fand `bresche-B` bei x=0 in der festen
+  // Wand zwischen B's zwei Breschen). Die Sim öffnet die Kante genau dann, wenn
+  // die Bresche unter diesem Knoten offen ist.
+  // TODO(Rückfrage): B's zweite Bresche (x=+3) hat keinen eigenen Nav-Knoten —
+  // ein Knoten je Bresche braucht eine allgemeinere Id-Konvention als
+  // `bresche-<abschnitt>` (Politur-Ticket „Sektor-Wissen aus der Sim").
+  eng(nk("bresche-A", BRESCHEN_A[0]!.x, 16, "frontlinie")),
+  eng(nk("bresche-B", BRESCHEN_B[0]!.x, 16, "frontlinie")),
+  eng(nk("bresche-C", BRESCHEN_C[0]!.x, 16, "frontlinie")),
+  // Rückwege: Parados-Rampen (Knoten auf der obersten Rampenstufe, −0,45),
+  // Feld, Verbindungsgraben, Home. Rampen-Lücken und Grabenmündung sind
+  // Engstellen (AP4-06: schräg „erreicht" landete der Gegner neben der Lücke).
+  eng(nk("parados-A", -16, 11, "frontlinie", -0.4)),
+  eng(nk("parados-C", 16, 11, "frontlinie", -0.4)),
+  eng(nk("graben-mund", 0, 10, "verbindungsgraben", IN_GRABEN)),
   nk("feld-links", -14, -2, "feld"),
   nk("feld-rechts", 14, -2, "feld"),
   nk("graben-mitte", 0, -6, "verbindungsgraben", IN_GRABEN),
@@ -240,7 +312,7 @@ const meta: SektorMeta = {
     {
       id: "A",
       bounds: aabb(-25, FRONT_MIN_Z, -8, FRONT_MAX_Z),
-      parapetBreschen: [{ x: -14, y: -0.4, z: 16 }],
+      parapetBreschen: BRESCHEN_A,
       bauSlots: [
         { x: -15, y: IN_GRABEN, z: 13 },
         { x: -11, y: IN_GRABEN, z: 13 },
@@ -250,10 +322,7 @@ const meta: SektorMeta = {
     {
       id: "B",
       bounds: aabb(-8, FRONT_MIN_Z, 8, FRONT_MAX_Z),
-      parapetBreschen: [
-        { x: -3, y: -0.4, z: 16 },
-        { x: 3, y: -0.4, z: 16 },
-      ],
+      parapetBreschen: BRESCHEN_B,
       bauSlots: [
         { x: -3, y: IN_GRABEN, z: 13 },
         { x: 3, y: IN_GRABEN, z: 13 },
@@ -263,7 +332,7 @@ const meta: SektorMeta = {
     {
       id: "C",
       bounds: aabb(8, FRONT_MIN_Z, 25, FRONT_MAX_Z),
-      parapetBreschen: [{ x: 14, y: -0.4, z: 16 }],
+      parapetBreschen: BRESCHEN_C,
       bauSlots: [
         { x: 11, y: IN_GRABEN, z: 13 },
         { x: 15, y: IN_GRABEN, z: 13 },
@@ -278,14 +347,14 @@ const meta: SektorMeta = {
     {
       id: "H-West",
       bounds: aabb(-25, -36.5, 0, -19),
-      parapetBreschen: [{ x: -9, y: -0.4, z: -20 }],
+      parapetBreschen: BRESCHEN_H_WEST,
       bauSlots: [{ x: -9, y: IN_GRABEN, z: -23 }],
       depot: { x: -12, y: IN_GRABEN, z: -32 },
     },
     {
       id: "H-Ost",
       bounds: aabb(0, -36.5, 25, -19),
-      parapetBreschen: [{ x: 9, y: -0.4, z: -20 }],
+      parapetBreschen: BRESCHEN_H_OST,
       bauSlots: [{ x: 9, y: IN_GRABEN, z: -23 }],
       depot: { x: 12, y: IN_GRABEN, z: -32 },
     },

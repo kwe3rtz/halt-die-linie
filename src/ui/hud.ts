@@ -142,7 +142,7 @@ function einsatzText(e: NonNullable<HudData["einsatz"]>): string {
   }
   if (e.phase === "finale") {
     return e.ergebnis === "gewonnen"
-      ? "Entsatz eingetroffen — extrahieren oder verlängern"
+      ? "Entsatz eingetroffen — E extrahieren · Q verlängern"
       : `Home-Line halten — Entsatz in ${Math.max(0, Math.ceil(e.finaleRest))} s`;
   }
   return "";

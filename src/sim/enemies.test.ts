@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createCollisionWorld, type CollisionWorld } from "./collision";
 import {
   damageEnemy,
+  FEST_ZEIT,
   NAHKAMPF_REICHWEITE,
   spawnEnemy,
   updateEnemies,
@@ -267,5 +268,149 @@ describe("enemies — Nav-Graph folgen (AP4-02)", () => {
     expect(Math.hypot(list[0]?.pos.x ?? 9, list[0]?.pos.z ?? 9)).toBeLessThan(
       2,
     );
+  });
+});
+
+describe("enemies — Stuck-Watchdog (AP4-06)", () => {
+  // Boden + eine Wand bei z 10..11 über x -5..5; rechts davon ist frei.
+  const wandWorld = createCollisionWorld({
+    boxes: [
+      { center: { x: 0, y: -0.5, z: 0 }, size: { x: 200, y: 1, z: 200 } },
+      { center: { x: 0, y: 1.5, z: 10.5 }, size: { x: 10, y: 3, z: 1 } },
+    ],
+    spawnPoints: [],
+  });
+  // n1 liegt hinter der Wand, front-A davor; der direkte Weg n1 → front-A ist
+  // im Graph „offen", geht aber durch die Wand (Datenfehler, wie Audit H1).
+  // Über `seite` (rechts an der Wand vorbei, weit genug für den 3-m-Wegpunkt-
+  // Radius) kommt man herum.
+  const graph: NavGraph = {
+    knoten: [
+      { id: "n1", pos: { x: 0, y: 0, z: 20 }, zone: "labyrinth" },
+      { id: "seite", pos: { x: 14, y: 0, z: 14 }, zone: "labyrinth" },
+      { id: "front-A", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
+      { id: "reinforcement-A", pos: { x: 9, y: 0, z: 20 }, zone: "labyrinth" },
+    ],
+    kanten: [
+      { von: "n1", nach: "front-A", offen: true },
+      { von: "n1", nach: "seite", offen: true },
+      { von: "seite", nach: "front-A", offen: true },
+      { von: "reinforcement-A", nach: "seite", offen: true },
+    ],
+  };
+  const spielerWeit = { x: 0, y: 0, z: -30 };
+
+  it("1. Eingriff: nach FEST_ZEIT ohne Fortschritt wird der Pfad von einem erreichbaren Knoten neu geplant — der Gegner kommt herum", () => {
+    let list = [spawnEnemy(linieninfanterie, 1, { x: 0, y: 0, z: 19 }, 1, "A")];
+    const nav = { graph, verloren: new Set<string>() };
+    let festNach = -1;
+    for (let i = 0; i < 60 * 20; i += 1) {
+      list = updateEnemies(
+        list,
+        wandWorld,
+        spielerWeit,
+        true,
+        () => undefined,
+        DT,
+        nav,
+      );
+      const e = list[0];
+      if (!e) break;
+      if (festNach < 0 && e.festVersuche === 1) festNach = i;
+      if (e.pos.z < 6) break;
+    }
+    const e = list[0];
+    expect(e).toBeDefined();
+    expect(festNach).toBeGreaterThan(FEST_ZEIT * 60 - 5);
+    expect(e?.festVersuche).toBe(1);
+    expect(e?.pos.z ?? 99).toBeLessThan(6); // an front-A angekommen — um die Wand herum
+  });
+
+  it("ohne Ausweg: 2. Eingriff relokiert auf reinforcement-<abschnitt>, 3. despawnt mit Callback", () => {
+    // Graph ohne Umweg und ohne Reinforcement → Relokation entfällt, Despawn folgt.
+    const sackgasse: NavGraph = {
+      knoten: graph.knoten.filter((k) => k.id === "n1" || k.id === "front-A"),
+      kanten: [{ von: "n1", nach: "front-A", offen: true }],
+    };
+    const despawned: number[] = [];
+    let list = [spawnEnemy(linieninfanterie, 7, { x: 0, y: 0, z: 19 }, 1, "A")];
+    const nav = {
+      graph: sackgasse,
+      verloren: new Set<string>(),
+      onDespawn: (e: EnemyEntity) => despawned.push(e.id),
+    };
+    for (let i = 0; i < 60 * 30 && list.length > 0; i += 1) {
+      list = updateEnemies(
+        list,
+        wandWorld,
+        spielerWeit,
+        true,
+        () => undefined,
+        DT,
+        nav,
+      );
+    }
+    expect(list.length).toBe(0);
+    expect(despawned).toEqual([7]);
+  });
+
+  it("Relokation: mit reinforcement-Knoten landet der Gegner dort statt zu despawnen", () => {
+    // Umweg-Knoten `seite` ist unsichtbar gemacht: nur n1/front-A/reinforcement.
+    const g: NavGraph = {
+      knoten: graph.knoten.filter((k) => k.id !== "seite"),
+      kanten: [
+        { von: "n1", nach: "front-A", offen: true },
+        { von: "reinforcement-A", nach: "front-A", offen: true },
+      ],
+    };
+    const despawned: number[] = [];
+    let list = [spawnEnemy(linieninfanterie, 3, { x: 0, y: 0, z: 19 }, 1, "A")];
+    const nav = {
+      graph: g,
+      verloren: new Set<string>(),
+      onDespawn: (e: EnemyEntity) => despawned.push(e.id),
+    };
+    let relokiert = false;
+    // Nach dem 1. Eingriff läuft der Gegner erst zurück zu n1 und dann wieder
+    // in die Wand — der 2. Eingriff kommt daher erst nach ~16 s.
+    for (let i = 0; i < 60 * 30; i += 1) {
+      list = updateEnemies(
+        list,
+        wandWorld,
+        spielerWeit,
+        true,
+        () => undefined,
+        DT,
+        nav,
+      );
+      const e = list[0];
+      if (
+        e &&
+        e.festVersuche === 2 &&
+        Math.hypot(e.pos.x - 9, e.pos.z - 20) < 1
+      ) {
+        relokiert = true;
+        break;
+      }
+    }
+    expect(relokiert).toBe(true);
+    expect(despawned).toEqual([]);
+  });
+
+  it("ein normal marschierender Gegner löst den Watchdog nie aus", () => {
+    let list = [spawnEnemy(linieninfanterie, 1, { x: 8, y: 0, z: 30 }, 1, "A")];
+    const nav = { graph, verloren: new Set<string>() };
+    for (let i = 0; i < 60 * 15; i += 1) {
+      list = updateEnemies(
+        list,
+        world,
+        spielerWeit,
+        true,
+        () => undefined,
+        DT,
+        nav,
+      );
+    }
+    expect(list[0]?.festVersuche).toBe(0);
   });
 });

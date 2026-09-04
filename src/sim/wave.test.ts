@@ -157,3 +157,102 @@ describe("wave director — Finale-Reservewellen (AP4-04)", () => {
     expect(s.phase).toBe("vorbei");
   });
 });
+
+describe("wave director — Tick-Reihenfolge & Einfrieren (AP4-06)", () => {
+  it("erschöpfte Angriffskraft geht immer zuerst auf 'reserve'; ohne finale fällt sie im nächsten Tick auf 'vorbei'", () => {
+    const s = createWaveState();
+    s.angriffskraft = 3;
+    const { ctx, spawns } = makeCtx(0);
+    // ctx.finale ist nicht gesetzt (kein Einsatzbogen) — trotzdem zuerst reserve.
+    expect(
+      runUntil(s, ctx, () => s.phase !== "welle" && s.welle === 1),
+    ).toBeGreaterThan(0);
+    expect(s.phase).toBe("reserve");
+    updateWave(s, ctx, DT);
+    expect(s.phase).toBe("vorbei");
+    expect(spawns.length).toBe(3);
+  });
+
+  it("im Tick eines Spawns wechselt die Phase nicht (der frische Gegner zählt noch nicht als lebend)", () => {
+    const s = createWaveState();
+    s.angriffskraft = 1;
+    const { ctx, spawns } = makeCtx(0);
+    runUntil(s, ctx, () => spawns.length === 1);
+    // Queue ist leer, „Feld leer", Angriffskraft 0 — aber der Spawn war gerade.
+    expect(s.spawnQueue.length).toBe(0);
+    expect(s.angriffskraft).toBe(0);
+    expect(s.phase).toBe("welle");
+    updateWave(s, ctx, DT);
+    expect(s.phase).toBe("reserve");
+  });
+
+  it("eingefroren: im 'reserve'-Regime kommen keine neuen Spawns, bis die Sperre fällt", () => {
+    const s = createWaveState();
+    s.angriffskraft = 0;
+    s.phase = "reserve";
+    s.phaseTimer = 8;
+    const { ctx, spawns } = makeCtx(0);
+    ctx.finale = true;
+    ctx.eingefroren = true;
+    tick(s, ctx, 60 * 60);
+    expect(spawns.length).toBe(0);
+    expect(s.spawnQueue.length).toBe(0);
+    expect(s.phase).toBe("reserve");
+    ctx.eingefroren = false;
+    expect(runUntil(s, ctx, () => spawns.length > 0, 1200)).toBeGreaterThan(-1);
+  });
+});
+
+// Regressionstest gegen Audit H3: Reihenfolge wie in `createSim` (updateWave VOR
+// updateEinsatz). Fällt die Angriffskraft durch den letzten Kill exakt auf 0,
+// während das Feld im selben Tick leer wird, muss der Director trotzdem ins
+// Reserve-Regime — vorher blieb er auf `vorbei` und das Finale lief ohne Wellen.
+describe("wave ↔ einsatz — Verdrahtungsreihenfolge (AP4-06, Audit H3)", () => {
+  it("letzter Kill bricht die Angriffskraft und leert das Feld im selben Tick → reserve, nicht vorbei", async () => {
+    const { createEinsatzState, updateEinsatz } = await import("./einsatz");
+    const wave = createWaveState();
+    const einsatz = createEinsatzState();
+    const { ctx, spawns } = makeCtx(0);
+    let lebende = 0;
+    ctx.spawn = () => {
+      spawns.push({ defId: "x", hpFaktor: 1 });
+      lebende += 1;
+    };
+    const step = () => {
+      ctx.lebendeGegner = lebende;
+      ctx.finale = einsatz.phase === "finale";
+      ctx.eingefroren = einsatz.ergebnis === "gewonnen";
+      updateWave(wave, ctx, DT);
+      updateEinsatz(
+        einsatz,
+        {
+          wavePhase: wave.phase,
+          angriffskraftGebrochen: wave.angriffskraft <= 0,
+          spawnQueueLeer: wave.spawnQueue.length === 0,
+          homeVerloren: false,
+          truppAus: false,
+        },
+        DT,
+      );
+    };
+    // Welle 1 komplett spawnen (Aufbau 3 s + 4 Spawns).
+    for (let i = 0; i < 60 * 10; i += 1) step();
+    expect(wave.phase).toBe("welle");
+    expect(lebende).toBe(4);
+    // „Die Uhr": 3 Front-Kills à −2 …
+    wave.angriffskraft = Math.max(0, wave.angriffskraft - 6);
+    lebende = 1;
+    step();
+    // … und der letzte Kill zieht die Angriffskraft exakt auf 0.
+    wave.angriffskraft = 2;
+    wave.angriffskraft = Math.max(0, wave.angriffskraft - 2);
+    lebende = 0;
+    step();
+    expect(einsatz.phase).toBe("finale");
+    expect(wave.phase).toBe("reserve");
+    // Im Finale kommen Reservewellen.
+    const vorher = spawns.length;
+    for (let i = 0; i < 60 * 30; i += 1) step();
+    expect(spawns.length).toBeGreaterThan(vorher);
+  });
+});

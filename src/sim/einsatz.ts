@@ -84,8 +84,13 @@ export function updateEinsatz(
     return;
   }
 
-  // Verlust schlägt jede Phase.
+  // Verlust schlägt jede Phase — außer ein erreichtes „gewonnen" (der Entsatz
+  // ist da; AP4-06, Audit H4): das ist geschützt, bis der Spieler entscheidet.
+  // `verlaengern` setzt das Ergebnis zurück auf `offen` → wieder verlierbar.
   if (ctx.homeVerloren || ctx.truppAus) {
+    if (state.ergebnis === "gewonnen") {
+      return;
+    }
     state.phase = "vorbei";
     state.ergebnis = "verloren";
     state.finaleRest = 0;

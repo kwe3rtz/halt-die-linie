@@ -4,6 +4,7 @@ import { createRng } from "./rng";
 import {
   createCollisionWorld,
   moveCapsule,
+  setKolliderAktiv,
   type Aabb,
   type CollisionWorld,
   type LevelData,
@@ -37,7 +38,7 @@ import {
 } from "./enemies";
 import { imSichtkegel } from "./navgraph";
 import type { NavGraph, SektorData } from "./sektor";
-import { inBoundsXZ, zoneAt, abschnittAt } from "./sektor";
+import { inBoundsXZ, zoneAt, abschnittAt, brescheTag } from "./sektor";
 import {
   createFrontState,
   updateFront,
@@ -77,7 +78,7 @@ export type {
   NavKante,
   NavGraph,
 } from "./sektor";
-export { zoneAt, abschnittAt, inBoundsXZ } from "./sektor";
+export { zoneAt, abschnittAt, inBoundsXZ, brescheTag } from "./sektor";
 export { kuerzesterPfad, naechsterKnoten, imSichtkegel } from "./navgraph";
 export type {
   AbschnittZustand,
@@ -329,6 +330,9 @@ export function createSim(
 
   let tickCount = 0;
   let firePrev = false;
+  // Flanken für die Finale-Entscheidung (AP4-06): E = extrahieren, Q = verlängern.
+  let interactPrev = false;
+  let abilityPrev = false;
   let lastShot: Readonly<ShotEvent> | null = null;
   let nachschub = 0;
   let nextEnemyId = 1;
@@ -381,7 +385,18 @@ export function createSim(
   const aktiveAchsen: readonly string[] =
     options.aktiveAchsen ?? sektorMeta?.frontAbschnitte.map((a) => a.id) ?? [];
   const navKontext: NavKontext | undefined = navGraph
-    ? { graph: navGraph, verloren: verloreneAbschnitte }
+    ? {
+        graph: navGraph,
+        verloren: verloreneAbschnitte,
+        // Watchdog-Despawn (AP4-06): der Gegner war nie zu erreichen — seine
+        // Angriffskraft geht an den Director zurück, kein Nachschub, keine Uhr.
+        onDespawn: () => {
+          wave.angriffskraft = Math.min(
+            angriffskraftMax,
+            wave.angriffskraft + 1,
+          );
+        },
+      }
     : undefined;
 
   const setKanteOffen = (von: string, nach: string, offen: boolean): void => {
@@ -427,6 +442,54 @@ export function createSim(
   const abschnittState = (id: string): AbschnittFront | undefined =>
     frontState.find((a) => a.id === id) ?? homeState.find((a) => a.id === id);
 
+  // Welche Bresche (Index) liegt unter dem Nav-Knoten `bresche-<id>`? Die
+  // Nav-Kante ins Labyrinth öffnet nur für genau diese Bresche (AP4-06).
+  const brescheUnterKnoten = new Map<string, number>();
+  if (sektorMeta && navGraph) {
+    for (const ab of sektorMeta.frontAbschnitte) {
+      const knoten = navGraph.knoten.find((k) => k.id === `bresche-${ab.id}`);
+      if (!knoten || ab.parapetBreschen.length === 0) {
+        continue;
+      }
+      let best = 0;
+      let bestD = Infinity;
+      ab.parapetBreschen.forEach((b, i) => {
+        const d = Math.hypot(b.x - knoten.pos.x, b.z - knoten.pos.z);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      });
+      brescheUnterKnoten.set(ab.id, best);
+    }
+  }
+
+  // AP4-06: eine offene Bresche ist ein echtes Loch — das getaggte Parapet-
+  // Segment (`brescheTag`) verschwindet aus der Kollisionswelt, eine wieder
+  // geschlossene (Reset-Testeingang) kommt zurück. Gleichzeitig öffnet die
+  // Bresche unter dem Knoten `bresche-<id>` den Labyrinth-Zugang im Nav-Graph
+  // (KONZEPT.md §3: „durch eine Bresche strömt der Feind") — genau diese
+  // Bresche, sonst führt die Kante in eine stehende Wand (Audit H1). Nur
+  // öffnen; Schließen macht `setAbschnittVerloren(id, false)`. Idempotent,
+  // läuft nach jedem `updateFront` und nach den direkten Zustandsänderungen,
+  // damit Kollision und Nav nie auseinanderlaufen.
+  const syncBreschen = (): void => {
+    for (const f of frontState) {
+      f.breschen.forEach((b, i) =>
+        setKolliderAktiv(world, brescheTag(f.id, i), !b.offen),
+      );
+      const i = brescheUnterKnoten.get(f.id);
+      if (i !== undefined && f.breschen[i]?.offen) {
+        setKanteOffen(`bresche-${f.id}`, "lab-vorfront", true);
+      }
+    }
+    for (const f of homeState) {
+      f.breschen.forEach((b, i) =>
+        setKolliderAktiv(world, brescheTag(f.id, i), !b.offen),
+      );
+    }
+  };
+
   const abschnittBesetzt = (id: string): boolean => {
     const ab = alleAbschnitte.find((a) => a.id === id);
     if (!ab) {
@@ -447,6 +510,7 @@ export function createSim(
     f.ruheTimer = 0;
     f.depotVerloren = false;
     setAbschnittVerloren(abschnittId, false);
+    syncBreschen();
   };
 
   const forceAbschnittVerloren = (id: string, verloren: boolean): void => {
@@ -470,6 +534,7 @@ export function createSim(
       }
     }
     setAbschnittVerloren(id, verloren);
+    syncBreschen();
   };
 
   const waehleAbschnitt = (): string => {
@@ -696,15 +761,8 @@ export function createSim(
         },
         dt,
       );
-      // Eine aufgerissene Bresche öffnet den Labyrinth-Zugang (KONZEPT.md §3:
-      // „durch eine Bresche strömt der Feind") — die Kante steht in sektor.ts
-      // bereit (offen: false). Nur öffnen; Schließen macht `rueckerobern` /
-      // der Reset-Testeingang.
-      for (const f of frontState) {
-        if (f.breschen.some((b) => b.offen)) {
-          setKanteOffen(`bresche-${f.id}`, "lab-vorfront", true);
-        }
-      }
+      // Aufgerissene Breschen: Parapet-Segment raus, Labyrinth-Zugang auf (AP4-06).
+      syncBreschen();
     }
 
     // Wave-Director: spawnt neue Gegner (erst ab nächstem Tick aktiv).
@@ -718,9 +776,30 @@ export function createSim(
           spawn: spawnEnemyById,
           finale: einsatzState.phase === "finale",
           reserveStufe: einsatzState.reserveStufe,
+          eingefroren: einsatzState.ergebnis === "gewonnen",
         },
         dt,
       );
+    }
+
+    // Finale-Entscheidung als Eingabe-Kommando (AP4-06, Audit H4): nach
+    // „Entsatz eingetroffen" beendet `interact` (E) den Einsatz, `ability` (Q)
+    // verlängert. Flanken, damit ein gehaltener Knopf nicht mehrfach zündet;
+    // auch im Tod erlaubt (eine Entscheidung, keine Bewegung).
+    const interactFlanke = cmd.buttons.interact && !interactPrev;
+    const abilityFlanke = cmd.buttons.ability && !abilityPrev;
+    interactPrev = cmd.buttons.interact;
+    abilityPrev = cmd.buttons.ability;
+    if (
+      sektorMeta &&
+      einsatzState.phase === "finale" &&
+      einsatzState.ergebnis === "gewonnen"
+    ) {
+      if (interactFlanke) {
+        entscheide(einsatzState, "extrahieren");
+      } else if (abilityFlanke) {
+        entscheide(einsatzState, "verlaengern");
+      }
     }
 
     // Einsatzbogen (AP4-04): aufbau → wellen → finale → vorbei + die Uhr.

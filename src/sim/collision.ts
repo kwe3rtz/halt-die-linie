@@ -13,6 +13,13 @@ export interface LevelBox {
   center: Vec3;
   /** Volle Kantenlänge je Achse. */
   size: Vec3;
+  /**
+   * Optionales Etikett (z. B. `brescheTag(id, i)` aus `./sektor`). Getaggte
+   * Boxen kann die Sim zur Laufzeit ab-/anschalten (`setKolliderAktiv`) — so
+   * wird eine aufgerissene Bresche ein echtes Loch (AP4-06). Der Renderer
+   * blendet das Segment über dasselbe Etikett aus.
+   */
+  tag?: string;
 }
 
 export interface LevelData {
@@ -39,6 +46,13 @@ export interface Aabb {
 
 export interface CollisionWorld {
   readonly boxes: readonly Aabb[];
+  /** Etikett je Box, parallel zu `boxes` (`undefined` ohne Tag). */
+  readonly tags: readonly (string | undefined)[];
+  /**
+   * Aktiv-Flag je Box, parallel zu `boxes`. Inaktive Boxen sind für Bewegung,
+   * Hitscan und Sichtlinie nicht vorhanden. Nur über `setKolliderAktiv` ändern.
+   */
+  readonly aktiv: boolean[];
 }
 
 /** Wie hoch eine Kante sein darf, damit der Spieler sie hochsteigt statt anzustoßen. */
@@ -61,7 +75,31 @@ export function aabbFromBox(box: LevelBox): Aabb {
 }
 
 export function createCollisionWorld(level: LevelData): CollisionWorld {
-  return { boxes: level.boxes.map(aabbFromBox) };
+  return {
+    boxes: level.boxes.map(aabbFromBox),
+    tags: level.boxes.map((b) => b.tag),
+    aktiv: level.boxes.map(() => true),
+  };
+}
+
+/**
+ * Schaltet alle Boxen mit dem Etikett `tag` an oder ab. Liefert die Anzahl
+ * der betroffenen Boxen (0 = Tag unbekannt). Mutiert `world.aktiv` — die
+ * einzige veränderliche Stelle der Kollisionswelt (AP4-06, Bresche = Loch).
+ */
+export function setKolliderAktiv(
+  world: CollisionWorld,
+  tag: string,
+  aktiv: boolean,
+): number {
+  let n = 0;
+  for (let i = 0; i < world.tags.length; i += 1) {
+    if (world.tags[i] === tag) {
+      world.aktiv[i] = aktiv;
+      n += 1;
+    }
+  }
+  return n;
 }
 
 function capsuleAabb(pos: Vec3, radius: number, height: number): Aabb {
@@ -110,7 +148,11 @@ export function moveCapsule(
 
   // --- X-Achse ---
   next.x += v.x * dt;
-  for (const box of world.boxes) {
+  for (let i = 0; i < world.boxes.length; i += 1) {
+    const box = world.boxes[i];
+    if (!box || !world.aktiv[i]) {
+      continue;
+    }
     if (!overlaps(capsuleAabb(next, radius, height), box)) {
       continue;
     }
@@ -129,7 +171,11 @@ export function moveCapsule(
 
   // --- Z-Achse ---
   next.z += v.z * dt;
-  for (const box of world.boxes) {
+  for (let i = 0; i < world.boxes.length; i += 1) {
+    const box = world.boxes[i];
+    if (!box || !world.aktiv[i]) {
+      continue;
+    }
     if (!overlaps(capsuleAabb(next, radius, height), box)) {
       continue;
     }
@@ -150,7 +196,11 @@ export function moveCapsule(
   v.y += GRAVITY * dt;
   next.y += v.y * dt;
   let onGround = false;
-  for (const box of world.boxes) {
+  for (let i = 0; i < world.boxes.length; i += 1) {
+    const box = world.boxes[i];
+    if (!box || !world.aktiv[i]) {
+      continue;
+    }
     if (!overlaps(capsuleAabb(next, radius, height), box)) {
       continue;
     }
@@ -213,7 +263,11 @@ export function raycast(
   let nearest = maxDistanz;
   let hit = false;
 
-  for (const box of world.boxes) {
+  for (let i = 0; i < world.boxes.length; i += 1) {
+    const box = world.boxes[i];
+    if (!box || !world.aktiv[i]) {
+      continue;
+    }
     let tNear = 0;
     let tFar = maxDistanz;
 
