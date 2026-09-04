@@ -48,6 +48,24 @@ pro Frame übergeben (`update()`), pollt nichts selbst. Bei aktivem Pointer-Lock
 bleibt es sichtbar und lesbar — Pointer-Lock betrifft nur den Cursor und die
 Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
 
+Dasselbe Muster: `src/ui/hud.ts` (HP / Munition / Welle / Nachschub / Finale-
+Text), `src/ui/kompass.ts` (AP4-05 — Peil-Band oben: HOME-Marker + je
+Frontabschnitt ein Zustands-Marker, **Farbe UND Glyph** redundant, **keine
+Gegner-Marker**; `relPeilung()` rein), `src/ui/lagekarte.ts` (AP4-05 — statisches
+Sektor-Schema mit Abschnitts-Zuständen, Umschalten **M**; kein Echtzeit-Nav).
+Alle bekommen den State pro Frame, pollen nichts.
+
+## Audio
+
+`src/audio/` (AP4-05) — reiner Client, **außerhalb der Sim** (goldene Regel:
+darf `window` / `AudioContext`, importiert aus `src/sim` nur Typen und liest den
+State). `createAudio()` diffed den State frame-zu-frame (`beobachteEreignisse` —
+rein) und spielt Platzhalter-Töne (Oszillatoren) auf strategische Ereignisse:
+Abschnitt `verloren` → **Signalhorn aus Richtung Home-Line** (StereoPanner,
+`panFuerPeilung(relPeilung(...))`), Phase `finale` → Signalhorn + Truppen-Ruf.
+Default leise, stummschaltbar mit **T**. Feste Callout-Grammatik als
+String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/VO.
+
 ## First-Person-Controller, Kollision, Test-Level
 
 - `src/data/testlevel.ts` beschreibt ein Grabenstück als reine Quader-Liste
@@ -64,8 +82,12 @@ Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
 - `src/render/index.ts`: `createRenderer(canvas, level, meta?)`. Baut die Boxen
   einmalig, `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
   Spielerposition (+ Augenhöhe) und Rotation aus `yaw`/`pitch` — kein
-  `attachControl`, die Sim ist die Wahrheit. Mit `meta` (Sektor) bekommt jede Box
-  ihr Zonen-Material (`zoneAt`) — erste Stufe der Zonensilhouette.
+  `attachControl`, die Sim ist die Wahrheit. Mit `meta` (Sektor): Zonen-Material
+  je Box (`zoneAt`), Landmark-Pfosten, `syncFront` (Trümmer/Rauch je Abschnitt,
+  AP4-03) und (AP4-05) die Leit-„Spines" je Route (`meta.spineRouten`:
+  Farb-Polylinie + Pfosten + geometrische Symbole), A/B/C-Schilder
+  (`DynamicTexture`), Zonen-Tore an den zwei Rückzugs-Übergängen, geschärfte
+  Zonen-Farbtöne.
 - Regressionsschutz: Golden-/Replay-Test in `src/sim/sim.test.ts`
   (Seed + Kommandosequenz → identischer End-State; nutzt ein Inline-Testlevel,
   nicht den Sektor).
@@ -82,8 +104,10 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   aus `modul(...)` + Roh-Quadern. EINE Quelle für Render + Sim. `main.ts` fährt
   den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
 - `src/sim/sektor.ts` — Typen (`ZonenId`, `SektorMeta`,
-  `SektorData extends LevelData`, `FrontAbschnitt`, `NavGraph` …) + reine Helfer
-  `zoneAt(meta, pos)` / `abschnittAt(meta, pos)` (X/Z-Punkttest). Kein Babylon.
+  `SektorData extends LevelData`, `FrontAbschnitt`, `NavGraph`, `SpineRoute` …) +
+  reine Helfer `zoneAt` / `abschnittAt` / `inBoundsXZ`. Kein Babylon, keine
+  Logik — `SektorMeta.spineRouten` (AP4-05) ist ein reines Datenfeld, Werte in
+  `src/data/sektor.ts`, nur der Renderer liest es.
 - `src/sim/navgraph.ts` (AP4-02) — `kuerzesterPfad` (BFS über offene Kanten,
   deterministisch), `naechsterKnoten`, `imSichtkegel`. Der `SektorMeta.navGraph`
   ist handgepflegt in `src/data/sektor.ts`. `updateEnemies` bekommt einen

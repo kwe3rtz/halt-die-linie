@@ -61,6 +61,25 @@ export interface NavGraph {
   kanten: NavKante[];
 }
 
+/** Geometrisches Leitsymbol einer Spine-Route (redundant zur Farbe, AP4-05). */
+export type SpineSymbol = "dreieck" | "doppelstrich" | "kreis";
+
+/**
+ * Eine Leit-„Spine" (Kommunikationskabel an der Grabenwand, ~Brusthöhe) von
+ * einem Frontabschnitt zur Home-Line (KONZEPT.md §3). Je Route eine eigene
+ * Farbe **und** ein eigenes Symbol — lesbar bei Nacht / Farbsehschwäche /
+ * gedämpfter Palette. Nur Render — kein Sim-Verhalten hängt daran.
+ */
+export interface SpineRoute {
+  /** Deckungsgleich mit der Callout-Grammatik (`verbindungsgraben` …). */
+  id: string;
+  /** RGB 0..1. */
+  farbe: [number, number, number];
+  symbol: SpineSymbol;
+  /** Polylinie in Weltkoordinaten (Front → Home). */
+  punkte: Vec3[];
+}
+
 /** Semantische Metadaten neben der reinen Geometrie eines `LevelData`. */
 export interface SektorMeta {
   zonen: ZonenEintrag[];
@@ -76,6 +95,8 @@ export interface SektorMeta {
   homeZugaenge: HomeZugang[];
   /** Großes Orientierungs-Landmark im Labyrinth (Panzerwrack o. Ä.). */
   landmark: Vec3;
+  /** Leit-„Spines" Front → Home, je Route Farbe + Symbol (AP4-05). */
+  spineRouten: SpineRoute[];
   /** Spieler-Startpunkte an der Frontlinie. */
   spielerSpawn: Vec3[];
   /**

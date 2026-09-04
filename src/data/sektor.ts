@@ -300,6 +300,48 @@ const meta: SektorMeta = {
     { id: "feld-rechts", pos: { x: 20, y: AUF_FELD, z: -20 } },
   ],
   landmark: { x: 0, y: 0, z: 45 },
+  // Leit-Spines (AP4-05): je Route eigene Farbe + geometrisches Symbol, damit
+  // ein Tester von jedem Frontabschnitt der Wand/den Pfosten zur Home-Line
+  // folgen kann. Polylinien Front → Home, ~Brusthöhe (im Graben y≈−0,5, im Feld
+  // y≈1,0). Ids = Callout-Grammatik.
+  spineRouten: [
+    {
+      id: "verbindungsgraben",
+      farbe: [0.92, 0.78, 0.2], // gelb
+      symbol: "dreieck",
+      punkte: [
+        { x: 1.7, y: -0.5, z: 12 },
+        { x: 1.7, y: -0.5, z: 4 },
+        { x: 1.7, y: -0.5, z: -6 },
+        { x: 1.7, y: -0.5, z: -15 },
+        { x: 1.7, y: -0.5, z: -21 },
+      ],
+    },
+    {
+      id: "feld-links",
+      farbe: [0.9, 0.9, 0.86], // weiß
+      symbol: "doppelstrich",
+      punkte: [
+        { x: -15.5, y: -0.4, z: 12 },
+        { x: -16.5, y: 1.0, z: 6 },
+        { x: -18, y: 1.0, z: -3 },
+        { x: -19, y: 1.0, z: -13 },
+        { x: -19, y: -0.4, z: -21 },
+      ],
+    },
+    {
+      id: "feld-rechts",
+      farbe: [0.3, 0.72, 0.82], // cyan
+      symbol: "kreis",
+      punkte: [
+        { x: 15.5, y: -0.4, z: 12 },
+        { x: 16.5, y: 1.0, z: 6 },
+        { x: 18, y: 1.0, z: -3 },
+        { x: 19, y: 1.0, z: -13 },
+        { x: 19, y: -0.4, z: -21 },
+      ],
+    },
+  ],
   spielerSpawn: [
     { x: 0, y: -1.4, z: 13 },
     { x: -12, y: -1.4, z: 13 },

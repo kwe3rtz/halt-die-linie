@@ -5,6 +5,7 @@ import {
   Color3,
   Color4,
   DirectionalLight,
+  DynamicTexture,
   Engine,
   FreeCamera,
   HemisphericLight,
@@ -69,15 +70,15 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + delta * t;
 }
 
-// Grobe, klar unterscheidbare Zonen-Farbtöne — erste Stufe der Zonensilhouette
-// (Feinschliff in AP4-05).
+// Zonen-Farbtöne — auf Wiedererkennung getrimmt (AP4-05): Labyrinth erdig-dunkel,
+// Front sandhell, Feld oliv, Verbindungsgraben & Home kühl (Beton/Blau).
 const ZONEN_TON: Record<ZonenId, [number, number, number]> = {
-  feindzone: [0.28, 0.22, 0.22],
-  labyrinth: [0.35, 0.3, 0.21],
-  frontlinie: [0.47, 0.44, 0.37],
-  feld: [0.41, 0.44, 0.34],
-  verbindungsgraben: [0.3, 0.33, 0.4],
-  homeline: [0.37, 0.35, 0.42],
+  feindzone: [0.24, 0.17, 0.17],
+  labyrinth: [0.29, 0.23, 0.15],
+  frontlinie: [0.54, 0.49, 0.37],
+  feld: [0.35, 0.42, 0.27],
+  verbindungsgraben: [0.22, 0.27, 0.36],
+  homeline: [0.29, 0.31, 0.42],
 };
 
 export function createRenderer(
@@ -415,6 +416,159 @@ export function createRenderer(
     }
   };
 
+  // --- Lesbarkeit (AP4-05): Spine-Routen, Abschnittsschilder, Zonen-Tore ------
+  const leitMeshes: Mesh[] = [];
+  const leitMats: StandardMaterial[] = [];
+  const leitTexturen: DynamicTexture[] = [];
+  const leitLinien: LinesMesh[] = [];
+
+  const emissivMat = (
+    name: string,
+    farbe: readonly [number, number, number],
+  ): StandardMaterial => {
+    const m = new StandardMaterial(name, scene);
+    m.disableLighting = true;
+    m.emissiveColor = new Color3(farbe[0], farbe[1], farbe[2]);
+    leitMats.push(m);
+    return m;
+  };
+
+  const spineSymbol = (
+    typ: "dreieck" | "doppelstrich" | "kreis",
+    name: string,
+    mat: StandardMaterial,
+  ): Mesh => {
+    let m: Mesh;
+    if (typ === "dreieck") {
+      m = MeshBuilder.CreateDisc(
+        name,
+        { radius: 0.26, tessellation: 3 },
+        scene,
+      );
+    } else if (typ === "kreis") {
+      m = MeshBuilder.CreateTorus(
+        name,
+        { diameter: 0.5, thickness: 0.12, tessellation: 18 },
+        scene,
+      );
+    } else {
+      // Doppelstrich: zwei kurze Balken.
+      const a = MeshBuilder.CreateBox(
+        `${name}_a`,
+        { width: 0.5, height: 0.09, depth: 0.04 },
+        scene,
+      );
+      const b = MeshBuilder.CreateBox(
+        `${name}_b`,
+        { width: 0.5, height: 0.09, depth: 0.04 },
+        scene,
+      );
+      a.position.y = 0.09;
+      b.position.y = -0.09;
+      b.parent = a;
+      m = a;
+    }
+    m.material = mat;
+    m.isPickable = false;
+    m.renderingGroupId = GROUP_WORLD;
+    return m;
+  };
+
+  if (meta) {
+    // Spine je Route: Polylinie (Farbe) + Pfosten + Leitsymbole an jedem Punkt.
+    for (const route of meta.spineRouten) {
+      const farbe = new Color3(route.farbe[0], route.farbe[1], route.farbe[2]);
+      const pts = route.punkte.map((p) => new Vector3(p.x, p.y, p.z));
+      const linie = MeshBuilder.CreateLines(
+        `spine_${route.id}`,
+        { points: pts },
+        scene,
+      );
+      linie.color = farbe;
+      linie.isPickable = false;
+      linie.renderingGroupId = GROUP_WORLD;
+      leitLinien.push(linie);
+
+      const symMat = emissivMat(`spineMat_${route.id}`, route.farbe);
+      const pfostenMat = emissivMat(`spinePfosten_${route.id}`, [
+        route.farbe[0] * 0.4,
+        route.farbe[1] * 0.4,
+        route.farbe[2] * 0.4,
+      ]);
+      route.punkte.forEach((p, i) => {
+        const pfosten = MeshBuilder.CreateBox(
+          `spineP_${route.id}_${i}`,
+          { width: 0.09, height: 1.0, depth: 0.09 },
+          scene,
+        );
+        pfosten.position.set(p.x, p.y - 0.5, p.z);
+        pfosten.material = pfostenMat;
+        pfosten.isPickable = false;
+        pfosten.renderingGroupId = GROUP_WORLD;
+        leitMeshes.push(pfosten);
+
+        const sym = spineSymbol(
+          route.symbol,
+          `spineS_${route.id}_${i}`,
+          symMat,
+        );
+        sym.position.set(p.x, p.y + 0.3, p.z);
+        sym.billboardMode = BILLBOARD_ALL;
+        leitMeshes.push(sym);
+      });
+    }
+
+    // Abschnittsschilder A/B/C an der Grabenlinie (Y-Billboard, immer lesbar).
+    for (const ab of meta.frontAbschnitte) {
+      const tex = new DynamicTexture(
+        `schild_${ab.id}`,
+        { width: 128, height: 128 },
+        scene,
+        false,
+      );
+      tex.hasAlpha = true;
+      const ctx = tex.getContext();
+      ctx.fillStyle = "#12140f";
+      ctx.fillRect(0, 0, 128, 128);
+      tex.drawText(ab.id, null, 96, "bold 88px sans-serif", "#e8e4c8", "");
+      const mat = new StandardMaterial(`schildMat_${ab.id}`, scene);
+      mat.diffuseTexture = tex;
+      mat.emissiveColor = new Color3(0.5, 0.48, 0.4);
+      mat.specularColor = new Color3(0, 0, 0);
+      leitMats.push(mat);
+      leitTexturen.push(tex);
+      const mx = (ab.bounds.minX + ab.bounds.maxX) / 2;
+      const schild = MeshBuilder.CreatePlane(
+        `schild_${ab.id}`,
+        { size: 1.3 },
+        scene,
+      );
+      schild.position.set(mx, 0.9, 9.5);
+      schild.billboardMode = 2; // BILLBOARDMODE_Y
+      schild.material = mat;
+      schild.isPickable = false;
+      schild.renderingGroupId = GROUP_WORLD;
+      leitMeshes.push(schild);
+    }
+
+    // Zonen-Tore: markieren die zwei Rückzugs-Übergänge (Front→Feld, Feld→Home).
+    const torMat = emissivMat("zonentor", [0.6, 0.58, 0.5]);
+    for (const z of [10, -19.5]) {
+      for (const seite of [-23, 23]) {
+        const pylon = MeshBuilder.CreateBox(
+          `zonentor_${z}_${seite}`,
+          { width: 0.5, height: 4.5, depth: 0.5 },
+          scene,
+        );
+        pylon.position.set(seite, 1.2, z);
+        pylon.material = torMat;
+        pylon.isPickable = false;
+        pylon.renderingGroupId = GROUP_WORLD;
+        leitMeshes.push(pylon);
+      }
+    }
+  }
+
   const resize = () => engine.resize();
   window.addEventListener("resize", resize);
   engine.runRenderLoop(() => scene.render());
@@ -536,6 +690,18 @@ export function createRenderer(
       }
       frontVisuals.clear();
       truemmerMat?.dispose();
+      for (const m of leitLinien) {
+        m.dispose();
+      }
+      for (const m of leitMeshes) {
+        m.dispose();
+      }
+      for (const m of leitMats) {
+        m.dispose();
+      }
+      for (const t of leitTexturen) {
+        t.dispose();
+      }
       for (const m of zonenMat.values()) {
         m.dispose();
       }
