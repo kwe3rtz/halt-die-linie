@@ -102,6 +102,17 @@ export function setKolliderAktiv(
   return n;
 }
 
+/**
+ * Kontakt-Toleranz in Metern: Durchdringungen unterhalb dieser Tiefe gelten
+ * als Berührung, nicht als Kollision. Nötig, weil das Herausdrücken an eine
+ * Boxfläche (`box.minX - radius`) in Gleitkomma nicht immer wieder exakt auf
+ * der Fläche landet — z. B. 1,8 − 0,35 + 0,35 = 1,8000000000000003. Ohne die
+ * Toleranz „steckte" die Kapsel danach 2e-16 m in der Wand, und die nächste
+ * Achse löste diesen Rest als echte Kollision auf (AP5-01, Verbindungsgraben-
+ * Wände bei x = ±1,8).
+ */
+const KONTAKT_EPS = 1e-6;
+
 function capsuleAabb(pos: Vec3, radius: number, height: number): Aabb {
   return {
     minX: pos.x - radius,
@@ -115,13 +126,18 @@ function capsuleAabb(pos: Vec3, radius: number, height: number): Aabb {
 
 function overlaps(a: Aabb, b: Aabb): boolean {
   return (
-    a.minX < b.maxX &&
-    a.maxX > b.minX &&
-    a.minY < b.maxY &&
-    a.maxY > b.minY &&
-    a.minZ < b.maxZ &&
-    a.maxZ > b.minZ
+    a.minX < b.maxX - KONTAKT_EPS &&
+    a.maxX > b.minX + KONTAKT_EPS &&
+    a.minY < b.maxY - KONTAKT_EPS &&
+    a.maxY > b.minY + KONTAKT_EPS &&
+    a.minZ < b.maxZ - KONTAKT_EPS &&
+    a.maxZ > b.minZ + KONTAKT_EPS
   );
+}
+
+/** Durchdringungstiefe zweier überlappender Intervalle (die flachere Seite). */
+function tiefe(aMin: number, aMax: number, bMin: number, bMax: number): number {
+  return Math.min(aMax - bMin, bMax - aMin);
 }
 
 export interface MoveResult {
@@ -134,6 +150,19 @@ export interface MoveResult {
  * Bewegt eine Kapsel (Fußpunkt `pos`, `radius`, `height`) um `vel * dt`,
  * wendet Schwerkraft an und löst die Durchdringung statischer Boxen auf.
  * Reine Funktion: Eingaben werden nicht mutiert.
+ *
+ * Grundsatz der achsenweisen Auflösung (AP5-01): **eine Achse löst nur auf,
+ * was ihre eigene Bewegung verursacht haben kann** — höchstens `|Δ| +
+ * KONTAKT_EPS` tief. Eine tiefere Überlappung stammt von einer anderen Achse
+ * (oder ist ein Rundungsrest) und wird von dieser Achse übersprungen. Würde
+ * sie trotzdem hier „gelöst", landete die Kapsel an der nächstgelegenen Fläche
+ * der Box entlang dieser Achse — bei einer 33 m langen Grabenwand meterweit
+ * entfernt (der Teleport-Bug). Damit ist jede Einzelauflösung von Haus aus auf
+ * den Tick-Weg begrenzt; ein separates Clamping ist nicht nötig.
+ *
+ * Eine Kapsel, die *tief* in einer Box startet (Datenfehler — ein Spawn oder
+ * Nav-Knoten im Kollider), wird darum nicht mehr herausgeschoben; dagegen
+ * schützt der Begehbarkeits-Test (`navgraph-begehbarkeit.test.ts`).
  */
 export function moveCapsule(
   world: CollisionWorld,
@@ -147,13 +176,16 @@ export function moveCapsule(
   const v: Vec3 = { x: vel.x, y: vel.y, z: vel.z };
 
   // --- X-Achse ---
-  next.x += v.x * dt;
+  const dx = v.x * dt;
+  next.x += dx;
+  const maxTiefeX = Math.abs(dx) + KONTAKT_EPS;
   for (let i = 0; i < world.boxes.length; i += 1) {
     const box = world.boxes[i];
     if (!box || !world.aktiv[i]) {
       continue;
     }
-    if (!overlaps(capsuleAabb(next, radius, height), box)) {
+    const kapsel = capsuleAabb(next, radius, height);
+    if (!overlaps(kapsel, box)) {
       continue;
     }
     const ledge = box.maxY - next.y;
@@ -164,19 +196,25 @@ export function moveCapsule(
       next.y = box.maxY; // kleine Stufe: hochsteigen statt blockieren
       continue;
     }
+    if (tiefe(kapsel.minX, kapsel.maxX, box.minX, box.maxX) > maxTiefeX) {
+      continue; // nicht von dieser Achse verursacht — nicht entlang X lösen
+    }
     const center = (box.minX + box.maxX) / 2;
     next.x = next.x < center ? box.minX - radius : box.maxX + radius;
     v.x = 0;
   }
 
   // --- Z-Achse ---
-  next.z += v.z * dt;
+  const dz = v.z * dt;
+  next.z += dz;
+  const maxTiefeZ = Math.abs(dz) + KONTAKT_EPS;
   for (let i = 0; i < world.boxes.length; i += 1) {
     const box = world.boxes[i];
     if (!box || !world.aktiv[i]) {
       continue;
     }
-    if (!overlaps(capsuleAabb(next, radius, height), box)) {
+    const kapsel = capsuleAabb(next, radius, height);
+    if (!overlaps(kapsel, box)) {
       continue;
     }
     const ledge = box.maxY - next.y;
@@ -187,6 +225,9 @@ export function moveCapsule(
       next.y = box.maxY;
       continue;
     }
+    if (tiefe(kapsel.minZ, kapsel.maxZ, box.minZ, box.maxZ) > maxTiefeZ) {
+      continue; // nicht von dieser Achse verursacht — nicht entlang Z lösen
+    }
     const center = (box.minZ + box.maxZ) / 2;
     next.z = next.z < center ? box.minZ - radius : box.maxZ + radius;
     v.z = 0;
@@ -194,21 +235,28 @@ export function moveCapsule(
 
   // --- Y-Achse (Schwerkraft + Bodenkontakt) ---
   v.y += GRAVITY * dt;
-  next.y += v.y * dt;
+  const dy = v.y * dt;
+  next.y += dy;
+  const maxTiefeY = Math.abs(dy) + KONTAKT_EPS;
   let onGround = false;
   for (let i = 0; i < world.boxes.length; i += 1) {
     const box = world.boxes[i];
     if (!box || !world.aktiv[i]) {
       continue;
     }
-    if (!overlaps(capsuleAabb(next, radius, height), box)) {
+    const kapsel = capsuleAabb(next, radius, height);
+    if (!overlaps(kapsel, box)) {
       continue;
     }
-    if (v.y > 0 && box.minY > next.y) {
+    const vonOben = box.maxY - next.y; // Fußpunkt unter der Oberseite
+    const vonUnten = kapsel.maxY - box.minY; // Kopf über der Unterseite
+    if (v.y > 0 && vonUnten <= maxTiefeY) {
       next.y = box.minY - height; // Kopf an einer echten Decke anstoßen
-    } else {
+    } else if (vonOben <= maxTiefeY) {
       next.y = box.maxY; // auf der Oberseite landen
       onGround = true;
+    } else {
+      continue; // seitlicher Kontakt (Wand) — nicht Sache der Y-Achse
     }
     v.y = 0;
   }

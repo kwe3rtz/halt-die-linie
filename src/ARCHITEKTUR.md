@@ -73,7 +73,9 @@ String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/
   (`src/render`) und Sim-Collider (`src/sim/collision`). Keine Babylon-Typen.
 - `src/sim/collision.ts`: statische AABBs, `moveCapsule()` löst die Bewegung
   achsenweise auf (X, Z, dann Schwerkraft-Y), mit Stufen-Hochsteigen bis
-  `STEP_HEIGHT` und Bodenkontakt. Reine Funktion.
+  `STEP_HEIGHT` und Bodenkontakt. Reine Funktion. Grundsatz seit AP5-01:
+  **eine Achse löst nur Durchdringungen auf, die ihre eigene Bewegung
+  verursacht haben kann** (höchstens `|Δ| + KONTAKT_EPS` tief) — siehe unten.
 - `src/sim/index.ts`: `createSim(seed, level?)`. Der Seed speist `rng.ts` und
   wählt daraus deterministisch einen Spawn-Punkt. `tick()` dreht `yaw`/`pitch`
   aus dem Maus-Delta (Pitch geklemmt ±89°), bewegt den Spieler yaw-relativ auf
@@ -185,6 +187,25 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   `WaveContext.eingefroren` (keine Reservespawns) und die Verlustprüfung in
   `einsatz.ts` kippt das Ergebnis nicht mehr; `verlaengern` → `offen` → wieder
   verlierbar.
+
+### Boxhead-Kern (AP5)
+
+- **AP5-01 Mittelgang-Teleport.** Ursache in `moveCapsule`: der X-Push setzt
+  die Kapsel auf `box.minX − radius`; für die Verbindungsgraben-Wände
+  (Innenfläche x = ±1,8, Spielerradius 0,35) ergibt das in Gleitkomma einen
+  Rest von 2e-16 m Durchdringung. Die Z-Achse behandelte diesen Rest als echte
+  Kollision und löste ihn an der _nächsten Z-Fläche_ der 33-m-Wand auf — bis
+  zu 16,5 m Sprung in einem Tick (die Y-Achse hätte die Kapsel analog auf die
+  Wandkrone gehoben). Fix: (1) Kontakt-Toleranz `KONTAKT_EPS` (1 µm) im
+  Überlappungstest — Berührung ist keine Kollision; (2) jede Achse löst nur
+  Durchdringungen ≤ ihrem eigenen Tick-Weg auf, tiefere überspringt sie (die
+  gehören einer anderen Achse). Damit ist jede Einzelauflösung von Haus aus
+  auf den Tick-Weg begrenzt — kein separates Clamping. Kehrseite: eine Kapsel,
+  die _tief_ in einer Box startet (Datenfehler), wird nicht mehr
+  herausgeschoben; dagegen schützt `navgraph-begehbarkeit.test.ts`.
+  Regressionstests: `collision-verbindungsgraben.test.ts` (Durchläufe auf
+  der echten Geometrie inkl. Spieler-Sim, Gegenprobe am exakten Zustand) und
+  Mechanismus-Tests in `collision.test.ts`.
 
 ## Bundle-Größe
 
