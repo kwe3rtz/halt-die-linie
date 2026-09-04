@@ -1,6 +1,6 @@
 # AP4-04 — Die Uhr, der Rückzug & das Home-Line-Finale
 
-**Status:** review
+**Status:** erledigt · `6af9326` · reviewed 2026-09-04
 **Arbeitspaket:** 4 · **Branch:** `arbeitspaket-4`
 **Referenz:** `KONZEPT.md` §3 („die Uhr — warum die Front halten"), §6
 (Einsatzbogen: Wellen → Zeit-Hold an der Home-Line → Extraktion/Verlängern;
@@ -195,3 +195,65 @@ Tests: 186 (18 Dateien, +26) · Coverage src/sim **97,26 %** · Bundle ~6,89 MB 
 - **Nicht headless einzufangen:** die volle 90-s-Countdown-Auflösung in Echtzeit
   (zu langsam) und ein Standbild der Home-Line von vorn (keine Kameradrehung). Im
   Spieltest gegenchecken.
+
+---
+
+## Review — AP4-04 · 2026-09-04
+
+Verdikt: **grünes Licht**.
+
+Geprüft: lokal typecheck / lint / format:check / test:coverage / build alle grün
+(186 Tests, +26; Coverage src/sim 97,26 % — `einsatz.ts` + `wave.ts` 100 %). CI +
+Pages-Preview grün auf `6af9326` (CI ~6 min — die langen `sektor.test.ts`-Tick-
+Tests laufen auf CI-Hardware träger, im Limit; Merk-Posten falls es länger wird).
+Gelesen:
+
+- `src/sim/einsatz.ts` — Phasenmaschine `aufbau → wellen → finale → vorbei`,
+  `ergebnis offen/gewonnen/verloren`, rein/in-place. Verlust schlägt jede Phase.
+  `finale` = fester Countdown, `entscheide` nur bei `gewonnen`, `verlaengern`
+  setzt `ergebnis` zurück auf `offen` + neuen Countdown + `reserveStufe++`.
+  `zermuerbungProKill(zone, verloren)`: Front 2 · Labyrinth/Feindzone 1,5 ·
+  Feld/Graben 1 · Home 0,5 · verlorene Front = wie Feld. Sauber.
+- `src/sim/wave.ts` — `leereQueue()` herausgezogen (DRY), neue Phase `reserve`
+  (Finale-Reservewellen auf 8-s-Takt, `reserveStufe`-skaliert), `finale`/
+  `reserveStufe` als optionaler Kontext. `angriffskraft` bleibt bei 0.
+- `src/sim/front.ts` — `FrontKontext.sektorMeta → abschnitte` (entkoppelt,
+  dieselbe Maschine für Front + Home), `createFrontState(abschnitte, hpFaktor)`.
+- `src/data/sektor.ts` — `meta.homeAbschnitte` (H-West / H-Ost ums Nordparapet,
+  je 1 Bresche) — reine Meta über der AP4-01-Geometrie.
+- `src/sim/index.ts` — Uhr im tödlichen Treffer (`zoneAt` + `abschnittState`-
+  `verloren`-Check), `updateFront` ×2 (Front + Home, geteilte
+  `spielerPositionen`), `updateWave` mit `finale`, `updateEinsatz` mit
+  `homeVerloren` (alle Home `verloren`) + `truppAus`. `abschnittState` /
+  `rueckerobern` / `_setAbschnittVerloren` wirken jetzt auf Front **und** Home.
+  `SimState.home` + `SimState.einsatz`. Sim-Eingänge `entscheide` /
+  `_setTruppAus`. `SimOptions.startAngriffskraft` (Test-Affordanz).
+- `src/ui/hud.ts` — eine Textzeile im Wellen-Panel (Countdown / Ergebnis).
+- Golden-Anker: der **Nav-Anker (Seed 40404) ist zu Recht unverändert** (im
+  600-Tick-Fenster fällt kein Gegner → die Uhr feuert nicht), nur um `einsatz`/
+  `home`-Asserts ergänzt. **Neuer, dedizierter Uhr-Anker** (Seed 1, ein
+  Front-Kill zieht 2 / an gefallener Front 1) + der alte Inline-Anker unverändert.
+  Bessere Lösung als die von mir im Kickoff angenommene Neubaseline.
+
+Zu den 8 `TODO(Rückfrage)` — Planer-Entscheidung: alle akzeptiert als
+Platzhalter-Zahlen bzw. Ticket-konforme Vorgaben.
+
+- **Merk-Posten Spieltest:** Finale ist feldunabhängig — „gewonnen" kann fallen,
+  während noch Restgegner im Sektor sind. Prüfen, ob sich das richtig anfühlt
+  (Entsatz-Fiktion trägt das wahrscheinlich). Reservewellen-Kurve + alle
+  Countdowns + `HOME_BRESCHE_FAKTOR 2,5` im Spieltest justieren.
+- `_setTruppAus` = Koop-Stub (solo respawnt ewig) — korrekt, echte
+  „Trupp aus"-Bedingung kommt mit dem Koop-Wiederbelebungsfenster.
+- `entscheide`-Knopf ist noch nicht im UI verdrahtet (kein UI-Ticket hier) —
+  HUD zeigt nur den Text. AP4-05 / späteres UI-Paket.
+
+Anmerkungen (nicht blockierend):
+
+- `HINTEN_KANTE`-Map (AP4-03) kennt nur A/B/C — ein verlorener Home-Abschnitt
+  löst dort keine Nav-Änderung aus. Richtig so (die Home-Line ist die letzte
+  Linie, kein „dahinter").
+- `SimState.home[]` + `SimState.einsatz` über die Ticket-Form hinaus — sinnvoll,
+  HUD/Render brauchen beides analog zu `front[]`.
+
+Folge-Ticket: **AP4-05** (Lesbarkeit: Silhouetten, Spine, Schilder, Kompass,
+Audio) — **letztes AP4-Ticket**, danach Spieltest des Kern-Bogens.

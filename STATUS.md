@@ -16,10 +16,11 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). Spielbar: FP-Shooter auf
   dem Boxen-Testgraben, Wellen aus Nahkampf-Infanterie.
 - **Als Nächstes:** **AP4 „Verteidigung in der Tiefe"** läuft auf
-  `arbeitspaket-4`. AP4-01/-02/-03 ✅ reviewed + archiviert (`a0badbf`, `20bf9a0`,
-  `1701ff1`) — Sektor-Geometrie, Feind-Nav-Graph, Frontabschnitts-Zustandsmaschine
-  (`stabil→…→verloren`, Breschen, `rueckerobern`). Als Nächstes **AP4-04** (Die
-  Uhr, Rückzug & Home-Line-Finale). Kickoff-Prompt: `WORKFLOW.md`.
+  `arbeitspaket-4`. AP4-01…04 ✅ reviewed + archiviert (`a0badbf`, `20bf9a0`,
+  `1701ff1`, `6af9326`) — Sektor-Geometrie, Feind-Nav-Graph, Frontabschnitts-
+  Zustandsmaschine, die Uhr + Home-Line-Finale + Verlustbedingung. Als Nächstes
+  **AP4-05** (Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio) —
+  **letztes AP4-Ticket**, danach Spieltest. Kickoff-Prompt: `WORKFLOW.md`.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -42,15 +43,17 @@ angesagt.
 ## Als Nächstes
 
 1. **AP4 „Verteidigung in der Tiefe"** bauen — Worker im Ticket-Loop.
-   AP4-01/-02/-03 ✅. Jetzt **AP4-04 → AP4-05** der Reihe nach. Branch
-   `arbeitspaket-4`. Beim nächsten Spieltest gegenchecken: einmal quer durch alle
-   6 Zonen des H (headless ging nicht); Feuertritt-Marge (~0,1 m über Parapet);
-   Sap-Lücken ↔ Parapet-Enden (Geometrie in AP4-02 justiert); ob sich ein still
-   „gebrochener" Abschnitt ohne Angreifer bis `verloren` ausbluten komisch
-   anfühlt (AP4-03 TODO 2); ob `rueckerobern` sich lohnend anfühlt (Breschen
-   bleiben offen).
-2. Nach AP4: Spieltest des Kern-Bogens (Front halten → verlieren → zurückfallen →
-   Home-Line). Trägt der Moment, geht es weiter.
+   AP4-01…04 ✅. Jetzt **AP4-05** (Lesbarkeit), dann ist AP4 komplett → Spieltest
+   des Kern-Bogens. Branch `arbeitspaket-4`.
+2. **Spieltest-Checkliste Kern-Bogen** (nach AP4-05): einmal quer durch alle 6
+   Zonen des H (headless ging nie); Feuertritt-Marge (~0,1 m über Parapet);
+   Sap-Lücken ↔ Parapet-Enden (Geometrie in AP4-02 justiert); still „gebrochener"
+   Abschnitt ohne Angreifer blutet bis `verloren` aus (AP4-03 TODO 2 — komisch?);
+   `rueckerobern` lässt Breschen offen — lohnend?; Finale ist feldunabhängig
+   („gewonnen" trotz Restgegner — richtig?); alle Zahlen (Zermürbung je Zone,
+   Countdowns, Reservewellen, Schwellenzeiten `T/T2/T3`) sind Platzhalter.
+   **Kernfrage:** trägt „Front halten → Abschnitt verlieren → zurückfallen →
+   Home-Line halten" als Spielgefühl? Trägt der Moment, geht es weiter.
 3. Danach: „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
    Generator fürs vordere Labyrinth, dann Gegner-Roster-Ausbau (`AUFGABEN.md`
    „Arbeitspaket 5+").

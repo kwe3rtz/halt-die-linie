@@ -6,6 +6,20 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · in Arbeit
 
+- **AP4-04** · `6af9326` · **Die Uhr, der Rückzug & das Home-Line-Finale.**
+  `src/sim/einsatz.ts` (Phasenmaschine `aufbau → wellen → finale → vorbei`,
+  `ergebnis offen/gewonnen/verloren`, `entscheide(extrahieren|verlaengern)`,
+  `zermuerbungProKill(zone, verloren)`). **Die Uhr:** jeder Kill zermürbt die
+  `angriffskraft` zonengewichtet (Front 2 · Labyrinth 1,5 · Feld/Graben 1 · Home
+  0,5; verlorener Frontabschnitt = wie Feld) — im tödlichen Treffer verdrahtet.
+  **Home-Line** über dieselbe `front.ts`-Maschine (`meta.homeAbschnitte` H-West/
+  H-Ost, 2,5× Bresche-HP). Verlust: alle Home-Abschnitte `verloren` **oder**
+  `_setTruppAus`, in jeder Phase. `wave.ts`: neue Phase `reserve` (Finale-
+  Reservewellen, `reserveStufe`-skaliert). `SimState.home` + `SimState.einsatz`,
+  Sim-Eingänge `entscheide` / `_setTruppAus`, `SimOptions.startAngriffskraft`.
+  HUD-Textzeile für den Countdown. Neuer Uhr-Golden-Anker (Seed 1); Nav-Anker
+  unverändert (kein Kill in seinem Fenster). 186 Tests (+26), Coverage src/sim
+  97,26 %.
 - **AP4-03** · `1701ff1` · **Frontabschnitte: Besitz, Bresche, Fall.**
   `src/sim/front.ts` (Zustandsmaschine je Abschnitt `stabil → bedraengt →
   gebrochen → verloren` aus Feinddruck + aufgerissenen Parapet-Breschen;

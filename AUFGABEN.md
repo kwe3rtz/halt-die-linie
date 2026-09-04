@@ -620,7 +620,7 @@ Branch: `arbeitspaket-4` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien in
 | AP4-01 | Sektor-Geometrie (das „H") als Daten + Renderer | ✅ `erledigt/` (`a0badbf`) |
 | AP4-02 | Feind-Navigation: semantischer Graph | ✅ `erledigt/` (`20bf9a0`) |
 | AP4-03 | Frontabschnitte: Besitz, Bresche, Fall | ✅ `erledigt/` (`1701ff1`) |
-| AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | offen |
+| AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | ✅ `erledigt/` (`6af9326`) |
 | AP4-05 | Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | offen |
 
 Reihenfolge einhalten — 02 vor 03/04, weil sonst auf Platzhalter-Geradeauslauf
