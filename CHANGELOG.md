@@ -6,6 +6,18 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · in Arbeit
 
+- **AP4-03** · `1701ff1` · **Frontabschnitte: Besitz, Bresche, Fall.**
+  `src/sim/front.ts` (Zustandsmaschine je Abschnitt `stabil → bedraengt →
+  gebrochen → verloren` aus Feinddruck + aufgerissenen Parapet-Breschen;
+  Erholung eine Stufe, nie aus `verloren`; `updateFront` rein/in-place).
+  `onVerloren(id)` verdrahtet in `createSim` das AP4-02-Verhalten (Nav-Kanten
+  nach hinten, Infiltration, Depot verloren); eine offene Bresche öffnet
+  `bresche-<id> ↔ lab-vorfront`. `SimState.front` (Zustand + offene Breschen).
+  Neuer Sim-Eingang `rueckerobern(id)` (`verloren → gebrochen`, nur bei leerem
+  Abschnitt). `_setAbschnittVerloren` bleibt als dünner Testeingang.
+  Renderer: Trümmer je Bresche, Rauch je `gebrochen`/`verloren` (grob, Feinschliff
+  AP4-05). Beide Golden-Anker unverändert. 160 Tests (+21), Coverage src/sim
+  96,86 %.
 - **AP4-02** · `20bf9a0` · **Feind-Navigation: semantischer Graph.**
   `src/sim/navgraph.ts` (`kuerzesterPfad` = deterministische BFS über offene
   Kanten, `naechsterKnoten`, `imSichtkegel` — reine Sim-Helfer).

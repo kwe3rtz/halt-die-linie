@@ -16,10 +16,10 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). Spielbar: FP-Shooter auf
   dem Boxen-Testgraben, Wellen aus Nahkampf-Infanterie.
 - **Als Nächstes:** **AP4 „Verteidigung in der Tiefe"** läuft auf
-  `arbeitspaket-4`. **AP4-01** (Sektor-Geometrie) + **AP4-02** (Feind-Navigation,
-  semantischer Graph) ✅ reviewed + archiviert (`a0badbf`, `20bf9a0`). Als
-  Nächstes **AP4-03** (Frontabschnitte: Besitz, Bresche, Fall) — **frische
-  Worker-Session** (die alte war voll). Kickoff-Prompt: `WORKFLOW.md`.
+  `arbeitspaket-4`. AP4-01/-02/-03 ✅ reviewed + archiviert (`a0badbf`, `20bf9a0`,
+  `1701ff1`) — Sektor-Geometrie, Feind-Nav-Graph, Frontabschnitts-Zustandsmaschine
+  (`stabil→…→verloren`, Breschen, `rueckerobern`). Als Nächstes **AP4-04** (Die
+  Uhr, Rückzug & Home-Line-Finale). Kickoff-Prompt: `WORKFLOW.md`.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -42,11 +42,13 @@ angesagt.
 ## Als Nächstes
 
 1. **AP4 „Verteidigung in der Tiefe"** bauen — Worker im Ticket-Loop.
-   AP4-01 + AP4-02 ✅ (`a0badbf`, `20bf9a0`). Jetzt **AP4-03 → AP4-05** der Reihe
-   nach. Branch `arbeitspaket-4`. Beim nächsten Spieltest: einmal quer durch alle
-   6 Zonen des H laufen (headless ging nicht); Feuertritt-Marge (~0,1 m über
-   Parapet) gegenchecken; prüfen, dass die Sap-Lücken zu den Parapet-Enden passen
-   (Geometrie in AP4-02 justiert).
+   AP4-01/-02/-03 ✅. Jetzt **AP4-04 → AP4-05** der Reihe nach. Branch
+   `arbeitspaket-4`. Beim nächsten Spieltest gegenchecken: einmal quer durch alle
+   6 Zonen des H (headless ging nicht); Feuertritt-Marge (~0,1 m über Parapet);
+   Sap-Lücken ↔ Parapet-Enden (Geometrie in AP4-02 justiert); ob sich ein still
+   „gebrochener" Abschnitt ohne Angreifer bis `verloren` ausbluten komisch
+   anfühlt (AP4-03 TODO 2); ob `rueckerobern` sich lohnend anfühlt (Breschen
+   bleiben offen).
 2. Nach AP4: Spieltest des Kern-Bogens (Front halten → verlieren → zurückfallen →
    Home-Line). Trägt der Moment, geht es weiter.
 3. Danach: „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale

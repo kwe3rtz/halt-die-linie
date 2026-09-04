@@ -1,6 +1,6 @@
 # AP4-03 — Frontabschnitte: Besitz, Bresche, Fall
 
-**Status:** review
+**Status:** erledigt · `1701ff1` · reviewed 2026-09-04
 **Arbeitspaket:** 4 · **Branch:** `arbeitspaket-4`
 **Referenz:** `KONZEPT.md` §3 (`stabil → bedrängt → gebrochen → verloren`,
 Parapet als lebendiges Ziel, „Verlust öffnet den Weg", Rückeroberung
@@ -189,3 +189,60 @@ Tests: 160 (17 Dateien, +21) · Coverage src/sim **96,86 %** · Bundle ~6,89 MB 
   stirbt wiederholt (Screen-FX überdeckt die Front). Wie in AP4-01/-02: bitte
   beim Spieltest gegenchecken (Bresche = Trümmer im Parapet, `gebrochen`/
   `verloren` = Rauch über dem Abschnitt).
+
+---
+
+## Review — AP4-03 · 2026-09-04
+
+Verdikt: **grünes Licht**.
+
+Geprüft: lokal typecheck / lint / format:check / test:coverage / build alle grün
+(160 Tests, +21; Coverage src/sim 96,86 %, `front.ts` 98,42 %). CI +
+Pages-Preview grün auf `1701ff1`. Gelesen:
+
+- `src/sim/front.ts` — Zustandsmaschine je Abschnitt, rein + in-place, kein
+  Babylon/Zeit/Zufall. Druck rauf/runter mit Gegnerzahl, Bresche-HP sinkt nur
+  ungehalten + mit Gegner in Reichweite (Spieler-Deckung blockiert), drei Timer,
+  ein Übergang je Tick (vorwärts vor Erholung), `verloren` terminal, `onVerloren`
+  genau im Übergangs-Tick. Sauber.
+- `src/sim/index.ts` — `frontState` je Sim, `updateFront` nach `updateEnemies`,
+  `spielerPositionen` leer im Tod. `onVerloren` → bestehendes
+  `setAbschnittVerloren` (Nav + Infiltration). Offene Bresche öffnet
+  `bresche-<id> ↔ lab-vorfront` (idempotent je Tick). `rueckerobern` nur bei
+  leerem `bounds`. `_setAbschnittVerloren` als `forceAbschnittVerloren` neu (voll
+  reset inkl. Bresche-Reparatur) — AP4-02-Tests laufen unverändert.
+- `src/sim/sektor.ts` — `imXZ` → `inBoundsXZ` exportiert (von `front.ts` +
+  `createSim` genutzt). Reine Umbenennung.
+- `src/render/index.ts` — `syncFront`: gepoolte Trümmerquader je Bresche
+  (`setEnabled`), 1 Rauch-Billboard je Abschnitt, Alpha nach Stufe. Sauber
+  disposed.
+- Beide Golden-Anker (Inline-Testlevel + Sektor-Graph Seed 40404) unverändert,
+  nur um `front`-Asserts ergänzt.
+
+Zu den 6 `TODO(Rückfrage)` — Planer-Entscheidung: alle akzeptiert.
+
+1. `T/T2/T3` + Druck-Schwelle Platzhalter — so lassen, Balance im Spieltest /
+   mit AP4-04 (die Uhr). Die Wahl „kleiner Wellenstoß knackt nicht, Dauerdruck
+   ~15 s" ist sinnvoll und hält den Nav-Golden-Anker grün.
+2. `gebrochen → verloren` ohne Feindbedingung (streng Ticket-Wortlaut) —
+   akzeptiert. **Merk-Posten:** wenn sich im Spieltest ein still gebrochener
+   Abschnitt ohne Angreifer „ausbluten" komisch anfühlt, die 1-Zeile
+   `&& gegnerImAbschnitt.length > 0` in `updateFront` ziehen. Nicht jetzt.
+3. „am `front-<id>`-Knoten" = „im `bounds`" — akzeptiert, spart `front.ts` die
+   `navGraph`-Abhängigkeit, kein Gameplay-Verlust im Greybox.
+4. Offene Bresche öffnet den Labyrinth-Zugang — richtig, das war in der
+   AP4-02-Review als AP4-03-Aufgabe genannt (KONZEPT §3).
+5. Render grob — ok, Feinschliff ist AP4-05.
+6. `bedraengt` nur Anzeige — ok, Ticket-Vorgabe.
+
+Anmerkungen (nicht blockierend):
+
+- **`rueckerobern` repariert die Breschen nicht** — ein zurückeroberter Abschnitt
+  ist `gebrochen` mit offenen Breschen und fällt ungehalten in `T2` wieder.
+  Vertretbare Lesart von „Rückeroberung selten/teuer" (echte Reparatur =
+  Pionier, späteres Paket). Im Spieltest / mit der Nachschub-Ökonomie
+  gegenchecken, ob sich das lohnend anfühlt.
+- Abweichung 3 (`SimState.front[].breschen: boolean[]` zusätzlich zu
+  `breschenOffen`) — sinnvoll, der Renderer braucht *welche* Bresche.
+
+Folge-Ticket: **AP4-04** (Die Uhr, der Rückzug & das Home-Line-Finale).
