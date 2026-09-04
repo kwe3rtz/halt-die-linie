@@ -33,6 +33,7 @@ Fixes aus dem ersten Spieltest. Branch `arbeitspaket-3` von `main`.
 Der handgebaute Greybox-Sektor (das „H", `KONZEPT.md` §3) + der Kern-Bogen:
 Front halten → Abschnitt verlieren → zurückfallen → Home-Line halten. Branch
 `arbeitspaket-4` von `main`. Kein Generator, keine neuen Gegner, kein Tag/Nacht.
+**Komplett** — alle 5 Tickets in `erledigt/`, PR → `main` offen.
 
 | Ticket | Status |
 |---|---|
@@ -40,7 +41,7 @@ Front halten → Abschnitt verlieren → zurückfallen → Home-Line halten. Bra
 | AP4-02 Feind-Navigation: semantischer Graph | ✅ `erledigt/` |
 | AP4-03 Frontabschnitte: Besitz, Bresche, Fall | ✅ `erledigt/` |
 | AP4-04 Die Uhr, der Rückzug & das Home-Line-Finale | ✅ `erledigt/` |
-| AP4-05 Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | offen |
+| AP4-05 Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | ✅ `erledigt/` |
 
 ## Arbeitspaket 5+
 

@@ -4,8 +4,20 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
-## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · in Arbeit
+## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · komplett
 
+- **AP4-05** · `9c9af56` · **Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio.**
+  Renderer: geschärfte Zonen-Farbtöne + render-only Zonen-Tore an den
+  Rückzugs-Übergängen; Leit-„Spines" je Route (`SektorMeta.spineRouten` —
+  reines Typ-Feld, Werte in `src/data/sektor.ts`) als Farb-Polylinie + Pfosten
+  + geometrisches Symbol (Dreieck/Doppelstrich/Kreis, redundant zur Farbe);
+  A/B/C-Schilder (`DynamicTexture`). `src/ui/kompass.ts` (Peil-Band, HOME +
+  Frontabschnitt-Zustände über Farbe **und** Glyph, keine Gegner-Marker).
+  `src/ui/lagekarte.ts` (statisches Schema, Taste `M`). `src/audio/` (neu:
+  reiner Client außerhalb der Sim, State-Diff → Signalhorn aus Richtung
+  Home-Line bei Abschnittsverlust / im Finale, `StereoPanner`, Taste `T` stumm,
+  Callout-Grammatik-Konstanten). `src/sim` nur um das eine Typ-Feld ergänzt —
+  beide Golden-Anker unverändert. 212 Tests (+26), Coverage src/sim 97,26 %.
 - **AP4-04** · `6af9326` · **Die Uhr, der Rückzug & das Home-Line-Finale.**
   `src/sim/einsatz.ts` (Phasenmaschine `aufbau → wellen → finale → vorbei`,
   `ergebnis offen/gewonnen/verloren`, `entscheide(extrahieren|verlaengern)`,

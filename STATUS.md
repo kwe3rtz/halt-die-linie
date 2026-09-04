@@ -13,23 +13,26 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Konzept:** beschlossen. §3 (Sektor) am 2026-09-03 aus der Map-Design-Runde
   neu gefasst — H-Grundriss, offenes Feld statt hartem Korridor, „die Uhr",
   Generator später.
-- **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). Spielbar: FP-Shooter auf
-  dem Boxen-Testgraben, Wellen aus Nahkampf-Infanterie.
-- **Als Nächstes:** **AP4 „Verteidigung in der Tiefe"** läuft auf
-  `arbeitspaket-4`. AP4-01…04 ✅ reviewed + archiviert (`a0badbf`, `20bf9a0`,
-  `1701ff1`, `6af9326`) — Sektor-Geometrie, Feind-Nav-Graph, Frontabschnitts-
-  Zustandsmaschine, die Uhr + Home-Line-Finale + Verlustbedingung. Als Nächstes
-  **AP4-05** (Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio) —
-  **letztes AP4-Ticket**, danach Spieltest. Kickoff-Prompt: `WORKFLOW.md`.
+- **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). **AP4 „Verteidigung in
+  der Tiefe" komplett** auf `arbeitspaket-4` (5 Tickets, alle reviewed, 212
+  Tests) — **PR → `main` offen, wartet auf Merge + Spieltest.**
+- **Als Nächstes:** Nutzer mergt `arbeitspaket-4`, spielt den Kern-Bogen
+  (Checkliste unten). Trägt der Moment → AP5 („zwei Kampfsprachen": Tag-Fernkampf
+  + Nacht).
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
 
-`npm run dev` → in First Person durch einen Boxen-Test-Graben laufen, schießen
-(Langgewehr M98, Hitscan). Nach ~3 s Aufbau starten **Wellen** aus der
-Parapet-Lücke — Linieninfanterie marschiert an, schlägt im Nahkampf zu, Kills
-geben Nachschub; Wellen werden größer, bis die endliche Angriffskraft leer ist.
-Debug-Overlay per F3. Preview: <https://kwe3rtz.github.io/halt-die-linie/>
+`npm run dev` → First Person im **Greybox-Sektor „H"** (`arbeitspaket-4`, nach
+Merge auf `main`): Frontlinie A/B/C · offenes Feld · zentraler Verbindungsgraben ·
+Home-Line, vorderes Grabenlabyrinth. Gegner folgen dem Nav-Graphen durchs
+Labyrinth an die Front, reißen Parapet-Breschen auf; ein verlorener Abschnitt
+öffnet den Weg nach hinten. Jeder Kill zermürbt die Angriffskraft
+(zonengewichtet). Ist sie gebrochen → **Zeit-Finale an der Home-Line**
+(Countdown + Reservewellen) → gewonnen, oder alle Home-Abschnitte verloren →
+verloren. Kompass + Spine + Schilder + Signalhorn zur Orientierung.
+Tasten: F3 Debug · M Lagekarte · T Ton. Preview:
+<https://kwe3rtz.github.io/halt-die-linie/>
 
 ## Arbeitsweise gerade
 
@@ -42,16 +45,17 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP4 „Verteidigung in der Tiefe"** bauen — Worker im Ticket-Loop.
-   AP4-01…04 ✅. Jetzt **AP4-05** (Lesbarkeit), dann ist AP4 komplett → Spieltest
-   des Kern-Bogens. Branch `arbeitspaket-4`.
-2. **Spieltest-Checkliste Kern-Bogen** (nach AP4-05): einmal quer durch alle 6
+1. **Nutzer:** PR `arbeitspaket-4` → `main` mergen (`gh pr merge <N> --merge
+   --delete-branch`), dann `npm run dev` und den **Kern-Bogen** spielen.
+2. **Spieltest-Checkliste Kern-Bogen:** einmal quer durch alle 6
    Zonen des H (headless ging nie); Feuertritt-Marge (~0,1 m über Parapet);
    Sap-Lücken ↔ Parapet-Enden (Geometrie in AP4-02 justiert); still „gebrochener"
    Abschnitt ohne Angreifer blutet bis `verloren` aus (AP4-03 TODO 2 — komisch?);
    `rueckerobern` lässt Breschen offen — lohnend?; Finale ist feldunabhängig
-   („gewonnen" trotz Restgegner — richtig?); alle Zahlen (Zermürbung je Zone,
-   Countdowns, Reservewellen, Schwellenzeiten `T/T2/T3`) sind Platzhalter.
+   („gewonnen" trotz Restgegner — richtig?); Kompass-Marker überlagern sich am
+   Spawn (Blick Nord) am rechten Rand (AP4-05 TODO 6); alle Zahlen (Zermürbung
+   je Zone, Countdowns, Reservewellen, Schwellenzeiten `T/T2/T3`) sind
+   Platzhalter. Tasten: **F3** Debug · **M** Lagekarte · **T** Ton stumm.
    **Kernfrage:** trägt „Front halten → Abschnitt verlieren → zurückfallen →
    Home-Line halten" als Spielgefühl? Trägt der Moment, geht es weiter.
 3. Danach: „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
@@ -107,12 +111,25 @@ je mit Konvergenz-Analyse).
   (KONZEPT §9.7–9.10) — offen.
 - **Kamera-Pitch-Vorzeichen** beim manuellen Spielen gegenchecken
   (`src/ARCHITEKTUR.md` → Offene Rückfragen).
-- **Bundle ~6,6 MB** (`@babylonjs/core`) — Bundle-Budget-Gate im
+- **Bundle ~6,9 MB** (`@babylonjs/core` + AP4-UI/Audio) — Bundle-Budget-Gate im
   Infrastruktur-Backlog.
+- **AP4-Balance-Platzhalter** (im Spieltest justieren): Zermürbung je Zone,
+  Finale-/Verlängern-Countdown, Reservewellen-Kurve, `T/T2/T3` + Druck-Schwelle
+  (`front.ts`), `HOME_BRESCHE_FAKTOR`, Sektor-Maße (`module.ts`/`sektor.ts`),
+  Spine-Polylinien, Kompass-Marker-Überlappung.
+- **CI-Laufzeit** ~5–7 min (lange Tick-Tests in `sektor.test.ts`) — im Limit,
+  aber im Auge behalten.
 - Weiteres siehe `AUFGABEN.md` → „Infrastruktur-Backlog".
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-04** — **AP4 „Verteidigung in der Tiefe" komplett** (AP4-01…05, alle
+  reviewed, 212 Tests, Coverage src/sim 97,3 %): Greybox-Sektor „H" aus
+  modularen Bausteinen · semantischer Feind-Nav-Graph (kein NavMesh) ·
+  Frontabschnitts-Zustandsmaschine (`stabil→…→verloren`, Breschen, `rueckerobern`)
+  · die Uhr (zonengewichtete Zermürbung) + Home-Line-Finale + Verlustbedingung ·
+  Lesbarkeit (Zonensilhouetten, Wand-Spine, Kompass, Lagekarte, direktionales
+  Audio). PR `arbeitspaket-4` → `main` offen. Alle Zahlen Platzhalter → Spieltest.
 - **2026-09-03** — **Map-Design-Runde abgeschlossen + AP4 spezifiziert.**
   Sektor-Grundriss = H (durchgehende Front / zentraler Verbindungsgraben /
   durchgehende Home-Line), **offenes Feld** statt hartem Korridor (Kartengrenzen

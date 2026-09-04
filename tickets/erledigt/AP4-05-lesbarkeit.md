@@ -1,6 +1,6 @@
 # AP4-05 — Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio
 
-**Status:** review
+**Status:** erledigt · `9c9af56` · reviewed 2026-09-04
 **Arbeitspaket:** 4 · **Branch:** `arbeitspaket-4`
 **Referenz:** `KONZEPT.md` §3 („Lesbarkeit im First-Person-Graben"),
 `SPARRING-ANTWORTEN.md` → „Runde 2" (Spine an die **Wand** + redundant codiert;
@@ -191,3 +191,51 @@ Coverage src/sim **97,26 %** (unverändert) · Bundle ~6,90 MB / ~1,53 MB gzip
   Bitte im Spieltest: von einem Frontabschnitt der Spine (Farbe + Symbol) zur
   Home-Line folgen; bei Abschnittsverlust auf das Signalhorn aus Home-Richtung
   hören.
+
+---
+
+## Review — AP4-05 · 2026-09-04
+
+Verdikt: **grünes Licht**. Damit ist **Arbeitspaket 4 komplett**.
+
+Geprüft: lokal typecheck / lint / format:check / test:coverage / build alle grün
+(212 Tests, +26; Coverage src/sim **unverändert** 97,26 %). CI + Pages-Preview
+grün auf `9c9af56`. Gelesen:
+
+- `src/sim/sektor.ts` — **nur** `SpineRoute`/`SpineSymbol`-Typen + reines Feld
+  `SektorMeta.spineRouten`. Keine Logik. Beide Golden-Anker (Inline-Testlevel +
+  Sektor-Graph Seed 40404) trivial unverändert grün — bestätigt.
+- `src/audio/index.ts` — reiner Client, importiert aus `src/sim` nur den
+  `SimState`-Typ. `beobachteEreignisse` / `relPeilung` / `panFuerPeilung` rein +
+  getestet. Lazy `AudioContext` mit `resume()` bei `suspended`, `StereoPanner`
+  nach Peilung Spieler→Home, `T` = stumm, Default `MASTER_GAIN 0,22`. Callout-
+  Grammatik als Konstanten. Sauber.
+- `src/ui/kompass.ts` — DOM/CSS, importiert nur `AbschnittZustand`-Typ, HOME +
+  A/B/C-Marker mit Farbe **und** Glyph (▽▲◑✕), Rand-Pinning, **keine
+  Gegner-Marker** (Test hält das fest). `prefers-reduced-motion` respektiert.
+- `src/ui/lagekarte.ts` — statisches Schema auf `M` (eigener Keydown wie
+  `debug.ts`), Front-/Home-Zellen nach Zustand.
+- `src/render/index.ts` — geschärfte `ZONEN_TON`, Spine-Polylinien +
+  Leitsymbole + Pfosten je Route, A/B/C-Schilder via `DynamicTexture`,
+  render-only Zonen-Tore. Alles disposed.
+- `src/main.ts` — Kompass / Lagekarte / Audio in `onFrame` verdrahtet,
+  `prevState` für den Audio-Diff.
+
+Zu den 9 `TODO(Rückfrage)` — Planer-Entscheidung: alle akzeptiert.
+
+- `spineRouten` als `SektorMeta`-Typ-Feld: minimaler, logikfreier Sim-Eingriff,
+  Golden-Anker unberührt. Ok — genau der Ticket-Wortlaut.
+- Lagekarte voll gebaut statt nur Kompass + TODO: Bonus, gern genommen.
+- Silhouette = Farbe + render-only Tore statt Geometrie: sinnvolles Scoping —
+  echte Höhen-/Formsprünge gehören zum Generator / eigenem Ticket, und die
+  `sektor.test.ts`-Geometrietests bleiben so stabil.
+- Kompass-Marker überlagern sich am Spawn (Blick Nord → B/C/HOME am rechten Rand):
+  Politur-Merk-Posten (vertikales Auffächern) — in die Spieltest-Notiz.
+- Stumm-Taste `T`, Audio default leise: sinnvoll (M/F3 belegt).
+- `entscheide`-Knopf bewusst nicht verdrahtet: korrekt, späteres UI-Paket.
+
+Anmerkung: `panFuerPeilung` nutzt `sin(rel)` → ein Ereignis direkt hinter dem
+Spieler pannt mittig. Bekannte Stereo-Grenze, für Platzhalter-Töne ok.
+
+Folge: **AP4 komplett** → PR `arbeitspaket-4` → `main`, dann Spieltest des
+Kern-Bogens (Checkliste in `STATUS.md`).
