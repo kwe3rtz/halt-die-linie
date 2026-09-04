@@ -45,7 +45,23 @@ Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen).
 | AP4-05 Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | ✅ `erledigt/` |
 | AP4-06 Kern-Bogen-Fixes (Nachzügler, Branch `fix/ap4-06-kern-bogen`) | ✅ `erledigt/` |
 
-## Arbeitspaket 5+
+## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
 
-Nach AP4: „zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
-Generator fürs vordere Labyrinth, dann Gegner-Roster-Ausbau.
+Zweiter Spieltest (2026-09-04): Kern-Bogen läuft jetzt bugfrei durch, trägt
+als Gefühl aber noch nicht (zu wenige/dumme Gegner, Teleport-Bug im
+Verbindungsgraben, Munition nur durch Sterben, Karte fühlt sich wie eine Box
+an). Vorbild **Boxhead** — Loop reparieren, bevor das Graben-Konzept weiter
+vertieft wird. Branch `arbeitspaket-5` von `main`.
+
+| Ticket | Status |
+|---|---|
+| AP5-01 Mittelgang-Teleport-Bug | offen |
+| AP5-02 Munitions-Nachschub im Einsatz | offen |
+| AP5-03 Kartengrenze öffnen | offen |
+| AP5-04 Gegner-Druck & Wellen-Eskalation | offen |
+
+## Arbeitspaket 6+
+
+Nach AP5: ein Politur-Ticket aus den Audit-Medium-Befunden, dann „zwei
+Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale Generator fürs
+vordere Labyrinth, dann Gegner-Roster-Ausbau.

@@ -640,8 +640,46 @@ Gegner-Fernkampf · Tag/Nacht · Klassen + Fähigkeiten · Bauen / Platzierungen
 Pionier-Reparatur · Nachschub-Ökonomie · Quartier · echte Art / Sound-Politur ·
 Netcode. Das kommt in eigenen Paketen danach.
 
-## Arbeitspaket 5+ (Skizze — nach AP4)
+## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
 
+**Ausgangslage:** zweiter Spieltest (2026-09-04) nach AP4-06 — der Kern-Bogen
+(„Front halten → Abschnitt verlieren → zurückfallen → Home-Line halten") ist
+jetzt Ende-zu-Ende spielbar (Bug-frei dank AP4-06), **trägt als Gefühl aber
+noch nicht**: zu wenige/zu dumme Gegner, keine spürbare Eskalation, ein
+Teleport-Bug im Verbindungsgraben, Munition nur durch Sterben nachfüllbar,
+die Karte fühlt sich wie eine geschlossene Box an (sichtbare Kartengrenz-
+Wände). Nutzer-Entscheidung: **bevor** das Graben-Konzept (Front/Bresche/Uhr)
+weiter vertieft wird, muss der Moment-zu-Moment-Loop für sich stehen und
+Spaß machen — Vorbild **Boxhead** (simpler Top-Down-Zombie-Shooter: offene
+Fläche, Deckung, Gegner strömen kontinuierlich), übertragen auf unsere
+3D-First-Person-Basis mit der vorhandenen Trench-Map. Das AP4-System (Front-
+Zustandsmaschine, Bresche, Uhr, Home-Line-Finale) wird **nicht zurückgebaut**
+— es bleibt bestehen, wird aber vorerst nicht weiter ausgebaut.
+
+**Ziel:** die vier gemeldeten Probleme beheben/verbessern — kein neues
+System, sondern den Bestand reparieren und spürbar machen.
+
+Branch: `arbeitspaket-5` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien
+in `tickets/`.
+
+| Nr | Ticket | Status |
+|---|---|---|
+| AP5-01 | Mittelgang-Teleport-Bug | offen |
+| AP5-02 | Munitions-Nachschub im Einsatz | offen |
+| AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | offen |
+| AP5-04 | Gegner-Druck & Wellen-Eskalation | offen |
+
+**Ausdrücklich NICHT in AP5:** Front-/Bresche-/Uhr-Balancing (eigenes
+späteres Politur-Ticket aus dem Audit) · neue Gegnertypen/KI-Rollen ·
+zweite Waffe · volle Nachschub-Ökonomie (§9.6) · prozeduraler Generator ·
+Tag/Nacht · Klassen. Das kommt danach.
+
+## Arbeitspaket 6+ (Skizze — nach AP5)
+
+- Ein **Politur-Ticket** aus den Audit-Medium-Befunden
+  (`AUDIT-2026-09-04-ap4.md`, hartkodiertes Sektor-Wissen in der Sim,
+  `createSim`-Größe, Zonen-Bounds-Überlappung, Perf-Vorbereitung) — sobald der
+  Boxhead-Kern-Loop steht.
 - **„Zwei Kampfsprachen":** ein überzeugender Tag-Fernkampf-Gegner + ein
   Nacht-Gegner, derselbe Sektor zweimal (ChatGPT-Vorschlag).
 - **Prozeduraler Generator** — nur fürs vordere Grabenlabyrinth, authored Module

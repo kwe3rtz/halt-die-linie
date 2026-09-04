@@ -13,14 +13,17 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Konzept:** beschlossen. §3 (Sektor) am 2026-09-03 aus der Map-Design-Runde
   neu gefasst — H-Grundriss, offenes Feld statt hartem Korridor, „die Uhr",
   Generator später.
-- **Code:** AP1–AP4 auf `main` (PR #1, #4, #5, #6). Nach dem AP4-Spieltest fand
-  ein **unabhängiger Audit** (`AUDIT-2026-09-04-ap4.md`, Session `ki-game-c2`)
-  4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen —
-  **AP4-06 „Kern-Bogen-Fixes" ist jetzt auch fertig** (`7688452`, reviewed,
-  232 Tests), Bresche ist ein echtes Loch, Stuck-Watchdog, Tick-Reihenfolge und
-  „gewonnen" behoben.
-- **Als Nächstes:** PR `fix/ap4-06-kern-bogen` → `main` mergen, dann **zweiter
-  Spieltest** — erst jetzt ist der Kern-Bogen Ende-zu-Ende sauber spielbar.
+- **Code:** AP1–AP4 (inkl. Nachzügler AP4-06) auf `main`, PR #7 gemergt. Der
+  Kern-Bogen läuft jetzt Ende-zu-Ende bugfrei durch.
+- **Zweiter Spieltest (2026-09-04):** Finale erreicht, „E" extrahiert →
+  gewonnen — technisch sauber. Aber: das Gefühl trägt noch nicht. Feedback im
+  Detail unten unter „Spieltest-Feedback (2026-09-04, AP5-Anlass)".
+- **Entscheidung:** bevor das Graben-Konzept (Front/Bresche/Uhr) weiter
+  vertieft wird, muss der Moment-zu-Moment-Loop für sich stehen — Vorbild
+  **Boxhead**. Neues **Arbeitspaket 5 „Boxhead-Kern"** spezifiziert (4
+  Tickets, `tickets/AP5-*`), AP4-System bleibt bestehen, wird aber vorerst
+  nicht weiter ausgebaut.
+- **Als Nächstes:** AP5 an eine Worker-Session geben, Ticket-Loop wie gehabt.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -47,22 +50,35 @@ angesagt.
 
 ## Als Nächstes
 
-1. **Nutzer:** PR `fix/ap4-06-kern-bogen` → `main` mergen.
-2. **Zweiter Spieltest** des Kern-Bogens (jetzt erst aussagekräftig, weil der
-   Einsatz vorher solo nicht sauber zu Ende ging). Zusätzlich zur alten
-   Checkliste gegenchecken: aufgerissene Bresche = sichtbares Loch mit
-   Trümmern, Gegner strömen hindurch; nach „Entsatz eingetroffen" **E**
-   extrahiert, **Q** verlängert; kein Gegner steht dauerhaft vor einer Wand.
-   F3 auf dem Mac: `fn+F3` oder Systemeinstellungen → Tastatur → Standard-
-   Funktionstasten; Tasten: **F3** Debug · **M** Lagekarte · **T** Ton · **E**
-   extrahieren · **Q** verlängern. Restliche Checkliste (Zonen, Feuertritt-
-   Marge, Sap-Lücken, Balance-Zahlen, Kompass-Überlappung) weiter gültig.
-   **Kernfrage:** trägt „Front halten →
-   Abschnitt verlieren → zurückfallen → Home-Line halten" als Spielgefühl?
-3. Danach: ein Politur-Ticket aus den Audit-Medium-Befunden (priorisieren mit
-   dem Nutzer), dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der
-   prozedurale Generator fürs vordere Labyrinth (`AUFGABEN.md` „Arbeitspaket
-   5+").
+1. **AP5 „Boxhead-Kern" an eine Worker-Session geben** (4 Tickets,
+   `tickets/AP5-01…04`), Ticket-Loop wie gehabt: Worker baut, Planer reviewt +
+   archiviert.
+2. Danach: dritter Spieltest — trägt der Loop jetzt? Erst dann wieder
+   Richtung Graben-Konzept vertiefen: ein Politur-Ticket aus den
+   Audit-Medium-Befunden, dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht),
+   dann der prozedurale Generator fürs vordere Labyrinth (`AUFGABEN.md`
+   „Arbeitspaket 6+").
+
+## Spieltest-Feedback (2026-09-04, AP5-Anlass)
+
+Zweiter Spieltest, nach AP4-06. Finale technisch sauber erreicht (E =
+extrahieren → „gewonnen"). Inhaltliches Feedback:
+
+- **Teleport-Bug:** beim Durchqueren des zentralen Verbindungsgrabens
+  („Mittelgang") wird der Spieler gelegentlich an eine andere Position
+  versetzt. → AP5-01.
+- **Munition:** nur eine Waffe, Reserve nur durch Sterben nachfüllbar — fühlt
+  sich falsch an. → AP5-02.
+- **Karte:** fühlt sich noch nicht richtig an, wirkt wie eine geschlossene
+  Box (sichtbare Kartengrenz-Wände). → AP5-03.
+- **Gegner/Wellen:** zu wenige, zu dumme Gegner, keine spürbare Eskalation in
+  höheren Wellen — das Kern-Gefühl „Front halten" kam noch nicht rüber.
+  → AP5-04 (Tuning, kein neues System).
+- Der Nutzer kannte die Begriffe „Bresche"/„Loch" (Lesbarkeit AP4-05) nicht —
+  Merkposten fürs nächste Onboarding/HUD, kein eigenes Ticket.
+- **Nutzer-Entscheidung:** erst den Boxhead-Kern-Loop reparieren (offene
+  Fläche, Trenches, Zombies strömen, Munition/Deckung stimmig), dann wieder
+  richtig ans Graben-Konzept (Front einnehmen/verlieren).
 
 **Audit-Report (2026-09-04):** `AUDIT-2026-09-04-ap4.md` — unabhängiger
 Voll-Kontext-Audit von `ki-game-c2` nach dem AP4-Merge. Architektur sauber, 4
@@ -131,6 +147,18 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-04** — **Pivot: Arbeitspaket 5 „Boxhead-Kern".** Zweiter
+  Spieltest zeigt: der Kern-Bogen läuft bugfrei, trägt aber als Gefühl noch
+  nicht (zu wenige/dumme Gegner, keine Eskalation, Teleport-Bug im
+  Verbindungsgraben, Munition nur durch Sterben, Karte wirkt wie eine Box).
+  Nutzer-Entscheidung: bevor das Graben-Konzept (Front/Bresche/Uhr) weiter
+  vertieft wird, muss der Moment-zu-Moment-Loop für sich stehen — Vorbild
+  **Boxhead** (offene Fläche, Trenches, Zombies strömen kontinuierlich),
+  übertragen auf die bestehende 3D-First-Person-Basis. AP4-System bleibt
+  bestehen (kein Rückbau), wird nur vorerst nicht weiter ausgebaut. AP5 = 4
+  Tickets (`tickets/AP5-01…04`): Teleport-Bugfix, Munitions-Nachschub,
+  Kartengrenze visuell öffnen, Gegner-Druck/Wellen-Tuning. Bisheriges
+  „Arbeitspaket 5" (zwei Kampfsprachen) → „Arbeitspaket 6+".
 - **2026-09-04** — **AP4-06 „Kern-Bogen-Fixes" komplett** (`7688452`, reviewed,
   232 Tests, Coverage src/sim 98,38 %, alle drei Golden-Anker unverändert).
   H1 als echte Lösung: Bresche ist jetzt ein physisches Loch (schaltbare
