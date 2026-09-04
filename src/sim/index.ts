@@ -36,6 +36,13 @@ import {
 } from "./enemies";
 import { imSichtkegel } from "./navgraph";
 import type { NavGraph, SektorData } from "./sektor";
+import { inBoundsXZ } from "./sektor";
+import {
+  createFrontState,
+  updateFront,
+  type AbschnittFront,
+  type AbschnittZustand,
+} from "./front";
 import { gegnerDefs } from "../data/gegner";
 import {
   createWaveState,
@@ -59,8 +66,13 @@ export type {
   NavKante,
   NavGraph,
 } from "./sektor";
-export { zoneAt, abschnittAt } from "./sektor";
+export { zoneAt, abschnittAt, inBoundsXZ } from "./sektor";
 export { kuerzesterPfad, naechsterKnoten, imSichtkegel } from "./navgraph";
+export type {
+  AbschnittZustand,
+  AbschnittFront,
+  BreschenZustand,
+} from "./front";
 
 export interface SimState {
   tick: number;
@@ -97,6 +109,18 @@ export interface SimState {
     angriffskraftRest: number;
     angriffskraftMax: number;
   };
+  /**
+   * Frontabschnitte: Besitz-/Bruchzustand je Abschnitt (AP4-03) für HUD/Render.
+   * Leer ohne Sektor-Meta.
+   */
+  front: readonly {
+    id: string;
+    zustand: AbschnittZustand;
+    /** Anzahl offener Breschen im Abschnitt. */
+    breschenOffen: number;
+    /** Offen-Status je Bresche in Abschnitts-Reihenfolge (Render). */
+    breschen: readonly boolean[];
+  }[];
   /** Letzter abgegebener Schuss (Signal für Tracer/Mündungsblitz). */
   lastShot: ShotEvent | null;
 }
@@ -175,10 +199,18 @@ export interface Sim {
    */
   _setKanteOffen: (von: string, nach: string, offen: boolean) => void;
   /**
-   * AP4-02-Testeingang (AP4-03 ersetzt ihn durch die Zustandsmaschine): einen
-   * Frontabschnitt als „verloren" markieren — öffnet die Nav-Kante nach hinten,
-   * aktiviert den Infiltrations-Spawn und lenkt die Gegner des Abschnitts auf
-   * die Home-Line.
+   * AP4-03: einen verlorenen Frontabschnitt zurückerobern — nur wenn gerade
+   * **kein Gegner** im Abschnitt steht. Setzt `verloren → gebrochen`, schließt
+   * die Nav-Kante nach hinten wieder und macht das Depot wieder verfügbar.
+   * Kosten / KI-Trupp kommen mit der Nachschub-Ökonomie (späteres Paket).
+   * Kein automatisches Zurückflippen.
+   */
+  rueckerobern: (abschnittId: string) => void;
+  /**
+   * Testeingang (dünn über der AP4-03-Zustandsmaschine): erzwingt für einen
+   * Frontabschnitt direkt den End- bzw. Ausgangszustand. `true` = `verloren`
+   * (öffnet die Nav-Kante nach hinten, aktiviert den Infiltrations-Spawn, lenkt
+   * die Gegner des Abschnitts auf die Home-Line); `false` = zurück auf `stabil`.
    */
   _setAbschnittVerloren: (abschnittId: string, verloren: boolean) => void;
 }
@@ -270,6 +302,10 @@ export function createSim(
     : undefined;
   const verloreneAbschnitte = new Set<string>();
   const abschnittRng = createRng((seed ^ 0x3c3c3c3c) >>> 0);
+  // Frontabschnitts-Zustandsmaschine (AP4-03). Leer ohne Sektor-Meta.
+  const frontState: AbschnittFront[] = sektorMeta
+    ? createFrontState(sektorMeta.frontAbschnitte)
+    : [];
   const aktiveAchsen: readonly string[] =
     options.aktiveAchsen ?? sektorMeta?.frontAbschnitte.map((a) => a.id) ?? [];
   const navKontext: NavKontext | undefined = navGraph
@@ -304,6 +340,60 @@ export function createSim(
     if (paar) {
       setKanteOffen(paar[0], paar[1], verloren);
     }
+    // Zurückgesetzt: auch den Bresche-Zugang aus dem Labyrinth wieder sperren.
+    if (!verloren) {
+      setKanteOffen(`bresche-${id}`, "lab-vorfront", false);
+    }
+  };
+
+  // AP4-03: Übergang nach `verloren` verdrahtet das AP4-02-Verhalten.
+  const onAbschnittVerloren = (id: string): void => {
+    setAbschnittVerloren(id, true);
+  };
+
+  const abschnittBesetzt = (id: string): boolean => {
+    const ab = sektorMeta?.frontAbschnitte.find((a) => a.id === id);
+    if (!ab) {
+      return false;
+    }
+    return enemies.some(
+      (e) => e.zustand !== "tot" && inBoundsXZ(ab.bounds, e.pos),
+    );
+  };
+
+  const rueckerobern = (abschnittId: string): void => {
+    const f = frontState.find((a) => a.id === abschnittId);
+    if (!f || f.zustand !== "verloren" || abschnittBesetzt(abschnittId)) {
+      return;
+    }
+    f.zustand = "gebrochen";
+    f.verlorenTimer = 0;
+    f.ruheTimer = 0;
+    f.depotVerloren = false;
+    setAbschnittVerloren(abschnittId, false);
+  };
+
+  const forceAbschnittVerloren = (id: string, verloren: boolean): void => {
+    const f = frontState.find((a) => a.id === id);
+    if (f && verloren) {
+      f.zustand = "verloren";
+      f.depotVerloren = true;
+      for (const b of f.breschen) {
+        b.offen = true;
+      }
+    } else if (f) {
+      f.zustand = "stabil";
+      f.depotVerloren = false;
+      f.druck = 0;
+      f.angriffTimer = 0;
+      f.verlorenTimer = 0;
+      f.ruheTimer = 0;
+      for (const b of f.breschen) {
+        b.offen = false;
+        b.hp = b.maxHp;
+      }
+    }
+    setAbschnittVerloren(id, verloren);
   };
 
   const waehleAbschnitt = (): string => {
@@ -491,6 +581,29 @@ export function createSim(
       navKontext,
     );
 
+    // Frontabschnitte (AP4-03): Druck, Breschen, stabil→…→verloren.
+    if (sektorMeta) {
+      updateFront(
+        frontState,
+        {
+          enemies,
+          sektorMeta,
+          spielerPositionen: combat.tot ? [] : [player.pos],
+          onVerloren: onAbschnittVerloren,
+        },
+        dt,
+      );
+      // Eine aufgerissene Bresche öffnet den Labyrinth-Zugang (KONZEPT.md §3:
+      // „durch eine Bresche strömt der Feind") — die Kante steht in sektor.ts
+      // bereit (offen: false). Nur öffnen; Schließen macht `rueckerobern` /
+      // der Reset-Testeingang.
+      for (const f of frontState) {
+        if (f.breschen.some((b) => b.offen)) {
+          setKanteOffen(`bresche-${f.id}`, "lab-vorfront", true);
+        }
+      }
+    }
+
     // Wave-Director: spawnt neue Gegner (erst ab nächstem Tick aktiv).
     if (options.waves) {
       updateWave(
@@ -553,6 +666,16 @@ export function createSim(
         angriffskraftRest: wave.angriffskraft,
         angriffskraftMax,
       }),
+      front: Object.freeze(
+        frontState.map((f) =>
+          Object.freeze({
+            id: f.id,
+            zustand: f.zustand,
+            breschenOffen: f.breschen.filter((b) => b.offen).length,
+            breschen: Object.freeze(f.breschen.map((b) => b.offen)),
+          }),
+        ),
+      ),
       lastShot,
     });
 
@@ -563,6 +686,7 @@ export function createSim(
     spawnEnemy: (defId, pos, abschnitt) =>
       spawnEnemyById(defId, pos, 1, abschnitt),
     _setKanteOffen: setKanteOffen,
-    _setAbschnittVerloren: setAbschnittVerloren,
+    rueckerobern,
+    _setAbschnittVerloren: forceAbschnittVerloren,
   };
 }

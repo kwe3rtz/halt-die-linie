@@ -475,5 +475,14 @@ describe("golden replay — Sektor-Nav-Graph", () => {
     expect(nach[0]?.pos.z).toBeCloseTo(34.672, 2);
     expect(nach[3]?.pos.x).toBeCloseTo(3.891, 2);
     expect(nach[3]?.pos.z).toBeCloseTo(40.244, 2);
+
+    // Frontabschnitte (AP4-03): die Gegner sind noch im Anmarsch, die Linie hält.
+    expect(s.front.map((f) => f.id)).toEqual(["A", "B", "C"]);
+    expect(s.front.map((f) => f.zustand)).toEqual([
+      "stabil",
+      "stabil",
+      "stabil",
+    ]);
+    expect(s.front.every((f) => f.breschenOffen === 0)).toBe(true);
   });
 });

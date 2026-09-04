@@ -90,8 +90,18 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   optionalen `nav`-Kontext: damit folgen Gegner Wegpunkten (Anmarsch → Labyrinth
   → Front, nach Durchbruch → Home), ohne = gerader Weg wie bisher. Neuberechnung
   nur bei Zielwechsel. `createSim` arbeitet auf einer Graph-Kopie (die
-  exportierte `sektorGreybox` bleibt unmutiert); Testeingänge `_setKanteOffen` /
-  `_setAbschnittVerloren` (AP4-03 ersetzt sie durch die Zustandsmaschine).
+  exportierte `sektorGreybox` bleibt unmutiert).
+- `src/sim/front.ts` (AP4-03) — Zustandsmaschine je Frontabschnitt:
+  `stabil → bedraengt → gebrochen → verloren` aus Feinddruck (lebende Gegner im
+  `bounds`) und aufgerissenen Parapet-Breschen (ungehalten sinkt die Bresche-HP,
+  bei 0 offen). Erholung nur eine Stufe zurück Richtung `stabil`, nie aus
+  `verloren`. `updateFront(front, ctx, dt)` ist rein/in-place; der
+  `onVerloren(id)`-Callback verdrahtet in `createSim` das AP4-02-Verhalten
+  (Nav-Kanten nach hinten öffnen, Infiltrations-Spawn, Depot verloren) — eine
+  offene Bresche öffnet zusätzlich `bresche-<id> ↔ lab-vorfront`. `SimState.front`
+  (Zustand + offene Breschen) fürs HUD/Render. Sim-Eingänge: `rueckerobern(id)`
+  (`verloren → gebrochen`, nur bei leerem Abschnitt) und der Testeingang
+  `_setAbschnittVerloren` (dünn über der Maschine, erzwingt den Endzustand).
 
 ## Bundle-Größe
 

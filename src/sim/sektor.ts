@@ -91,7 +91,7 @@ export interface SektorData extends LevelData {
 }
 
 /** Punkt-in-AABB, nur X/Z — Zonen und Abschnitte sind Säulen über die Höhe. */
-function imXZ(b: Aabb, p: Vec3): boolean {
+export function inBoundsXZ(b: Aabb, p: Vec3): boolean {
   return p.x >= b.minX && p.x <= b.maxX && p.z >= b.minZ && p.z <= b.maxZ;
 }
 
@@ -102,7 +102,7 @@ function imXZ(b: Aabb, p: Vec3): boolean {
  */
 export function zoneAt(meta: SektorMeta, pos: Vec3): ZonenId | null {
   for (const z of meta.zonen) {
-    if (imXZ(z.bounds, pos)) {
+    if (inBoundsXZ(z.bounds, pos)) {
       return z.id;
     }
   }
@@ -112,7 +112,7 @@ export function zoneAt(meta: SektorMeta, pos: Vec3): ZonenId | null {
 /** Welcher Frontabschnitt deckt `pos` ab (X/Z)? `null` außerhalb der Front. */
 export function abschnittAt(meta: SektorMeta, pos: Vec3): string | null {
   for (const a of meta.frontAbschnitte) {
-    if (imXZ(a.bounds, pos)) {
+    if (inBoundsXZ(a.bounds, pos)) {
       return a.id;
     }
   }

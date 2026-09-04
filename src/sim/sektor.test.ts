@@ -278,3 +278,139 @@ describe("Greybox-Sektor — in der Sim", () => {
     expect(kanteVorher?.offen).toBe(false);
   });
 });
+
+describe("Greybox-Sektor — Frontabschnitte (AP4-03)", () => {
+  it("SimState.front führt A/B/C, anfangs stabil und ohne offene Breschen", () => {
+    const sim = createSim(1, sektorGreybox, { waves: true });
+    for (let i = 0; i < 60; i += 1) sim.tick(command(), DT);
+    const front = sim.getState().front;
+    expect(front.map((f) => f.id)).toEqual(["A", "B", "C"]);
+    for (const f of front) {
+      expect(f.zustand).toBe("stabil");
+      expect(f.breschenOffen).toBe(0);
+      expect(f.breschen.every((b) => b === false)).toBe(true);
+    }
+  });
+
+  it("ein ungehaltener Abschnitt läuft unter Dauerdruck bis „verloren“ und lenkt die Gegner nach hinten", () => {
+    // 24 Gegner strömen gestaffelt auf Abschnitt C; der Spieler (Seed 1 → Spawn
+    // an Abschnitt A) verteidigt C nicht.
+    const strom: {
+      defId: string;
+      pos: { x: number; y: number; z: number };
+      abschnitt: string;
+    }[] = [];
+    const cluster: [number, number][] = [
+      [13, 15],
+      [14, 16],
+      [15, 15],
+      [12, 14],
+      [14, 14],
+      [8, 16.5],
+      [9, 16],
+      [7, 17],
+      [8.5, 15],
+      [0, 19],
+      [-1, 19],
+      [1, 20],
+      [0, 20],
+      [2, 23],
+      [3, 23],
+      [1, 24],
+      [2, 24],
+      [-8, 31],
+      [-7, 31],
+      [-9, 30],
+      [-8, 32],
+      [2, 40],
+      [1, 40],
+      [3, 41],
+    ];
+    for (const [x, z] of cluster) {
+      strom.push({
+        defId: "linieninfanterie",
+        pos: { x, y: 0, z },
+        abschnitt: "C",
+      });
+    }
+    const sim = createSim(1, sektorGreybox, {
+      enemies: strom,
+      aktiveAchsen: ["C"],
+    });
+
+    let sahBedraengt = false;
+    let sahGebrochen = false;
+    let brescheGingAuf = false;
+    for (let i = 0; i < 2500; i += 1) {
+      sim.tick(command(), DT);
+      const c = sim.getState().front.find((f) => f.id === "C");
+      if (c?.zustand === "bedraengt") sahBedraengt = true;
+      if (c?.zustand === "gebrochen") sahGebrochen = true;
+      if ((c?.breschenOffen ?? 0) >= 1) brescheGingAuf = true;
+    }
+    const end = sim.getState();
+    const c = end.front.find((f) => f.id === "C");
+    expect(brescheGingAuf).toBe(true); // Gegner reißen die Bresche auf
+    expect(sahBedraengt).toBe(true);
+    expect(sahGebrochen).toBe(true);
+    expect(c?.zustand).toBe("verloren"); // sauber die ganze Kette durchlaufen
+    expect(c?.breschenOffen).toBeGreaterThanOrEqual(1);
+    // Die Gegner des gefallenen Abschnitts zielen jetzt auf die Home-Line.
+    expect(end.enemies.some((e) => e.zielKnoten === "home-ziel")).toBe(true);
+  });
+
+  it("rueckerobern: No-op bei besetztem Abschnitt, verloren → gebrochen bei leerem", () => {
+    // Besetzt: ein Gegner steht im Abschnitt C.
+    const besetzt = createSim(1, sektorGreybox, {
+      enemies: [
+        {
+          defId: "linieninfanterie",
+          pos: { x: 14, y: -0.4, z: 14 },
+          abschnitt: "C",
+        },
+      ],
+    });
+    besetzt._setAbschnittVerloren("C", true);
+    besetzt.rueckerobern("C");
+    expect(besetzt.getState().front.find((f) => f.id === "C")?.zustand).toBe(
+      "verloren",
+    );
+
+    // Leer: kein Gegner in C.
+    const leer = createSim(1, sektorGreybox);
+    leer._setAbschnittVerloren("C", true);
+    expect(leer.getState().front.find((f) => f.id === "C")?.zustand).toBe(
+      "verloren",
+    );
+    leer.rueckerobern("C");
+    const c = leer.getState().front.find((f) => f.id === "C");
+    expect(c?.zustand).toBe("gebrochen");
+
+    // Nav-Kante nach hinten ist wieder zu: ein frischer C-Gegner zielt auf front-C.
+    leer.spawnEnemy("linieninfanterie", { x: 10, y: 0, z: 44 }, "C");
+    leer.tick(command(), DT);
+    const frisch = leer.getState().enemies.filter((e) => e.abschnitt === "C");
+    expect(frisch.some((e) => e.zielKnoten === "front-C")).toBe(true);
+  });
+
+  it("_setAbschnittVerloren(false) setzt den Abschnitt vollständig zurück", () => {
+    const sim = createSim(1, sektorGreybox, { aktiveAchsen: ["B"] });
+    sim._setAbschnittVerloren("B", true);
+    let b = sim.getState().front.find((f) => f.id === "B");
+    expect(b?.zustand).toBe("verloren");
+    expect(b?.breschenOffen).toBeGreaterThanOrEqual(1);
+
+    sim._setAbschnittVerloren("B", false);
+    b = sim.getState().front.find((f) => f.id === "B");
+    expect(b?.zustand).toBe("stabil");
+    expect(b?.breschenOffen).toBe(0);
+    // Gegner des Abschnitts zielen wieder auf die Front, nicht auf Home.
+    sim.spawnEnemy("linieninfanterie", { x: -10, y: 0, z: 44 }, "B");
+    sim.tick(command(), DT);
+    expect(
+      sim
+        .getState()
+        .enemies.some((e) => e.abschnitt === "B" && e.zielKnoten === "front-B"),
+    ).toBe(true);
+  });
+});

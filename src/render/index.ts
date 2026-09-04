@@ -354,6 +354,67 @@ export function createRenderer(
     landmarkMesh.renderingGroupId = GROUP_WORLD;
   }
 
+  // Frontabschnitte (AP4-03): Trümmer je aufgerissener Bresche, Rauch über
+  // gebrochenen/verlorenen Abschnitten. Grob — Feinschliff in AP4-05.
+  interface FrontVisual {
+    truemmer: Mesh[];
+    rauch: Mesh;
+    rauchMat: StandardMaterial;
+  }
+  const frontVisuals = new Map<string, FrontVisual>();
+  let truemmerMat: StandardMaterial | null = null;
+  if (meta) {
+    truemmerMat = flachMat("truemmer", 0.2, 0.18, 0.16);
+    for (const ab of meta.frontAbschnitte) {
+      const truemmer = ab.parapetBreschen.map((pos, i) => {
+        const m = MeshBuilder.CreateBox(
+          `bresche_${ab.id}_${i}`,
+          { width: 2.6, height: 1.3, depth: 1.7 },
+          scene,
+        );
+        m.position.set(pos.x, pos.y - 0.2, pos.z);
+        m.material = truemmerMat;
+        m.isPickable = false;
+        m.renderingGroupId = GROUP_WORLD;
+        m.setEnabled(false);
+        return m;
+      });
+      const mx = (ab.bounds.minX + ab.bounds.maxX) / 2;
+      const mz = (ab.bounds.minZ + ab.bounds.maxZ) / 2;
+      const abRauchMat = new StandardMaterial(`rauch_${ab.id}`, scene);
+      abRauchMat.disableLighting = true;
+      abRauchMat.emissiveColor = new Color3(0.12, 0.12, 0.13);
+      abRauchMat.alpha = 0.3;
+      const rauch = MeshBuilder.CreatePlane(
+        `rauch_${ab.id}`,
+        { width: 11, height: 7 },
+        scene,
+      );
+      rauch.position.set(mx, 4.5, mz);
+      rauch.billboardMode = BILLBOARD_ALL;
+      rauch.material = abRauchMat;
+      rauch.isPickable = false;
+      rauch.renderingGroupId = GROUP_WORLD;
+      rauch.setEnabled(false);
+      frontVisuals.set(ab.id, { truemmer, rauch, rauchMat: abRauchMat });
+    }
+  }
+
+  const syncFront = (front: Readonly<SimState>["front"]): void => {
+    for (const f of front) {
+      const v = frontVisuals.get(f.id);
+      if (!v) {
+        continue;
+      }
+      v.truemmer.forEach((m, i) => m.setEnabled(f.breschen[i] === true));
+      const rauchAn = f.zustand === "gebrochen" || f.zustand === "verloren";
+      v.rauch.setEnabled(rauchAn);
+      if (rauchAn) {
+        v.rauchMat.alpha = f.zustand === "verloren" ? 0.44 : 0.26;
+      }
+    }
+  };
+
   const resize = () => engine.resize();
   window.addEventListener("resize", resize);
   engine.runRenderLoop(() => scene.render());
@@ -432,6 +493,7 @@ export function createRenderer(
       }
 
       syncEnemies(state.enemies, now);
+      syncFront(state.front);
 
       // Schadens-Flash / Tod-Abdunkeln.
       const hp = state.player.hp;
@@ -465,6 +527,15 @@ export function createRenderer(
       enemyBarBgMat.dispose();
       landmarkMesh?.dispose();
       landmarkMat?.dispose();
+      for (const v of frontVisuals.values()) {
+        for (const m of v.truemmer) {
+          m.dispose();
+        }
+        v.rauch.dispose();
+        v.rauchMat.dispose();
+      }
+      frontVisuals.clear();
+      truemmerMat?.dispose();
       for (const m of zonenMat.values()) {
         m.dispose();
       }
