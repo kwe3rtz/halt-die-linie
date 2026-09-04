@@ -23,7 +23,7 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   **Boxhead**. Neues **Arbeitspaket 5 „Boxhead-Kern"** spezifiziert (4
   Tickets, `tickets/AP5-*`), AP4-System bleibt bestehen, wird aber vorerst
   nicht weiter ausgebaut.
-- **Als Nächstes:** AP5 an eine Worker-Session geben, Ticket-Loop wie gehabt.
+- **Als Nächstes:** AP5-02 (Munitions-Nachschub) läuft beim Worker.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -50,9 +50,11 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP5 „Boxhead-Kern" an eine Worker-Session geben** (4 Tickets,
-   `tickets/AP5-01…04`), Ticket-Loop wie gehabt: Worker baut, Planer reviewt +
-   archiviert.
+1. **AP5-01 erledigt** (`f4231ac`, reviewed) — Teleport-Bug im
+   Verbindungsgraben war ein Gleitkomma-/Achsenauflösungs-Fehler in
+   `moveCapsule`, echte Ursache behoben, nicht gepflastert. **AP5-02
+   (Munitions-Nachschub) ist an den Worker (`ki-game-38`) gegangen**, danach
+   AP5-03 → AP5-04.
 2. Danach: dritter Spieltest — trägt der Loop jetzt? Erst dann wieder
    Richtung Graben-Konzept vertiefen: ein Politur-Ticket aus den
    Audit-Medium-Befunden, dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht),

@@ -664,7 +664,7 @@ in `tickets/`.
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP5-01 | Mittelgang-Teleport-Bug | offen |
+| AP5-01 | Mittelgang-Teleport-Bug | ✅ `erledigt/` (`f4231ac`) |
 | AP5-02 | Munitions-Nachschub im Einsatz | offen |
 | AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | offen |
 | AP5-04 | Gegner-Druck & Wellen-Eskalation | offen |

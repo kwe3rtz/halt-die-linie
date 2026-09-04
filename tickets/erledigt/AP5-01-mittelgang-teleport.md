@@ -1,6 +1,6 @@
 # AP5-01 — Mittelgang-Teleport-Bug
 
-**Status:** review
+**Status:** erledigt · `f4231ac` · reviewed 2026-09-04
 **Arbeitspaket:** 5 (Boxhead-Kern) · **Branch:** `arbeitspaket-5` (von `main`)
 **Referenz:** Zweiter Spieltest 2026-09-04 (Nutzer-Feedback), `src/sim/collision.ts`
 (`moveCapsule`), `src/data/sektor.ts` (Zone `verbindungsgraben`, `aabb(-3, -20,
@@ -232,3 +232,55 @@ Positionen, die auch das F3-Overlay anzeigt — vor dem Fix reproduzierbar mit
 Sprung, nach dem Fix in allen Läufen ≤ Sprint·dt je Tick. Für den Spieltest:
 im Mittelgang beim Laufen A/D gegen eine Wand halten (Strafe/Anlehnen) und F3
 beobachten — vorher der Wurf ans Grabenende, jetzt keine Positionssprünge mehr.
+
+## Review — AP5-01 · 2026-09-04
+
+**Grünes Licht.** Lokal nachvollzogen: `git checkout arbeitspaket-5 && git pull`
+(baut sauber auf `main` `6c835d0` auf, der zuvor noch nicht auf `origin` war —
+selbst nachgeholt). `typecheck`/`lint`/`format:check` grün, `test:coverage`
+250/250 grün (Coverage src/sim 98,40 %), `build` grün. CI + Pages Preview auf
+GitHub beide `success` (Läufe `33864262067`/`33864262393`).
+
+Diff gelesen (`collision.ts`, `collision-verbindungsgraben.test.ts`,
+`collision.test.ts`, `ARCHITEKTUR.md`) — das ist die Wurzelursache, kein
+Pflaster: die achsenweise AABB-Auflösung hatte keinen Begriff davon, *welche*
+Durchdringung ihre eigene Bewegung verursacht hat, und hat jeden Rest (auch
+einen 2e-16-m-Gleitkomma-Rest) als echte Kollision an die nächstgelegene
+Fläche der Box gelöst — bei der 33 m langen Grabenwand meterweit entfernt. Die
+Tiefengrenze `|Δ_achse| + KONTAKT_EPS` je Achse ist die richtige Antwort: sie
+implementiert die im Ticket vorgeschlagene Plausibilitätsgrenze strukturell
+(nicht als nachträgliches Clamping, das den eigentlichen Fehler nur versteckt
+hätte) und behebt nebenbei dieselbe Bugklasse in der Y-Achse (Wandkontakt
+hätte die Kapsel auf die Wandkrone gehoben), die im Feld noch nicht
+aufgefallen war. Genau die Art Fix, die AP4-06 vorgemacht hat: Ursache vor
+Symptom.
+
+Besonders überzeugend: die **Gegenprobe gegen den alten Code** (`git stash`
+nur `collision.ts`, 14 von 30 neuen Tests rot) beweist, dass die neuen Tests
+den ursprünglichen Bug tatsächlich fangen — nicht nur grün beim neuen Code.
+Golden-Anker sauber behandelt: `moveCapsule` ist global (auch für Gegner),
+das wurde erkannt und **explizit** gegengecheckt statt stillschweigend
+angenommen — alle drei Anker liefern identische Werte, zusätzlich die
+Golden-Skripte unter dem alten Code mit Sprung-Logging nachgespielt, um zu
+zeigen, dass diese konkreten Läufe nie Wandkontakt hatten (keine
+Neubaselinierung nötig).
+
+Die bewusst in Kauf genommene Kehrseite (eine tief in einer Box startende
+Kapsel wird nicht mehr herausgeschoben) ist sauber begründet und nach
+aktuellem Stand nicht erreichbar (Spawns frei, `rueckerobern` ohne
+Tastenbindung, Nav-Knoten per Begehbarkeitstest geprüft) — akzeptiert, in
+`ARCHITEKTUR.md` dokumentiert.
+
+**Der Home-Brustwehr-„Vault"-Merkposten** (Feuertritt-Bank → Sprung + Stufen-
+Hochsteigen über die Brustwehr aufs Feld) ist vorbestehendes Verhalten, kein
+AP5-01-Regress — für AP5-03 (Kartengrenze/Gelände) vorgemerkt, siehe unten.
+
+Organisatorisches: `main` (`6c835d0`) war beim Kickoff noch nicht auf
+`origin` — jetzt gepusht, `arbeitspaket-5` bleibt sauber. CI-Node-Deprecation-
+Hinweis (Actions auf Node 20, GitHub erzwingt Node 24) notiert für den
+Infrastruktur-Backlog, nicht blockierend.
+
+**Manueller Spieltest im Browser steht noch aus** (der Worker konnte in
+dieser Session nicht spielen) — headless-Nachweis ist stichhaltig genug fürs
+grüne Licht, der Browser-Check läuft im nächsten Spieltest mit den anderen
+AP5-Tickets zusammen.

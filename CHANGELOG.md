@@ -4,6 +4,27 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
+
+- **AP5-01** · `f4231ac` · **Mittelgang-Teleport-Bug.** Nach dem zweiten
+  Spieltest gemeldet: Spieler wurde beim Durchqueren des zentralen
+  Verbindungsgrabens gelegentlich meterweit versetzt. Ursache gefunden (nicht
+  gepflastert): `moveCapsule` (`src/sim/collision.ts`) löste die Bewegung
+  achsenweise auf, ohne zu unterscheiden, welche Durchdringung die eigene
+  Bewegung verursacht hat — ein Gleitkomma-Rest von 2e-16 m an den
+  Verbindungsgraben-Wänden (x = ±1,8) wurde von der nächsten Achse als echte
+  Kollision an die *nächstgelegene Fläche* der 33 m langen Wand aufgelöst
+  (bis zu 16,5 m Sprung in einem Tick). Fix: Kontakt-Toleranz `KONTAKT_EPS`
+  im Überlappungstest + Tiefengrenze je Achse (`|Δ_achse| + EPS`) — jede
+  Einzelauflösung ist damit strukturell auf den eigenen Tick-Weg begrenzt,
+  kein nachträgliches Clamping. Dieselbe Bugklasse in der Y-Achse (Wandkontakt
+  hätte auf die Wandkrone gehoben) mitbehoben. Neu:
+  `collision-verbindungsgraben.test.ts` (15 Tests, echte Sektor-Geometrie +
+  Spieler-Sim, Gegenprobe gegen den alten Code: 14/30 Tests schlagen ohne den
+  Fix fehl) + 3 Mechanismus-Tests in `collision.test.ts`. Alle drei
+  Golden-Anker unverändert (explizit gegengecheckt, da `moveCapsule` global
+  ist — auch für Gegner). 250 Tests (+18), Coverage src/sim 98,40 %.
+
 ## Arbeitspaket 4 — Verteidigung in der Tiefe · komplett (inkl. Nachzügler AP4-06)
 
 - **AP4-06** · `7688452` · **Kern-Bogen-Fixes** (Branch `fix/ap4-06-kern-bogen`,
