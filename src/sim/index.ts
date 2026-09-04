@@ -4,6 +4,7 @@ import { createRng } from "./rng";
 import {
   createCollisionWorld,
   moveCapsule,
+  type Aabb,
   type CollisionWorld,
   type LevelData,
 } from "./collision";
@@ -36,13 +37,23 @@ import {
 } from "./enemies";
 import { imSichtkegel } from "./navgraph";
 import type { NavGraph, SektorData } from "./sektor";
-import { inBoundsXZ } from "./sektor";
+import { inBoundsXZ, zoneAt, abschnittAt } from "./sektor";
 import {
   createFrontState,
   updateFront,
   type AbschnittFront,
   type AbschnittZustand,
 } from "./front";
+import {
+  createEinsatzState,
+  entscheide,
+  updateEinsatz,
+  zermuerbungProKill,
+  type EinsatzPhase,
+  type EinsatzErgebnis,
+  type EinsatzState,
+  type EinsatzWahl,
+} from "./einsatz";
 import { gegnerDefs } from "../data/gegner";
 import {
   createWaveState,
@@ -73,6 +84,7 @@ export type {
   AbschnittFront,
   BreschenZustand,
 } from "./front";
+export type { EinsatzPhase, EinsatzErgebnis, EinsatzWahl } from "./einsatz";
 
 export interface SimState {
   tick: number;
@@ -121,6 +133,26 @@ export interface SimState {
     /** Offen-Status je Bresche in Abschnitts-Reihenfolge (Render). */
     breschen: readonly boolean[];
   }[];
+  /**
+   * Home-Line-Abschnitte (AP4-04) — gleiche Form wie `front`. Leer ohne
+   * Sektor-Meta. Alle `verloren` = Einsatz verloren.
+   */
+  home: readonly {
+    id: string;
+    zustand: AbschnittZustand;
+    breschenOffen: number;
+    breschen: readonly boolean[];
+  }[];
+  /**
+   * Einsatzbogen (AP4-04): Phase, Finale-Countdown, Ergebnis. Ohne Sektor-Meta
+   * bleibt der Einsatz im `aufbau` (die Uhr braucht die Zonen).
+   */
+  einsatz: {
+    phase: EinsatzPhase;
+    /** Sekunden bis „Entsatz eingetroffen" (nur im `finale`). */
+    finaleRest: number;
+    ergebnis: EinsatzErgebnis;
+  };
   /** Letzter abgegebener Schuss (Signal für Tracer/Mündungsblitz). */
   lastShot: ShotEvent | null;
 }
@@ -207,12 +239,23 @@ export interface Sim {
    */
   rueckerobern: (abschnittId: string) => void;
   /**
+   * AP4-04: Spieler-Entscheidung nach „Entsatz eingetroffen" (`einsatz.phase
+   * === "finale"`, `ergebnis === "gewonnen"`). `extrahieren` beendet den Einsatz,
+   * `verlaengern` startet einen weiteren, kürzeren Countdown mit härteren
+   * Reservewellen. Sonst wirkungslos.
+   */
+  entscheide: (wahl: EinsatzWahl) => void;
+  /**
    * Testeingang (dünn über der AP4-03-Zustandsmaschine): erzwingt für einen
-   * Frontabschnitt direkt den End- bzw. Ausgangszustand. `true` = `verloren`
-   * (öffnet die Nav-Kante nach hinten, aktiviert den Infiltrations-Spawn, lenkt
-   * die Gegner des Abschnitts auf die Home-Line); `false` = zurück auf `stabil`.
+   * Front- **oder** Home-Line-Abschnitt direkt den End-/Ausgangszustand.
+   * `true` = `verloren`, `false` = zurück auf `stabil`.
    */
   _setAbschnittVerloren: (abschnittId: string, verloren: boolean) => void;
+  /**
+   * AP4-04-Testeingang: der Trupp ist ausgeschaltet (Koop-Verlustbedingung;
+   * solo respawnt der Spieler ewig). Setzt den Einsatz auf `verloren`.
+   */
+  _setTruppAus: (aus: boolean) => void;
 }
 
 // First-Person-Controller — Platzhalterwerte, Balancing kommt später.
@@ -230,6 +273,16 @@ const EMPTY_LEVEL: LevelData = { boxes: [], spawnPoints: [] };
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+/** Eingefrorene HUD/Render-Sicht auf einen Front-/Home-Abschnitt (AP4-03/04). */
+function abschnittView(f: AbschnittFront) {
+  return Object.freeze({
+    id: f.id,
+    zustand: f.zustand,
+    breschenOffen: f.breschen.filter((b) => b.offen).length,
+    breschen: Object.freeze(f.breschen.map((b) => b.offen)),
+  });
 }
 
 function pickSpawn(level: LevelData, seed: number): Vec3 {
@@ -258,6 +311,11 @@ export interface SimOptions {
    * „~2 aktiv solo"-Auswahl je Spielerzahl macht der Wave-Director in AP4-04).
    */
   aktiveAchsen?: readonly string[];
+  /**
+   * Start-Angriffskraft (Uhr). Default `START_ANGRIFFSKRAFT`. Tests setzen sie
+   * klein, um das Finale schnell zu erreichen.
+   */
+  startAngriffskraft?: number;
 }
 
 export function createSim(
@@ -278,6 +336,9 @@ export function createSim(
   const weapon: WeaponState = createWeaponState(weaponDef);
   const combat: PlayerCombat = createPlayerCombat();
   const wave: WaveState = createWaveState();
+  if (options.startAngriffskraft !== undefined) {
+    wave.angriffskraft = Math.max(0, options.startAngriffskraft);
+  }
   const angriffskraftMax = wave.angriffskraft;
   const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
   const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
@@ -306,6 +367,17 @@ export function createSim(
   const frontState: AbschnittFront[] = sektorMeta
     ? createFrontState(sektorMeta.frontAbschnitte)
     : [];
+  // Home-Line über dieselbe Maschine, aber befestigt (AP4-04).
+  const HOME_BRESCHE_FAKTOR = 2.5;
+  const homeState: AbschnittFront[] = sektorMeta
+    ? createFrontState(sektorMeta.homeAbschnitte, HOME_BRESCHE_FAKTOR)
+    : [];
+  const alleAbschnitte: readonly { id: string; bounds: Aabb }[] = sektorMeta
+    ? [...sektorMeta.frontAbschnitte, ...sektorMeta.homeAbschnitte]
+    : [];
+  // Einsatzbogen (AP4-04). Ohne Sektor-Meta bleibt der Einsatz im `aufbau`.
+  const einsatzState: EinsatzState = createEinsatzState();
+  let truppAus = false;
   const aktiveAchsen: readonly string[] =
     options.aktiveAchsen ?? sektorMeta?.frontAbschnitte.map((a) => a.id) ?? [];
   const navKontext: NavKontext | undefined = navGraph
@@ -346,13 +418,17 @@ export function createSim(
     }
   };
 
-  // AP4-03: Übergang nach `verloren` verdrahtet das AP4-02-Verhalten.
+  // AP4-03: Übergang nach `verloren` verdrahtet das AP4-02-Verhalten (für
+  // Front-Ids; Home-Ids haben keine Nav-Kante nach hinten → No-op-Zweig).
   const onAbschnittVerloren = (id: string): void => {
     setAbschnittVerloren(id, true);
   };
 
+  const abschnittState = (id: string): AbschnittFront | undefined =>
+    frontState.find((a) => a.id === id) ?? homeState.find((a) => a.id === id);
+
   const abschnittBesetzt = (id: string): boolean => {
-    const ab = sektorMeta?.frontAbschnitte.find((a) => a.id === id);
+    const ab = alleAbschnitte.find((a) => a.id === id);
     if (!ab) {
       return false;
     }
@@ -362,7 +438,7 @@ export function createSim(
   };
 
   const rueckerobern = (abschnittId: string): void => {
-    const f = frontState.find((a) => a.id === abschnittId);
+    const f = abschnittState(abschnittId);
     if (!f || f.zustand !== "verloren" || abschnittBesetzt(abschnittId)) {
       return;
     }
@@ -374,7 +450,7 @@ export function createSim(
   };
 
   const forceAbschnittVerloren = (id: string, verloren: boolean): void => {
-    const f = frontState.find((a) => a.id === id);
+    const f = abschnittState(id);
     if (f && verloren) {
       f.zustand = "verloren";
       f.depotVerloren = true;
@@ -554,6 +630,22 @@ export function createSim(
           ) {
             toedlich = true;
             nachschub += NACHSCHUB_PRO_KILL;
+            // Die Uhr (AP4-04): der Tod zermürbt die Angriffskraft, je weiter
+            // vorn desto mehr. Ein schon verlorener Frontabschnitt zählt wie
+            // offenes Feld.
+            if (sektorMeta) {
+              const zone = zoneAt(sektorMeta, getroffen.pos);
+              const aId =
+                zone === "frontlinie"
+                  ? abschnittAt(sektorMeta, getroffen.pos)
+                  : null;
+              const verloren =
+                aId !== null && abschnittState(aId)?.zustand === "verloren";
+              wave.angriffskraft = Math.max(
+                0,
+                wave.angriffskraft - zermuerbungProKill(zone, verloren),
+              );
+            }
           }
         }
         lastShot = Object.freeze({
@@ -581,14 +673,25 @@ export function createSim(
       navKontext,
     );
 
-    // Frontabschnitte (AP4-03): Druck, Breschen, stabil→…→verloren.
+    // Frontabschnitte + Home-Line (AP4-03/04): Druck, Breschen, stabil→…→verloren.
     if (sektorMeta) {
+      const spielerPositionen: Vec3[] = combat.tot ? [] : [player.pos];
       updateFront(
         frontState,
         {
           enemies,
-          sektorMeta,
-          spielerPositionen: combat.tot ? [] : [player.pos],
+          abschnitte: sektorMeta.frontAbschnitte,
+          spielerPositionen,
+          onVerloren: onAbschnittVerloren,
+        },
+        dt,
+      );
+      updateFront(
+        homeState,
+        {
+          enemies,
+          abschnitte: sektorMeta.homeAbschnitte,
+          spielerPositionen,
           onVerloren: onAbschnittVerloren,
         },
         dt,
@@ -613,6 +716,25 @@ export function createSim(
           spawnPunkte: enemySpawnPunkte,
           rng: waveRng,
           spawn: spawnEnemyById,
+          finale: einsatzState.phase === "finale",
+          reserveStufe: einsatzState.reserveStufe,
+        },
+        dt,
+      );
+    }
+
+    // Einsatzbogen (AP4-04): aufbau → wellen → finale → vorbei + die Uhr.
+    if (sektorMeta) {
+      updateEinsatz(
+        einsatzState,
+        {
+          wavePhase: wave.phase,
+          angriffskraftGebrochen: wave.angriffskraft <= 0,
+          spawnQueueLeer: wave.spawnQueue.length === 0,
+          homeVerloren:
+            homeState.length > 0 &&
+            homeState.every((f) => f.zustand === "verloren"),
+          truppAus,
         },
         dt,
       );
@@ -666,16 +788,13 @@ export function createSim(
         angriffskraftRest: wave.angriffskraft,
         angriffskraftMax,
       }),
-      front: Object.freeze(
-        frontState.map((f) =>
-          Object.freeze({
-            id: f.id,
-            zustand: f.zustand,
-            breschenOffen: f.breschen.filter((b) => b.offen).length,
-            breschen: Object.freeze(f.breschen.map((b) => b.offen)),
-          }),
-        ),
-      ),
+      front: Object.freeze(frontState.map(abschnittView)),
+      home: Object.freeze(homeState.map(abschnittView)),
+      einsatz: Object.freeze({
+        phase: einsatzState.phase,
+        finaleRest: einsatzState.finaleRest,
+        ergebnis: einsatzState.ergebnis,
+      }),
       lastShot,
     });
 
@@ -687,6 +806,10 @@ export function createSim(
       spawnEnemyById(defId, pos, 1, abschnitt),
     _setKanteOffen: setKanteOffen,
     rueckerobern,
+    entscheide: (wahl) => entscheide(einsatzState, wahl),
     _setAbschnittVerloren: forceAbschnittVerloren,
+    _setTruppAus: (aus) => {
+      truppAus = aus;
+    },
   };
 }

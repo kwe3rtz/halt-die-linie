@@ -484,5 +484,46 @@ describe("golden replay — Sektor-Nav-Graph", () => {
       "stabil",
     ]);
     expect(s.front.every((f) => f.breschenOffen === 0)).toBe(true);
+
+    // Einsatzbogen (AP4-04): im Wellen-Regime, kein Kill → die Uhr ruht.
+    expect(s.home.map((f) => f.id)).toEqual(["H-West", "H-Ost"]);
+    expect(s.einsatz.phase).toBe("wellen");
+    expect(s.einsatz.ergebnis).toBe("offen");
+    expect(s.einsatz.finaleRest).toBe(0);
+  });
+});
+
+// Golden-/Replay-Anker für „die Uhr" (AP4-04): ein Kill an der Frontlinie
+// zermürbt die Angriffskraft stärker als an einer gefallenen Front.
+describe("golden replay — die Uhr (AP4-04)", () => {
+  const bau = () =>
+    createSim(1, sektorGreybox, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: -12, y: 0, z: 15 } }],
+      aktiveAchsen: ["A"],
+    });
+  const feuere = (sim: ReturnType<typeof createSim>) => {
+    for (let i = 0; i < 500; i += 1)
+      sim.tick(command({ fire: i % 40 < 2 }), DT);
+  };
+
+  it("ist deterministisch", () => {
+    const a = bau();
+    const b = bau();
+    feuere(a);
+    feuere(b);
+    expect(a.getState()).toEqual(b.getState());
+  });
+
+  it("trifft den Uhr-Golden-Anker", () => {
+    const steht = bau();
+    feuere(steht);
+    expect(steht.getState().nachschub).toBe(5); // genau ein Kill
+    expect(steht.getState().wave.angriffskraftRest).toBe(58); // 60 − 1*2
+
+    const fiel = bau();
+    fiel._setAbschnittVerloren("A", true);
+    feuere(fiel);
+    expect(fiel.getState().nachschub).toBe(5);
+    expect(fiel.getState().wave.angriffskraftRest).toBe(59); // 60 − 1*1
   });
 });

@@ -85,6 +85,37 @@ describe("hud", () => {
     expect(q(".hdl-hud__wave")?.textContent).not.toContain("Welle");
   });
 
+  it("blendet die Einsatz-Zeile nur im Finale / bei Einsatz-Ende ein", () => {
+    const line = () => q(".hdl-hud__einsatz");
+    hud.update(base); // kein einsatz übergeben
+    expect(line()?.hidden).toBe(true);
+
+    hud.update({
+      ...base,
+      einsatz: { phase: "wellen", finaleRest: 0, ergebnis: "offen" },
+    });
+    expect(line()?.hidden).toBe(true);
+
+    hud.update({
+      ...base,
+      einsatz: { phase: "finale", finaleRest: 42.7, ergebnis: "offen" },
+    });
+    expect(line()?.hidden).toBe(false);
+    expect(line()?.textContent).toContain("Entsatz in 43 s");
+
+    hud.update({
+      ...base,
+      einsatz: { phase: "finale", finaleRest: 0, ergebnis: "gewonnen" },
+    });
+    expect(line()?.textContent).toContain("extrahieren");
+
+    hud.update({
+      ...base,
+      einsatz: { phase: "vorbei", finaleRest: 0, ergebnis: "verloren" },
+    });
+    expect(line()?.textContent).toBe("Einsatz verloren");
+  });
+
   it("Tod-Overlay mit Countdown, verschwindet beim Respawn", () => {
     hud.update({ ...base, tot: true, respawnRest: 2.4 });
     const death = q(".hdl-hud__death");

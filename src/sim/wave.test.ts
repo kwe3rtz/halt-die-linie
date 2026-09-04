@@ -112,3 +112,48 @@ describe("wave director", () => {
     expect(s.phase).toBe("vorbei");
   });
 });
+
+describe("wave director — Finale-Reservewellen (AP4-04)", () => {
+  it("im Finale: statt 'vorbei' geht der Director auf 'reserve' und spawnt nach", () => {
+    const s = createWaveState();
+    s.angriffskraft = 2;
+    const { ctx, spawns } = makeCtx(0);
+    ctx.finale = true;
+
+    runUntil(s, ctx, () => s.phase === "reserve");
+    expect(spawns.length).toBe(2); // der Hauptangriff ist durch
+    const vorReserve = spawns.length;
+
+    // Nach ~8 s wird eine kleine Reservewelle (Basis 3) angesetzt.
+    runUntil(s, ctx, () => s.spawnQueue.length > 0, 900);
+    expect(s.spawnQueue.length).toBe(3);
+    runUntil(s, ctx, () => s.spawnQueue.length === 0, 900);
+    expect(spawns.length - vorReserve).toBe(3);
+    expect(s.angriffskraft).toBe(0); // Reserve zehrt nicht an der Angriffskraft
+  });
+
+  it("reserveStufe eskaliert die Reservewellen-Größe", () => {
+    const s = createWaveState();
+    s.angriffskraft = 0;
+    s.phase = "reserve";
+    s.phaseTimer = 8;
+    const { ctx } = makeCtx(0);
+    ctx.finale = true;
+    ctx.reserveStufe = 2; // Basis 3 + 2*2 = 7
+
+    runUntil(s, ctx, () => s.spawnQueue.length > 0, 900);
+    expect(s.spawnQueue.length).toBe(7);
+  });
+
+  it("Finale vorbei (ctx.finale=false) → 'reserve' endet in 'vorbei'", () => {
+    const s = createWaveState();
+    s.angriffskraft = 0;
+    s.phase = "reserve";
+    s.phaseTimer = 8;
+    const { ctx } = makeCtx(0);
+    ctx.finale = false;
+
+    updateWave(s, ctx, DT);
+    expect(s.phase).toBe("vorbei");
+  });
+});

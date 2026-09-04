@@ -6,7 +6,7 @@ import {
   type FrontKontext,
 } from "./front";
 import { spawnEnemy, damageEnemy, type EnemyEntity } from "./enemies";
-import type { SektorMeta } from "./sektor";
+import type { FrontAbschnitt } from "./sektor";
 import { linieninfanterie } from "../data/gegner";
 
 const DT = 1 / 60;
@@ -14,24 +14,16 @@ const DT = 1 / 60;
 // Minimal-Sektor: ein Abschnitt "A", Bounds x[-8,8] z[10,18], eine Bresche bei
 // (0,16). Genug für die Zustandsmaschine — die Sim-Integration testet
 // sektor.test.ts.
-function meta(): SektorMeta {
-  return {
-    zonen: [],
-    frontAbschnitte: [
-      {
-        id: "A",
-        bounds: { minX: -8, minY: -6, minZ: 10, maxX: 8, maxY: 10, maxZ: 18 },
-        parapetBreschen: [{ x: 0, y: -0.4, z: 16 }],
-        bauSlots: [],
-        depot: { x: 0, y: 0, z: 12 },
-      },
-    ],
-    feindAnmarsch: [],
-    homeZugaenge: [],
-    landmark: { x: 0, y: 0, z: 0 },
-    spielerSpawn: [],
-    navGraph: { knoten: [], kanten: [] },
-  };
+function abschnitte(): FrontAbschnitt[] {
+  return [
+    {
+      id: "A",
+      bounds: { minX: -8, minY: -6, minZ: 10, maxX: 8, maxY: 10, maxZ: 18 },
+      parapetBreschen: [{ x: 0, y: -0.4, z: 16 }],
+      bauSlots: [],
+      depot: { x: 0, y: 0, z: 12 },
+    },
+  ];
 }
 
 function gegner(x: number, z: number, id = 1): EnemyEntity {
@@ -47,7 +39,7 @@ interface Lauf {
 function laufe(front: AbschnittFront[], ticks: number, over: Lauf = {}): void {
   const ctx: FrontKontext = {
     enemies: over.enemies ?? [],
-    sektorMeta: meta(),
+    abschnitte: abschnitte(),
     spielerPositionen: over.spieler ?? [],
     onVerloren: over.onVerloren ?? (() => undefined),
   };
@@ -58,7 +50,7 @@ function laufe(front: AbschnittFront[], ticks: number, over: Lauf = {}): void {
 
 describe("front — createFrontState", () => {
   it("legt jeden Abschnitt stabil mit heilen Breschen an", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     expect(fs).toHaveLength(1);
     expect(fs[0]?.zustand).toBe("stabil");
     expect(fs[0]?.druck).toBe(0);
@@ -71,7 +63,7 @@ describe("front — createFrontState", () => {
 
 describe("front — Bresche", () => {
   it("ungehalten reißt der Feind die Bresche auf", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const start = fs[0]?.breschen[0]?.hp ?? 0;
     laufe(fs, 60, { enemies: [gegner(0, 16)] });
     expect(fs[0]?.breschen[0]?.hp).toBeLessThan(start);
@@ -82,7 +74,7 @@ describe("front — Bresche", () => {
   });
 
   it("steht ein Spieler an der Bresche, hält sie", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const start = fs[0]?.breschen[0]?.hp ?? 0;
     laufe(fs, 900, {
       enemies: [gegner(0, 16)],
@@ -93,9 +85,9 @@ describe("front — Bresche", () => {
   });
 
   it("mehr Gegner reißen die Bresche schneller auf", () => {
-    const einer = createFrontState(meta().frontAbschnitte);
+    const einer = createFrontState(abschnitte());
     laufe(einer, 120, { enemies: [gegner(0, 16, 1)] });
-    const drei = createFrontState(meta().frontAbschnitte);
+    const drei = createFrontState(abschnitte());
     laufe(drei, 120, {
       enemies: [gegner(0, 16, 1), gegner(0.5, 16, 2), gegner(-0.5, 16, 3)],
     });
@@ -105,7 +97,7 @@ describe("front — Bresche", () => {
   });
 
   it("tote Gegner an der Bresche zählen nicht", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const leiche = gegner(0, 16);
     damageEnemy(leiche, 999, 0);
     const start = fs[0]?.breschen[0]?.hp ?? 0;
@@ -116,7 +108,7 @@ describe("front — Bresche", () => {
 
 describe("front — Druck", () => {
   it("steigt mit Gegnern im Abschnitt, fällt ohne", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     // (0,11): im Abschnitt, aber außerhalb des Bresche-Radius.
     laufe(fs, 120, { enemies: [gegner(0, 11)] });
     const hoch = fs[0]?.druck ?? 0;
@@ -127,7 +119,7 @@ describe("front — Druck", () => {
   });
 
   it("ein Gegner weit weg erzeugt keinen Druck", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     laufe(fs, 300, { enemies: [gegner(40, 40)] });
     expect(fs[0]?.druck).toBe(0);
     expect(fs[0]?.zustand).toBe("stabil");
@@ -136,7 +128,7 @@ describe("front — Druck", () => {
 
 describe("front — Zustandsmaschine", () => {
   it("stabil → bedraengt über die Druck-Schwelle", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     laufe(fs, 60, { enemies: [gegner(0, 11)] });
     expect(fs[0]?.zustand).toBe("stabil"); // noch unter der Schwelle
     laufe(fs, 300, { enemies: [gegner(0, 11)] });
@@ -145,7 +137,7 @@ describe("front — Zustandsmaschine", () => {
   });
 
   it("stabil → bedraengt allein durch eine offene Bresche (Druck egal)", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const b = fs[0]?.breschen[0];
     if (b) {
       b.offen = true;
@@ -157,7 +149,7 @@ describe("front — Zustandsmaschine", () => {
   });
 
   it("bedraengt → gebrochen: offene Bresche + Feinddruck + ungehalten für T", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const f = fs[0];
     if (f) {
       f.zustand = "bedraengt";
@@ -173,7 +165,7 @@ describe("front — Zustandsmaschine", () => {
   });
 
   it("gebrochen hält nicht an, wenn ein Spieler den Abschnitt hält", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const f = fs[0];
     if (f) {
       f.zustand = "bedraengt";
@@ -188,7 +180,7 @@ describe("front — Zustandsmaschine", () => {
   });
 
   it("gebrochen → verloren nach T2 ungehalten; onVerloren einmal mit der Id", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const f = fs[0];
     if (f) {
       f.zustand = "gebrochen";
@@ -210,7 +202,7 @@ describe("front — Zustandsmaschine", () => {
   });
 
   it("gebrochen → verloren auch ohne Feind, sobald ungehalten (Ticket-Wortlaut)", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const f = fs[0];
     if (f) {
       f.zustand = "gebrochen";
@@ -224,7 +216,7 @@ describe("front — Zustandsmaschine", () => {
 
 describe("front — Erholung", () => {
   it("bedraengt (nur Druck) erholt sich ohne Gegner zu stabil", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     laufe(fs, 360, { enemies: [gegner(0, 11)] });
     expect(fs[0]?.zustand).toBe("bedraengt");
     laufe(fs, 600); // > T3 Ruhe
@@ -233,7 +225,7 @@ describe("front — Erholung", () => {
   });
 
   it("keine Erholung, solange eine Bresche offen ist", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const f = fs[0];
     if (f) {
       f.zustand = "gebrochen";
@@ -247,7 +239,7 @@ describe("front — Erholung", () => {
   });
 
   it("nie aus verloren heraus", () => {
-    const fs = createFrontState(meta().frontAbschnitte);
+    const fs = createFrontState(abschnitte());
     const f = fs[0];
     if (f) {
       f.zustand = "verloren";
@@ -261,7 +253,7 @@ describe("front — Erholung", () => {
 describe("front — Determinismus", () => {
   it("gleiche Eingaben → gleicher Verlauf", () => {
     const run = (): string => {
-      const fs = createFrontState(meta().frontAbschnitte);
+      const fs = createFrontState(abschnitte());
       for (let i = 0; i < 800; i += 1) {
         const enemies = i < 400 ? [gegner(0, 16, 1), gegner(1, 14, 2)] : [];
         const spieler = i > 600 ? [{ x: 0, y: 0, z: 13 }] : [];
@@ -269,7 +261,7 @@ describe("front — Determinismus", () => {
           fs,
           {
             enemies,
-            sektorMeta: meta(),
+            abschnitte: abschnitte(),
             spielerPositionen: spieler,
             onVerloren: () => undefined,
           },

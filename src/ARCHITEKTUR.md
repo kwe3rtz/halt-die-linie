@@ -91,17 +91,35 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   → Front, nach Durchbruch → Home), ohne = gerader Weg wie bisher. Neuberechnung
   nur bei Zielwechsel. `createSim` arbeitet auf einer Graph-Kopie (die
   exportierte `sektorGreybox` bleibt unmutiert).
-- `src/sim/front.ts` (AP4-03) — Zustandsmaschine je Frontabschnitt:
+- `src/sim/front.ts` (AP4-03) — Zustandsmaschine je Abschnitt:
   `stabil → bedraengt → gebrochen → verloren` aus Feinddruck (lebende Gegner im
   `bounds`) und aufgerissenen Parapet-Breschen (ungehalten sinkt die Bresche-HP,
   bei 0 offen). Erholung nur eine Stufe zurück Richtung `stabil`, nie aus
-  `verloren`. `updateFront(front, ctx, dt)` ist rein/in-place; der
-  `onVerloren(id)`-Callback verdrahtet in `createSim` das AP4-02-Verhalten
-  (Nav-Kanten nach hinten öffnen, Infiltrations-Spawn, Depot verloren) — eine
-  offene Bresche öffnet zusätzlich `bresche-<id> ↔ lab-vorfront`. `SimState.front`
-  (Zustand + offene Breschen) fürs HUD/Render. Sim-Eingänge: `rueckerobern(id)`
+  `verloren`. `updateFront(front, ctx, dt)` ist rein/in-place und läuft **zweimal
+  je Tick** — einmal für die Frontlinie A/B/C, einmal für die Home-Line
+  (`ctx.abschnitte` sagt welche; die Home-Line startet befestigt,
+  `createFrontState(..., faktor)`). Der `onVerloren(id)`-Callback verdrahtet in
+  `createSim` das AP4-02-Verhalten (Nav-Kanten nach hinten öffnen,
+  Infiltrations-Spawn, Depot verloren); eine offene Bresche öffnet zusätzlich
+  `bresche-<id> ↔ lab-vorfront`. `SimState.front` / `SimState.home` (Zustand +
+  offene Breschen) fürs HUD/Render. Sim-Eingänge: `rueckerobern(id)`
   (`verloren → gebrochen`, nur bei leerem Abschnitt) und der Testeingang
   `_setAbschnittVerloren` (dünn über der Maschine, erzwingt den Endzustand).
+- `src/sim/einsatz.ts` (AP4-04) — der Einsatzbogen über dem Wave-Director:
+  `aufbau → wellen → finale → vorbei` mit `ergebnis: offen | gewonnen | verloren`.
+  Ist die endliche `wave.angriffskraft` gebrochen und die Spawn-Queue leer, läuft
+  im `finale` ein fester Countdown („Entsatz in N s"); abgelaufen → `gewonnen`,
+  dann wartet die Maschine auf `entscheide("extrahieren" | "verlaengern")`
+  (verlängern = zweiter, kürzerer Countdown, `reserveStufe++`). Alle
+  Home-Abschnitte `verloren` **oder** `truppAus` → `verloren`, in jeder Phase.
+  **Die Uhr:** `zermuerbungProKill(zone, abschnittVerloren)` — jeder Kill zieht
+  zusätzlich Angriffskraft ab, je Todeszone (`frontlinie` am meisten, `homeline`
+  am wenigsten; ein schon verlorener Frontabschnitt zählt wie offenes Feld).
+  `createSim` ruft das im tödlichen Treffer. `SimState.einsatz`
+  (`phase / finaleRest / ergebnis`).
+- `src/sim/wave.ts` (AP4-04) — neue Phase `reserve`: statt `vorbei` schaltet der
+  Director im Finale (`ctx.finale`) auf kleine Nachschub-Reservewellen
+  (`RESERVE_*`, mit `ctx.reserveStufe` skaliert); `ctx.finale` false → `vorbei`.
 
 ## Bundle-Größe
 

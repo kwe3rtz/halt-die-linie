@@ -6,12 +6,19 @@ import { sektorGreybox } from "../data/sektor";
 
 const DT = 1 / 60;
 
-function command(parts: Partial<{ x: number; y: number }> = {}): InputCommand {
+function command(
+  parts: Partial<{
+    x: number;
+    y: number;
+    fire: boolean;
+    dx: number;
+  }> = {},
+): InputCommand {
   return {
     move: { x: parts.x ?? 0, y: parts.y ?? 0 },
-    look: { dx: 0, dy: 0 },
+    look: { dx: parts.dx ?? 0, dy: 0 },
     buttons: {
-      fire: false,
+      fire: parts.fire ?? false,
       aim: false,
       sprint: false,
       interact: false,
@@ -412,5 +419,136 @@ describe("Greybox-Sektor — Frontabschnitte (AP4-03)", () => {
         .getState()
         .enemies.some((e) => e.abschnitt === "B" && e.zielKnoten === "front-B"),
     ).toBe(true);
+  });
+});
+
+describe("Greybox-Sektor — Einsatzbogen & die Uhr (AP4-04)", () => {
+  // Feuert grob geradeaus (Spieler blickt beim Spawn nach +Z = Anmarschrichtung).
+  const feuerScript = (n: number, sim: ReturnType<typeof createSim>) => {
+    for (let i = 0; i < n; i += 1) {
+      sim.tick(command({ fire: i % 90 < 2 }), DT);
+    }
+  };
+
+  it("SimState.home führt die zwei Home-Abschnitte, anfangs stabil", () => {
+    const sim = createSim(1, sektorGreybox);
+    for (let i = 0; i < 30; i += 1) sim.tick(command(), DT);
+    const home = sim.getState().home;
+    expect(home.map((f) => f.id)).toEqual(["H-West", "H-Ost"]);
+    expect(home.every((f) => f.zustand === "stabil")).toBe(true);
+    expect(sim.getState().einsatz.phase).toBe("aufbau");
+  });
+
+  it("die Uhr: Kills an der stehenden Front zermürben stärker als an gefallener", () => {
+    const cluster = (): {
+      defId: string;
+      pos: { x: number; y: number; z: number };
+      abschnitt: string;
+    }[] =>
+      Array.from({ length: 6 }, (_, i) => ({
+        defId: "linieninfanterie",
+        pos: { x: -12 + (i - 3) * 0.5, y: 0, z: 15.5 + (i % 2) * 0.4 },
+        abschnitt: "A",
+      }));
+
+    // Front steht: Kill an der frontlinie zählt voll.
+    const steht = createSim(1, sektorGreybox, { enemies: cluster() });
+    feuerScript(1600, steht);
+    const sSteht = steht.getState();
+
+    // Front gefallen: derselbe Kill zählt nur noch wie offenes Feld.
+    const fiel = createSim(1, sektorGreybox, { enemies: cluster() });
+    for (const id of ["A", "B", "C"]) fiel._setAbschnittVerloren(id, true);
+    feuerScript(1600, fiel);
+    const sFiel = fiel.getState();
+
+    // Gleich viele Kills (Nachschub = 5/Kill), aber steht zieht mehr Angriffskraft.
+    expect(sSteht.nachschub).toBeGreaterThan(0);
+    expect(sSteht.nachschub).toBe(sFiel.nachschub);
+    const abbauSteht = 60 - sSteht.wave.angriffskraftRest;
+    const abbauFiel = 60 - sFiel.wave.angriffskraftRest;
+    expect(abbauSteht).toBeGreaterThan(abbauFiel);
+    expect(abbauSteht).toBeCloseTo(abbauFiel * 2, 0);
+  });
+
+  it("Angriffskraft gebrochen + Queue leer → Finale mit Countdown → gewonnen → extrahieren", () => {
+    const sim = createSim(2, sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 4,
+    });
+    // Aufbau + eine kleine Welle spawnen lassen.
+    for (let i = 0; i < 500; i += 1) sim.tick(command(), DT);
+    expect(sim.getState().wave.angriffskraftRest).toBe(0);
+    expect(sim.getState().einsatz.phase).toBe("finale");
+    expect(sim.getState().einsatz.finaleRest).toBeGreaterThan(0);
+
+    // Countdown ablaufen lassen (90 s + Puffer).
+    for (let i = 0; i < 100 * 60; i += 1) sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+    expect(sim.getState().einsatz.phase).toBe("finale");
+
+    sim.entscheide("extrahieren");
+    sim.tick(command(), DT);
+    expect(sim.getState().einsatz.phase).toBe("vorbei");
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+  });
+
+  it("verlaengern startet einen zweiten, kürzeren Countdown", () => {
+    const sim = createSim(3, sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 3,
+    });
+    // Der Countdown läuft unabhängig vom Feld → reines Ticken reicht (Aufbau +
+    // kleine Welle + 90 s Finale).
+    for (let i = 0; i < 110 * 60; i += 1) sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+
+    sim.entscheide("verlaengern");
+    sim.tick(command(), DT);
+    const s = sim.getState();
+    expect(s.einsatz.ergebnis).toBe("offen");
+    expect(s.einsatz.phase).toBe("finale");
+    expect(s.einsatz.finaleRest).toBeGreaterThan(0);
+    expect(s.einsatz.finaleRest).toBeLessThanOrEqual(45);
+
+    // Zweiter Countdown läuft ebenfalls ab → wieder gewonnen.
+    for (let i = 0; i < 50 * 60; i += 1) sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+  });
+
+  it("nach geräumtem Feld im Finale laufen Reservewellen (Director-Regime)", () => {
+    const sim = createSim(3, sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 3,
+    });
+    // Drehen + feuern räumt die kleine Erstwelle (headless „zielt" der Spieler so).
+    let sahReserve = false;
+    for (let i = 0; i < 20000; i += 1) {
+      sim.tick(command({ dx: 40, fire: i % 45 < 2 }), DT);
+      if (sim.getState().wave.phase === "reserve") sahReserve = true;
+    }
+    expect(sahReserve).toBe(true);
+    expect(sim.getState().einsatz.phase).toBe("finale");
+  });
+
+  it("alle Home-Abschnitte verloren → Einsatz verloren, in jeder Phase", () => {
+    const sim = createSim(1, sektorGreybox, { waves: true });
+    for (let i = 0; i < 240; i += 1) sim.tick(command(), DT);
+    sim._setAbschnittVerloren("H-West", true);
+    sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("offen"); // erst einer
+    sim._setAbschnittVerloren("H-Ost", true);
+    sim.tick(command(), DT);
+    expect(sim.getState().einsatz.phase).toBe("vorbei");
+    expect(sim.getState().einsatz.ergebnis).toBe("verloren");
+  });
+
+  it("Trupp ausgeschaltet → Einsatz verloren", () => {
+    const sim = createSim(1, sektorGreybox, { waves: true });
+    for (let i = 0; i < 300; i += 1) sim.tick(command(), DT);
+    sim._setTruppAus(true);
+    sim.tick(command(), DT);
+    expect(sim.getState().einsatz.ergebnis).toBe("verloren");
+    expect(sim.getState().einsatz.phase).toBe("vorbei");
   });
 });

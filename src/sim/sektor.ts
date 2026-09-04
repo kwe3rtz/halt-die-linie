@@ -65,6 +65,11 @@ export interface NavGraph {
 export interface SektorMeta {
   zonen: ZonenEintrag[];
   frontAbschnitte: FrontAbschnitt[];
+  /**
+   * Home-Line-Abschnitte (AP4-04) — dieselbe `front.ts`-Maschine wie die Front,
+   * startet aber befestigt (mehr Bresche-HP). Alle `verloren` = Einsatz verloren.
+   */
+  homeAbschnitte: FrontAbschnitt[];
   /** Anmarsch-/Spawn-Punkte am Nordrand (die zwei schrägen Korridore). */
   feindAnmarsch: Vec3[];
   /** Zugänge zur Home-Line: Verbindungsgraben + Feld links/rechts. */

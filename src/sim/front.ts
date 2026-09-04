@@ -10,7 +10,7 @@
 // (Nav-Kanten nach hinten öffnen, Infiltrations-Spawn, Depot als verloren).
 import type { Vec3 } from "./math";
 import type { EnemyEntity } from "./enemies";
-import type { FrontAbschnitt, SektorMeta } from "./sektor";
+import type { FrontAbschnitt } from "./sektor";
 import { inBoundsXZ } from "./sektor";
 
 export type AbschnittZustand =
@@ -79,24 +79,30 @@ const BRESCHE_SPIELER_RADIUS = 3.5;
 /** Kontext, den `updateFront` je Tick bekommt. */
 export interface FrontKontext {
   enemies: readonly EnemyEntity[];
-  sektorMeta: SektorMeta;
+  /** Die Abschnitts-Geometrie (Front **oder** Home-Line — dieselbe Maschine). */
+  abschnitte: readonly FrontAbschnitt[];
   /** Positionen lebender Spieler (solo: eine, oder leer im Tod). */
   spielerPositionen: readonly Vec3[];
   /** Wird genau im Tick des Übergangs nach `verloren` aufgerufen. */
   onVerloren: (id: string) => void;
 }
 
-/** Baut den Anfangszustand (alles `stabil`, Breschen heil) aus den Abschnitten. */
+/**
+ * Baut den Anfangszustand (alles `stabil`, Breschen heil) aus den Abschnitten.
+ * `brescheHpFaktor > 1` = befestigt (die Home-Line startet so, AP4-04).
+ */
 export function createFrontState(
   abschnitte: readonly FrontAbschnitt[],
+  brescheHpFaktor = 1,
 ): AbschnittFront[] {
+  const hp = BRESCHE_MAX_HP * brescheHpFaktor;
   return abschnitte.map((a) => ({
     id: a.id,
     zustand: "stabil" as AbschnittZustand,
     breschen: a.parapetBreschen.map((pos) => ({
       pos: { x: pos.x, y: pos.y, z: pos.z },
-      hp: BRESCHE_MAX_HP,
-      maxHp: BRESCHE_MAX_HP,
+      hp,
+      maxHp: hp,
       offen: false,
     })),
     druck: 0,
@@ -126,7 +132,7 @@ export function updateFront(
     if (f.zustand === "verloren") {
       continue;
     }
-    const ab = ctx.sektorMeta.frontAbschnitte.find((a) => a.id === f.id);
+    const ab = ctx.abschnitte.find((a) => a.id === f.id);
     if (!ab) {
       continue;
     }

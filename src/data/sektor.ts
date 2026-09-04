@@ -271,6 +271,25 @@ const meta: SektorMeta = {
       depot: { x: 16, y: IN_GRABEN, z: 12 },
     },
   ],
+  // Home-Line: zwei Abschnitte um das Nordparapet (Lücke = Verbindungsgraben-
+  // Mündung). Dieselbe front.ts-Maschine, aber befestigt (createFrontState-
+  // Faktor in index.ts) — der Feind bricht hier nur nach langem Druck durch.
+  homeAbschnitte: [
+    {
+      id: "H-West",
+      bounds: aabb(-25, -36.5, 0, -19),
+      parapetBreschen: [{ x: -9, y: -0.4, z: -20 }],
+      bauSlots: [{ x: -9, y: IN_GRABEN, z: -23 }],
+      depot: { x: -12, y: IN_GRABEN, z: -32 },
+    },
+    {
+      id: "H-Ost",
+      bounds: aabb(0, -36.5, 25, -19),
+      parapetBreschen: [{ x: 9, y: -0.4, z: -20 }],
+      bauSlots: [{ x: 9, y: IN_GRABEN, z: -23 }],
+      depot: { x: 12, y: IN_GRABEN, z: -32 },
+    },
+  ],
   feindAnmarsch: [
     { x: -10, y: AUF_FELD, z: 44 },
     { x: 10, y: AUF_FELD, z: 44 },
