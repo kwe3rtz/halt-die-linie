@@ -6,6 +6,19 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
 
+- **AP5-02** · `683340f` · **Munitions-Nachschub im Einsatz.** Reservemunition
+  war bisher nur durch Sterben nachfüllbar. Lösung: die seit AP4-04
+  vorhandenen Abschnitts-Depots (`FrontAbschnitt.depot`) werden zu
+  Nachfüllpunkten — drei an der Front (A/B/C, an der Parados-Rückwand hinter
+  dem Feuertritt), zwei an der Home-Line (im Munitionslager-Unterstand);
+  Positionen dafür neu gesetzt (die alten Marker steckten in Geometrie).
+  `naechstesDepot()` (`src/sim/sektor.ts`) findet das nächste Depot in 3D-
+  Reichweite (2 m); `E` als Flanke füllt dort die Reserve auf vollen Stand
+  (Extraktion im Finale hat weiterhin Vorrang vor dem Depot). Ein gefallener
+  Frontabschnitt verliert sein Depot (`depotVerloren`, „die Uhr") —
+  `rueckerobern` gibt es zurück. HUD-Hinweiszeile + sichtbare Munitionskiste
+  im Renderer (render-only, kein Kollider). 259 Tests (+9), Coverage src/sim
+  98,43 %, Golden-Anker unverändert.
 - **AP5-01** · `f4231ac` · **Mittelgang-Teleport-Bug.** Nach dem zweiten
   Spieltest gemeldet: Spieler wurde beim Durchqueren des zentralen
   Verbindungsgrabens gelegentlich meterweit versetzt. Ursache gefunden (nicht

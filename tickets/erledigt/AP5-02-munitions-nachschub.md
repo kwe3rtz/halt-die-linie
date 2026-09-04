@@ -1,6 +1,6 @@
 # AP5-02 — Munitions-Nachschub im Einsatz
 
-**Status:** review
+**Status:** erledigt · `683340f` · reviewed 2026-09-04
 **Arbeitspaket:** 5 (Boxhead-Kern) · **Branch:** `arbeitspaket-5` (von `main`)
 **Referenz:** Zweiter Spieltest 2026-09-04 (Nutzer-Feedback), `WAFFEN.md`,
 `src/sim/weapon.ts`, `src/sim/index.ts` (`resetWeapon`, `respawnPlayer`),
@@ -178,3 +178,50 @@ Gegenchecken im Spieltest: zur Kiste an der Rückwand rechts neben der
 Grabenmündung (Depot B) gehen — unter dem Munitionszähler erscheint grün
 „E · Munition auffüllen (Depot B)", `E` setzt die Reserve auf 45; im
 Unterstand links/rechts an der Home-Line dasselbe.
+
+## Review — AP5-02 · 2026-09-04
+
+**Grünes Licht.** Lokal nachvollzogen: `git pull` auf `arbeitspaket-5`,
+`typecheck`/`lint`/`format:check` grün, `test:coverage` 259/259 grün
+(Coverage src/sim 98,43 %), `build` grün. CI + Pages Preview auf GitHub
+beide `success` (`33866039852`/`33866039924`).
+
+Diff gelesen (`sektor.ts`/`data/sektor.ts`, `index.ts`, `hud.ts`,
+`render/index.ts`). Die Grundidee — die seit AP4-04 vorhandenen
+Abschnitts-Depots als Nachfüllpunkte wiederzuverwenden statt eine neue
+Datenstruktur einzuführen — ist genau die richtige Sparsamkeit: kein neues
+System, ein bestehendes Datum bekommt eine zweite Funktion. Die
+Positionskorrektur (alte Marker steckten in Rampenstufen/Grabenmündung) ist
+eine berechtigte Korrektur eines bisher folgenlosen Platzhalters, nicht
+Scope-Creep. `naechstesDepot()` ist sauber als reiner Sim-Helfer geschnitten,
+3D-Reichweite mit der Δy-Begründung (Parados-Oberkante über Depot B) ist
+nachvollziehbar und getestet. `E`-Vorrang für die Extraktion vor dem Depot
+ist korrekt und macht das bestehende AP4-06-Verhalten nicht kaputt.
+
+Zu den drei Ermessensentscheidungen:
+
+1. **`depotVerloren` als Verfügbarkeits-Bedingung:** angenommen. Das ist
+   genau im Sinn von KONZEPT §3 „die Uhr" — der Rückzug bekommt eine zweite,
+   spürbare Konsequenz (Munition an der Front weg, sobald ein Abschnitt
+   fällt), ohne dass dafür neues Gameplay gebaut wurde. Bleibt so.
+2. **Sichtbare Munitionskiste im Renderer** trotz Ticket-Wortlaut „nur
+   HUD-Hinweis": richtig erkannt, dass unmarkierte Punkte im Greybox
+   unauffindbar wären — passt zum Boxhead-Vorbild und zum bestehenden
+   Deko-Muster (Landmark/Spine), sauber mit Dispose. Kein Kollider, kein
+   Scope-Problem.
+3. **Depot-Positionen verschoben:** im Rahmen der im Ticket ausdrücklich dem
+   Worker überlassenen Platzierung, Begründung nachvollziehbar (Parados-
+   Rückwand aus der Schusslinie statt Rampenstufe/Grabenmündung).
+
+Testabdeckung ist wieder auf AP4-06-Niveau: Wohlgeformtheits-Check der
+verschobenen Depot-Positionen (in Bounds, über der Sohle, kollisionsfrei),
+Grenzfälle für `naechstesDepot` (Reichweite, Δy-Fall, Verfügbarkeit,
+„nächstes gewinnt"), der Akzeptanz-Kern (Reserve 0 → E am Depot → volle
+Reserve), die Flanken-Regel (gehaltenes E füllt nicht erneut), der
+Vorrang-Test im Finale nach `gewonnen` und der Rückzug/`rueckerobern`-Zyklus
+für `depotVerloren`. Golden-Anker korrekt als unverändert begründet (die
+Skripte drücken nie E).
+
+**Manueller Spieltest im Browser steht weiterhin aus** (zusammen mit AP5-01
+im nächsten Spieltest-Durchgang) — für den Review reicht der headless-
+Nachweis über den echten Sim-Pfad.

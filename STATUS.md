@@ -23,7 +23,9 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   **Boxhead**. Neues **Arbeitspaket 5 „Boxhead-Kern"** spezifiziert (4
   Tickets, `tickets/AP5-*`), AP4-System bleibt bestehen, wird aber vorerst
   nicht weiter ausgebaut.
-- **Als Nächstes:** AP5-02 (Munitions-Nachschub) läuft beim Worker.
+- **Als Nächstes:** AP5-01 + AP5-02 fertig reviewed. AP5-03 (Kartengrenze)
+  ist spezifiziert, aber **noch nicht an den Worker gegeben** — wartet auf
+  Reset des Session-Limits (Nutzer-Ansage 2026-09-04).
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -50,16 +52,20 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP5-01 erledigt** (`f4231ac`, reviewed) — Teleport-Bug im
-   Verbindungsgraben war ein Gleitkomma-/Achsenauflösungs-Fehler in
-   `moveCapsule`, echte Ursache behoben, nicht gepflastert. **AP5-02
-   (Munitions-Nachschub) ist an den Worker (`ki-game-38`) gegangen**, danach
-   AP5-03 → AP5-04.
-2. Danach: dritter Spieltest — trägt der Loop jetzt? Erst dann wieder
-   Richtung Graben-Konzept vertiefen: ein Politur-Ticket aus den
-   Audit-Medium-Befunden, dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht),
-   dann der prozedurale Generator fürs vordere Labyrinth (`AUFGABEN.md`
-   „Arbeitspaket 6+").
+1. **AP5-01 + AP5-02 erledigt** (`f4231ac`, `683340f`, beide reviewed).
+   AP5-01: Teleport-Bug im Verbindungsgraben war ein Gleitkomma-/
+   Achsenauflösungs-Fehler in `moveCapsule`, echte Ursache behoben. AP5-02:
+   Reservemunition an den Abschnitts-Depots auffüllbar (`E`), kein Sterben
+   mehr nötig.
+2. **Pause vor dem nächsten Kickoff:** Nutzer hat um Wartezeit gebeten, bis
+   das Session-Limit des Worker-Accounts zurückgesetzt ist — AP5-03
+   (Kartengrenze öffnen) ist spezifiziert und bereit, aber **noch nicht
+   gesendet**. Erst auf Ansage des Nutzers weitergeben.
+3. Danach AP5-03 → AP5-04, dann dritter Spieltest — trägt der Loop jetzt?
+   Erst dann wieder Richtung Graben-Konzept vertiefen: ein Politur-Ticket aus
+   den Audit-Medium-Befunden, dann „Zwei Kampfsprachen" (Tag-Fernkampf +
+   Nacht), dann der prozedurale Generator fürs vordere Labyrinth
+   (`AUFGABEN.md` „Arbeitspaket 6+").
 
 ## Spieltest-Feedback (2026-09-04, AP5-Anlass)
 
