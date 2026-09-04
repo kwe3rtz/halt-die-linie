@@ -6,6 +6,22 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · in Arbeit
 
+- **AP4-02** · `20bf9a0` · **Feind-Navigation: semantischer Graph.**
+  `src/sim/navgraph.ts` (`kuerzesterPfad` = deterministische BFS über offene
+  Kanten, `naechsterKnoten`, `imSichtkegel` — reine Sim-Helfer).
+  `SektorMeta.navGraph` handgepflegt in `src/data/sektor.ts` (~30 Knoten / ~40
+  Kanten: Anmarsch → Labyrinth-Serpentine → `front-<id>`/`bresche-<id>`,
+  verdeckte `reinforcement-<id>`, Parados/Feld/Verbindungsgraben/Home,
+  `home-ziel`; Front→hinten + Labyrinth→Bresche starten `offen: false`).
+  `enemies.ts`: `updateEnemies(…, nav?)` — ohne `nav` unverändert (alter
+  Golden-Anker hält), mit `nav` Wegpunkt-Folgen (Neuberechnung nur bei
+  Zielwechsel), Umschalten aufs direkte Nahkampf-Verhalten am Zielknoten oder
+  bei Spieler < 6 m + Sichtlinie. `index.ts`: eigene Graph-Kopie je Sim, eigener
+  `abschnittRng`-Strom, Infiltrations-Relokation mit Sichtkegel-Guard,
+  Testeingänge `_setKanteOffen` / `_setAbschnittVerloren`. `collision.ts`:
+  `sichtlinie()`. Neuer Golden-/Replay-Anker (Seed 40404, Sektor-Graph).
+  Labyrinth-/Parapet-Geometrie leicht justiert (AP4-01-Stub hatte eine
+  Sackgasse). 139 Tests (+23), Coverage src/sim 96,32 %.
 - **AP4-01** · `a0badbf` · **Sektor-Geometrie (das „H") als Daten + Renderer.**
   `src/data/module.ts` (Rasterbaukasten `RASTER = 4`, `modul(typ, at, drehung,
   opt)` → `LevelBox[]`: grabengerade/-knick, parapet mit zweistufigem Feuertritt

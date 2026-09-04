@@ -1,6 +1,6 @@
 # AP4-02 — Feind-Navigation: semantischer Graph
 
-**Status:** review
+**Status:** erledigt · `20bf9a0` · reviewed 2026-09-04
 **Arbeitspaket:** 4 · **Branch:** `arbeitspaket-4`
 **Referenz:** `KONZEPT.md` §3 (Zonen, „Gegner materialisieren nie im Sichtfeld"),
 §5 (Feind im Graben, Infiltration), `SPARRING-ANTWORTEN.md` → „Runde 2" (Graph
@@ -196,3 +196,59 @@ Tests: 139 (16 Dateien, +23) · Coverage src/sim **96,32 %** · Bundle ~6,88 MB 
   den Verbindungsgraben Richtung Home-Line bis z < 0.
 - Kein Gegner-Spawn im offenen Feld (reinforcement-Knoten liegen alle in der
   Zone `labyrinth`; `imSichtkegel`-Guard zusätzlich).
+
+---
+
+## Review — AP4-02 · 2026-09-04
+
+Verdikt: **grünes Licht**.
+
+Geprüft: lokal typecheck / lint / format:check / test:coverage / build alle grün
+(139 Tests, +23; Coverage src/sim 96,32 % — über der Schwelle; `navgraph.ts`
+93 %, `enemies.ts` 90 %, `sektor.ts` 100 %). CI + Pages-Preview grün auf
+`20bf9a0`. Gelesen:
+
+- `src/sim/navgraph.ts` — BFS über offene Kanten, Nachbarn sortiert →
+  deterministisch, reine Funktionen, kein Babylon/Zeit/Zufall. Sauber.
+- `src/sim/collision.ts` `sichtlinie()` — dünner Raycast-Wrapper, rein.
+- `src/sim/enemies.ts` — `nav` als optionaler Trailing-Param: ohne `nav` exakt
+  altes Verhalten (alter Golden-Anker unverändert). Pfad-Neuberechnung nur bei
+  Zielwechsel. Wegpunkt-Radius eng an Sap-/Bresche-Knoten (verhindert
+  „Knoten von der falschen Seite erreicht"). Deterministischer seitlicher
+  Versatz `(id % 7) − 3` gegen Conga-Stau, konvergiert am Wegpunkt.
+- `src/sim/index.ts` — eigene Graph-Kopie je Sim (Kanten frisch gemappt, die
+  exportierte `sektorGreybox` bleibt unmutiert; Test `_setKanteOffen` mutiert die
+  Singleton nicht — geprüft). Eigener `abschnittRng`-Strom → alter Golden-Anker
+  stabil. Infiltration relokiert auf `reinforcement-<id>` mit `imSichtkegel`-
+  Guard.
+- `src/data/sektor.ts` — ~30 Knoten / ~40 Kanten, handgepflegt entlang der
+  begehbaren Route. Front→hinten + Labyrinth→Bresche `offen: false` (AP4-03
+  öffnet). Neuer Golden-/Replay-Anker (Seed 40404) mit konkreten Ankern auf
+  Gegner-Positionen/-Abschnitten/-Zielen.
+
+Anmerkungen (nicht blockierend):
+
+1. **Geometrie-Churn aus AP4-01:** Labyrinth-Wälle, Landmark, `feindAnmarsch`
+   (z 48 → z 44) **und** Parapet A/C (x −8/20 → −11/23) verschoben, weil der
+   AP4-01-Stub eine Sackgasse hatte. Alles Greybox, Tests + Pathing headless
+   verifiziert. Beim Spieltest mitchecken, dass die Sap-Lücken zu den
+   Parapet-Enden passen. → in die Spieltest-Notiz aufgenommen.
+2. **`imSichtkegel`-Guard greift aktuell nie** — alle `reinforcement-*`-Knoten
+   liegen in Zone `labyrinth`, nie `feld`. Der Guard ist defensiv/zukunftssicher.
+   Ok.
+3. `aktiveAchsen` = alle Abschnitte im Greybox (statt „~2 solo"). Die
+   spielerzahl-/Director-abhängige Auswahl gehört zu AP4-04. `SimOptions.
+   aktiveAchsen` steht bereit. Ok.
+4. Coverage src/sim von 98,6 % auf 96,3 % — die neuen unabgedeckten Zeilen sind
+   Rand-Branches in `navgraph`/`enemies` (kein Weg, Wegpunkt fehlt). Vertretbar.
+
+Zu den 5 `TODO(Rückfrage)` — Planer-Entscheidung: alle akzeptiert als
+Greybox-Verschiebungen bzw. Folgeticket-Arbeit (Labyrinth-Justierung → Spieltest;
+Feld/Graben → wie AP4-01; Feindzone-Sperre → eigenes kleines Ticket / AP4-05;
+`aktiveAchsen` → AP4-04; Wegpunkt-Feinschliff → Spieltest via `WEGPUNKT_*` /
+`MARSCH_SEPARATION`).
+
+Abweichungen (a)–(d): alle vertretbar. `_setAbschnittVerloren` ist genau das, was
+AP4-03 als `onVerloren(id)` braucht — gute Vorarbeit.
+
+Folge-Ticket: **AP4-03** (Frontabschnitte: Besitz, Bresche, Fall).
