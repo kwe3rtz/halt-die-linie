@@ -65,6 +65,7 @@ const loop = createLoop({
       nachschub: state.nachschub,
       einsatz: state.einsatz,
       lastShot: state.lastShot,
+      depotInReichweite: state.player.depotInReichweite,
     });
     kompass.update({
       playerPos: { x: state.player.pos.x, z: state.player.pos.z },

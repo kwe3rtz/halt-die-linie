@@ -361,6 +361,45 @@ export function createRenderer(
     landmarkMesh.renderingGroupId = GROUP_WORLD;
   }
 
+  // Munitionsdepots (AP5-02): eine Kiste je Abschnitts-Depot — Front an der
+  // Parados, Home im Unterstand. Reine Markierung ohne Kollision; ob der
+  // Spieler nah genug steht, entscheidet die Sim (`DEPOT_REICHWEITE`).
+  const depotMeshes: Mesh[] = [];
+  let depotMat: StandardMaterial | null = null;
+  let depotDeckelMat: StandardMaterial | null = null;
+  if (meta) {
+    depotMat = new StandardMaterial("depot", scene);
+    depotMat.diffuseColor = new Color3(0.42, 0.34, 0.18);
+    depotMat.emissiveColor = new Color3(0.12, 0.09, 0.03);
+    depotMat.specularColor = new Color3(0, 0, 0);
+    // Deckelstreifen emissiv, damit die Kiste im Grabenschatten lesbar bleibt.
+    depotDeckelMat = new StandardMaterial("depotDeckel", scene);
+    depotDeckelMat.disableLighting = true;
+    depotDeckelMat.emissiveColor = new Color3(0.9, 0.72, 0.25);
+    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+      // Depot-Marker liegt 0,2 m über der Sohle — Kiste (0,5 hoch) steht auf.
+      const kiste = MeshBuilder.CreateBox(
+        `depot_${ab.id}`,
+        { width: 0.7, height: 0.5, depth: 0.5 },
+        scene,
+      );
+      kiste.position.set(ab.depot.x, ab.depot.y + 0.05, ab.depot.z);
+      kiste.material = depotMat;
+      kiste.isPickable = false;
+      kiste.renderingGroupId = GROUP_WORLD;
+      const streifen = MeshBuilder.CreateBox(
+        `depotS_${ab.id}`,
+        { width: 0.72, height: 0.06, depth: 0.14 },
+        scene,
+      );
+      streifen.position.set(ab.depot.x, ab.depot.y + 0.33, ab.depot.z);
+      streifen.material = depotDeckelMat;
+      streifen.isPickable = false;
+      streifen.renderingGroupId = GROUP_WORLD;
+      depotMeshes.push(kiste, streifen);
+    }
+  }
+
   // Front- und Home-Abschnitte (AP4-03/06): Trümmer je aufgerissener Bresche,
   // Rauch über gebrochenen/verlorenen Abschnitten. Grob — Feinschliff in AP4-05.
   interface FrontVisual {
@@ -693,6 +732,11 @@ export function createRenderer(
       enemyBarBgMat.dispose();
       landmarkMesh?.dispose();
       landmarkMat?.dispose();
+      for (const m of depotMeshes) {
+        m.dispose();
+      }
+      depotMat?.dispose();
+      depotDeckelMat?.dispose();
       for (const v of frontVisuals.values()) {
         for (const m of v.truemmer) {
           m.dispose();

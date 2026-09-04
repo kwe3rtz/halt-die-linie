@@ -206,6 +206,19 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   Regressionstests: `collision-verbindungsgraben.test.ts` (Durchläufe auf
   der echten Geometrie inkl. Spieler-Sim, Gegenprobe am exakten Zustand) und
   Mechanismus-Tests in `collision.test.ts`.
+- **AP5-02 Munitions-Nachschub.** Die Abschnitts-Depots (`FrontAbschnitt.depot`
+  — Front A/B/C an der Parados-Rückwand, Home in den Munitionslager-
+  Unterständen, Positionen in `src/data/sektor.ts`) sind Nachfüllpunkte:
+  `naechstesDepot()` (`src/sim/sektor.ts`, rein) liefert den Abschnitt, dessen
+  Depot in `DEPOT_REICHWEITE` (2 m, 3D) liegt und nicht `depotVerloren` ist;
+  `SimState.player.depotInReichweite` trägt ihn ins HUD („E · Munition
+  auffüllen"). `E` (Flanke, wie `entscheide`) setzt die Reserve auf
+  `WeaponDef.reserve` — außer im Finale nach `gewonnen`, wo `E` weiter
+  extrahiert. Ein gefallener Abschnitt hat sein Depot verloren (KONZEPT §3 „die
+  Uhr"), `rueckerobern` gibt es zurück; im Tod kein Auffüllen (der Respawn
+  füllt ohnehin). Renderer: Kiste je Depot, ohne Kollision. Testeingang
+  `_setReserve`. Keine Kosten/Budgets — die Nachschub-Ökonomie (§9.6) bleibt
+  ein eigenes Paket.
 
 ## Bundle-Größe
 

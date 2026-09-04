@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand } from "./index";
-import { abschnittAt, zoneAt, type ZonenId } from "./sektor";
+import {
+  abschnittAt,
+  inBoundsXZ,
+  naechstesDepot,
+  zoneAt,
+  DEPOT_REICHWEITE,
+  type ZonenId,
+} from "./sektor";
+import { standardWaffe } from "../data/waffen";
 import { kuerzesterPfad } from "./navgraph";
 import { sektorGreybox } from "../data/sektor";
 
@@ -732,5 +740,184 @@ describe("Greybox-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
     expect(sim.getState().enemies.length).toBe(0);
     expect(ak).toBe(2);
     expect(sahPause).toBe(true);
+  });
+});
+
+describe("Greybox-Sektor — Munitions-Nachschub (AP5-02)", () => {
+  const { meta } = sektorGreybox;
+  const alle = [...meta.frontAbschnitte, ...meta.homeAbschnitte];
+  const depotB = meta.frontAbschnitte.find((a) => a.id === "B")!.depot;
+  const RESERVE = standardWaffe.reserve;
+
+  /** Seed, dessen Spawn der mittlere ist (0, −1,4, 13) — nahe Depot B. */
+  function mittlererSeed(): number {
+    for (let seed = 1; seed < 100; seed += 1) {
+      const p0 = createSim(seed, sektorGreybox).getState().player.pos;
+      if (p0.x === 0 && p0.z === 13) return seed;
+    }
+    throw new Error("kein Seed mit mittlerem Spawn");
+  }
+
+  /**
+   * Läuft den Spieler bis auf ~1 m an `ziel` (X/Z) heran. Die Wunschrichtung
+   * ist yaw-relativ — hier aus dem aktuellen yaw zurückgerechnet, damit der
+   * Helfer nach beliebigem Drehen funktioniert.
+   */
+  function laufeZu(
+    sim: ReturnType<typeof createSim>,
+    ziel: { x: number; z: number },
+    maxTicks = 600,
+  ): void {
+    for (let i = 0; i < maxTicks; i += 1) {
+      const pl = sim.getState().player;
+      const dx = ziel.x - pl.pos.x;
+      const dz = ziel.z - pl.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 1) return;
+      const wx = dx / d;
+      const wz = dz / d;
+      const c = Math.cos(pl.yaw);
+      const sn = Math.sin(pl.yaw);
+      sim.tick(command({ x: c * wx - sn * wz, y: sn * wx + c * wz }), DT);
+    }
+  }
+
+  const reserve = (sim: ReturnType<typeof createSim>) =>
+    sim.getState().player.weapon.reserve;
+  const depotNah = (sim: ReturnType<typeof createSim>) =>
+    sim.getState().player.depotInReichweite;
+
+  it("jedes Depot liegt in seinem Abschnitt, knapp über der Grabensohle und in keinem Kollider", () => {
+    for (const ab of alle) {
+      expect(inBoundsXZ(ab.bounds, ab.depot), ab.id).toBe(true);
+      expect(ab.depot.y).toBeCloseTo(-1.6, 6);
+      const y = ab.depot.y + 0.05;
+      const drin = sektorGreybox.boxes.filter(
+        (b) =>
+          Math.abs(ab.depot.x - b.center.x) < b.size.x / 2 &&
+          Math.abs(ab.depot.z - b.center.z) < b.size.z / 2 &&
+          y >= b.center.y - b.size.y / 2 &&
+          y < b.center.y + b.size.y / 2,
+      );
+      expect(drin, `Depot ${ab.id} steckt in einem Kollider`).toEqual([]);
+    }
+  });
+
+  it("naechstesDepot: in Reichweite / außerhalb / darüber / nicht verfügbar / nächstes gewinnt", () => {
+    expect(naechstesDepot(alle, depotB, DEPOT_REICHWEITE)).toBe("B");
+    expect(
+      naechstesDepot(alle, { ...depotB, x: depotB.x + 1.9 }, DEPOT_REICHWEITE),
+    ).toBe("B");
+    expect(
+      naechstesDepot(alle, { ...depotB, x: depotB.x + 2.1 }, DEPOT_REICHWEITE),
+    ).toBeNull();
+    // Auf der Parados-Oberkante direkt darüber: 3D-Abstand zählt.
+    expect(
+      naechstesDepot(alle, { ...depotB, y: depotB.y + 2.2 }, DEPOT_REICHWEITE),
+    ).toBeNull();
+    expect(
+      naechstesDepot(alle, depotB, DEPOT_REICHWEITE, (id) => id !== "B"),
+    ).toBeNull();
+    const zwei = [
+      { id: "nah", depot: { x: 1, y: 0, z: 0 } },
+      { id: "fern", depot: { x: -1.5, y: 0, z: 0 } },
+    ];
+    expect(naechstesDepot(zwei, { x: 0, y: 0, z: 0 }, 2)).toBe("nah");
+    expect(
+      naechstesDepot(zwei, { x: 0, y: 0, z: 0 }, 2, (id) => id !== "nah"),
+    ).toBe("fern");
+  });
+
+  it("am Depot füllt E die Reserve auf — im laufenden Einsatz, ohne zu sterben", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    expect(depotNah(sim)).toBeNull(); // am Spawn noch nicht in Reichweite
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.tick(command(), DT);
+    expect(reserve(sim)).toBe(0);
+    expect(depotNah(sim)).toBe("B");
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+    expect(sim.getState().player.tot).toBe(false);
+    expect(sim.getState().player.hp).toBe(sim.getState().player.maxHp);
+  });
+
+  it("E ist flankengesteuert: gehalten füllt nicht erneut, erst die nächste Flanke", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+    sim._setReserve(3);
+    for (let i = 0; i < 30; i += 1) sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(3);
+    sim.tick(command(), DT); // loslassen
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+  });
+
+  it("außerhalb der Reichweite ist E wirkungslos", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, { x: 0, z: 4 }); // in den Verbindungsgraben
+    expect(zoneAt(meta, sim.getState().player.pos)).toBe("verbindungsgraben");
+    expect(depotNah(sim)).toBeNull();
+    sim._setReserve(0);
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(0);
+  });
+
+  it("ein gefallener Abschnitt hat sein Depot verloren; rueckerobern gibt es zurück", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, depotB);
+    sim._setAbschnittVerloren("B", true);
+    sim._setReserve(0);
+    sim.tick(command(), DT);
+    expect(depotNah(sim)).toBeNull();
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(0);
+
+    sim.rueckerobern("B"); // Abschnitt ist leer → verloren → gebrochen, Depot zurück
+    sim.tick(command(), DT);
+    expect(sim.getState().front.find((f) => f.id === "B")?.zustand).toBe(
+      "gebrochen",
+    );
+    expect(depotNah(sim)).toBe("B");
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+  });
+
+  it("im Tod gibt es kein Depot in Reichweite und E füllt nicht", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.applyDamage(999);
+    sim.tick(command(), DT);
+    expect(sim.getState().player.tot).toBe(true);
+    expect(depotNah(sim)).toBeNull();
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(0);
+  });
+
+  it("im Finale nach 'gewonnen' bleibt E die Extraktion — auch am Depot", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 3,
+    });
+    const dreheUndFeuere = (i: number) => command({ dx: 40, fire: i % 45 < 2 });
+    for (
+      let i = 0;
+      i < 30000 && sim.getState().einsatz.ergebnis !== "gewonnen";
+      i += 1
+    ) {
+      sim.tick(dreheUndFeuere(i), DT);
+    }
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.tick(command(), DT);
+    expect(depotNah(sim)).toBe("B");
+    sim.tick(command({ interact: true }), DT);
+    expect(sim.getState().einsatz.phase).toBe("vorbei");
+    expect(reserve(sim)).toBe(0); // E war die Extraktion, kein Auffüllen
   });
 });

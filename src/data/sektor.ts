@@ -308,6 +308,10 @@ const meta: SektorMeta = {
     { id: "homeline", bounds: aabb(-25, -36.5, 25, -20) },
     { id: "feld", bounds: aabb(-25, -20, 25, 10) },
   ],
+  // Depots = Munitionskisten (AP5-02): an der Front hinter dem Feuertritt an
+  // der Parados-Rückwand (aus der Schusslinie; A/C neben den Rampen, B neben
+  // der Grabenmündung), an der Home-Line im Munitionslager-Unterstand. Ein
+  // gefallener Abschnitt verliert sein Depot (`depotVerloren`).
   frontAbschnitte: [
     {
       id: "A",
@@ -317,7 +321,7 @@ const meta: SektorMeta = {
         { x: -15, y: IN_GRABEN, z: 13 },
         { x: -11, y: IN_GRABEN, z: 13 },
       ],
-      depot: { x: -16, y: IN_GRABEN, z: 12 },
+      depot: { x: -20, y: IN_GRABEN, z: 11.5 },
     },
     {
       id: "B",
@@ -327,7 +331,7 @@ const meta: SektorMeta = {
         { x: -3, y: IN_GRABEN, z: 13 },
         { x: 3, y: IN_GRABEN, z: 13 },
       ],
-      depot: { x: 0, y: IN_GRABEN, z: 12 },
+      depot: { x: 3, y: IN_GRABEN, z: 11.5 },
     },
     {
       id: "C",
@@ -337,7 +341,7 @@ const meta: SektorMeta = {
         { x: 11, y: IN_GRABEN, z: 13 },
         { x: 15, y: IN_GRABEN, z: 13 },
       ],
-      depot: { x: 16, y: IN_GRABEN, z: 12 },
+      depot: { x: 20, y: IN_GRABEN, z: 11.5 },
     },
   ],
   // Home-Line: zwei Abschnitte um das Nordparapet (Lücke = Verbindungsgraben-
@@ -349,14 +353,14 @@ const meta: SektorMeta = {
       bounds: aabb(-25, -36.5, 0, -19),
       parapetBreschen: BRESCHEN_H_WEST,
       bauSlots: [{ x: -9, y: IN_GRABEN, z: -23 }],
-      depot: { x: -12, y: IN_GRABEN, z: -32 },
+      depot: { x: -12, y: IN_GRABEN, z: -33.5 },
     },
     {
       id: "H-Ost",
       bounds: aabb(0, -36.5, 25, -19),
       parapetBreschen: BRESCHEN_H_OST,
       bauSlots: [{ x: 9, y: IN_GRABEN, z: -23 }],
-      depot: { x: 12, y: IN_GRABEN, z: -32 },
+      depot: { x: 12, y: IN_GRABEN, z: -33.5 },
     },
   ],
   feindAnmarsch: [
