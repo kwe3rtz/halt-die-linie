@@ -119,11 +119,12 @@ LIES IN DIESER REIHENFOLGE, bevor du irgendetwas tust:
 6. git log --oneline -15  und  git branch --show-current
 
 DEIN AUFTRAG: das nächste offene Ticket in tickets/ (siehe Tabelle in
-AUFGABEN.md → aktuelles Arbeitspaket). Aktuell: AP4-01. Reihenfolge AP4-01 →
-AP4-05 einhalten.
+AUFGABEN.md → aktuelles Arbeitspaket). Aktuell: AP4-03. Reihenfolge AP4-01 →
+AP4-05 einhalten (AP4-01/-02 sind erledigt, in tickets/erledigt/ nachlesen —
+navGraph, SektorMeta, _setAbschnittVerloren-Testeingang existieren schon).
 
 REGELN (aus AUFGABEN.md + WORKFLOW.md):
-- Auf dem Arbeitspaket-Branch bleiben (git branch zeigt ihn). Zuerst git pull.
+- Branch arbeitspaket-4 (git checkout arbeitspaket-4). Zuerst git pull.
 - NUR dieses eine Ticket. Kein Scope-Creep über die Ticket-Datei hinaus.
 - Goldene Regel strikt: src/sim/** ohne Babylon, ohne window/document/
   performance/Date.now/Math.random/requestAnimationFrame. Per ESLint erzwungen.
