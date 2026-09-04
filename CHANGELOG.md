@@ -6,6 +6,19 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
 
+- **AP5-03** · `ba631af` · **Kartengrenze öffnen.** Die Sektor-Umrandung
+  wirkte wie eine geschlossene Box (sichtbare 6-m-Sperrwände). Lösung: die
+  vier `kartengrenze`-Kollider bleiben unverändert (Lage/Länge/Höhe), bekommen
+  aber ein neues `LevelBox.unsichtbar`-Flag — kein Mesh mehr, Hitscan/
+  Sichtlinie gehen hindurch, Bewegung bleibt gesperrt. Sichtbar ist
+  stattdessen ein **Umland**: vier Geländeblöcke jenseits der Grenze (Oberkante
+  bündig mit dem Boden; an den offenen Grabenenden bilden ihre Flanken
+  automatisch die Erd-Stirnwand statt eines Lochs) plus zehn flache Erdhaufen
+  als Tiefenhinweise, dazu linearer Dunst (Himmelsfarbe, ab ~60 m), der die
+  Umland-Außenkante schluckt, ohne Front/Home-Sichtlinien zu trüben. Visuell
+  im laufenden Spiel gegengecheckt (Playwright + headless Chromium,
+  Screenshots in `tickets/erledigt/AP5-03-screenshots/`). 269 Tests (+10),
+  Coverage src/sim 98,43 % (unverändert), Golden-Anker unverändert.
 - **AP5-02** · `683340f` · **Munitions-Nachschub im Einsatz.** Reservemunition
   war bisher nur durch Sterben nachfüllbar. Lösung: die seit AP4-04
   vorhandenen Abschnitts-Depots (`FrontAbschnitt.depot`) werden zu

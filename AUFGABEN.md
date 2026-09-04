@@ -666,7 +666,7 @@ in `tickets/`.
 |---|---|---|
 | AP5-01 | Mittelgang-Teleport-Bug | ✅ `erledigt/` (`f4231ac`) |
 | AP5-02 | Munitions-Nachschub im Einsatz | ✅ `erledigt/` (`683340f`) |
-| AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | offen |
+| AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | ✅ `erledigt/` (`ba631af`) |
 | AP5-04 | Gegner-Druck & Wellen-Eskalation | offen |
 
 **Ausdrücklich NICHT in AP5:** Front-/Bresche-/Uhr-Balancing (eigenes

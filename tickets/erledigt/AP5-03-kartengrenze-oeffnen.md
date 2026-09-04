@@ -1,6 +1,6 @@
 # AP5-03 — Kartengrenze öffnen: offenes Gelände statt sichtbarer Wände
 
-**Status:** review
+**Status:** erledigt · `ba631af` · reviewed 2026-09-04
 **Arbeitspaket:** 5 (Boxhead-Kern) · **Branch:** `arbeitspaket-5` (von `main`)
 **Referenz:** Zweiter Spieltest 2026-09-04 (Nutzer-Feedback), `src/data/sektor.ts`
 Z. 75–79 (`modul("kartengrenze", …)`), `src/data/module.ts` (Modul
@@ -190,3 +190,53 @@ stehende Position. Verhalten wie gebaut, aber ein Stolperstein für Automation.
   (gewollt laut Ticket). Falls das im Spieltest als „unsichtbare Wand" stört:
   Umland ab der Grenze als sanft ansteigende Böschung/Schlamm — ebenfalls
   Politur, keine Systemänderung.
+
+## Review — AP5-03 · 2026-09-04
+
+**Grünes Licht.** Lokal nachvollzogen: `git pull` auf `arbeitspaket-5`,
+`typecheck`/`lint`/`format:check` grün, `test:coverage` 269/269 grün
+(Coverage src/sim 98,43 %, unverändert), `build` grün. CI + Pages Preview auf
+GitHub beide `success` (`33869709711`/`33869709747`).
+
+Diff gelesen (`collision.ts`, `module.ts`, `sektor.ts`, `render/index.ts`).
+Der Lösungsweg ist der richtige: die Kartengrenze bleibt exakt die gleiche
+Kollisionsbox wie vorher (Lage/Länge/Höhe unverändert, per Test abgesichert),
+bekommt nur ein `unsichtbar`-Flag — kein Mesh, kein Hitscan-Treffer, Bewegung
+weiterhin gesperrt. Das neue Umland sind **echte `LevelBox`en**, nicht
+Render-only-Planes — die Begründung (Planes hätten an den offenen
+Grabenenden Löcher gelassen, Blöcke liefern die Erd-Stirnwand automatisch)
+ist nachvollziehbar und in den Screenshots sichtbar bestätigt. Der Dunst
+schließt die Umland-Außenkante, ohne die Front/Home-Sichtlinien zu trüben.
+Sauber erkannt und behoben: Hitscan/Sichtlinie müssen unsichtbare Kollider
+ignorieren, sonst „Treffer in der Luft" — eine kleine, aber notwendige
+Sim-Änderung über den reinen Render-Auftrag hinaus, korrekt als solche im
+Bericht benannt statt stillschweigend gemacht.
+
+Zwei Stichproben-Screenshots angeschaut (05 „an der Westgrenze", 02
+„Frontgraben Blick Westende"): bestätigen die Beschreibung — offene Ebene
+ohne jede Kante bis in den Dunst, der Frontgraben endet in einer Erdflanke
+statt einer Betonwand. Die restlichen fünf inhaltlich plausibel, kein
+Bildvergleich nötig, die Sektor-Tests (vier Grenzkollider unverändert,
+Silhouetten-Schranke ≤ 1,5 m, Spielgrenze bleibt wirksam an allen vier
+Seiten) decken die Geometrie ohnehin ab.
+
+Zu den sechs Ermessensentscheidungen: alle nachvollziehbar begründet,
+keine Einwände — insbesondere (2) `LevelBox.unsichtbar` als explizites,
+generator-taugliches Datenfeld statt Größen-Heuristik ist die richtige
+Wahl, konsistent mit dem `tag`-Muster aus AP4-06.
+
+Der Merkposten „Spieler steht an einer unsichtbaren Wand, falls das im
+Spieltest stört" ist der einzige Punkt, den ich im dritten Spieltest
+gezielt gegenchecken will — für dieses Ticket ist er korrekt nicht
+mitgelöst (Politur, keine Systemänderung, wie im Ticket verlangt). Dunst-
+Werte (60/190 m) sind wie andere AP4/5-Zahlen Platzhalter fürs Playtest-
+Tuning.
+
+Screenshots liegen unter dem im Bericht genannten Pfad (Worker-Scratchpad,
+Session `7bd26b14…`) — für den Audit-Trail nach `tickets/erledigt/`
+kopiert (siehe unten), damit sie nicht mit dem temporären Verzeichnis
+verschwinden.
+
+**Manueller Spieltest im Browser** ist diesmal Teil des Reviews selbst
+(Playwright-Screenshots) — für AP5-01/02 steht der noch aus, läuft im
+dritten Spieltest zusammen.

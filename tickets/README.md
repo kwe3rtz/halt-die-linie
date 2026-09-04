@@ -57,7 +57,7 @@ vertieft wird. Branch `arbeitspaket-5` von `main`.
 |---|---|
 | AP5-01 Mittelgang-Teleport-Bug | ✅ `erledigt/` |
 | AP5-02 Munitions-Nachschub im Einsatz | ✅ `erledigt/` |
-| AP5-03 Kartengrenze öffnen | offen |
+| AP5-03 Kartengrenze öffnen | ✅ `erledigt/` |
 | AP5-04 Gegner-Druck & Wellen-Eskalation | offen |
 
 ## Arbeitspaket 6+
