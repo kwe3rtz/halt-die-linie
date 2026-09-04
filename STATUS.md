@@ -13,12 +13,15 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Konzept:** beschlossen. §3 (Sektor) am 2026-09-03 aus der Map-Design-Runde
   neu gefasst — H-Grundriss, offenes Feld statt hartem Korridor, „die Uhr",
   Generator später.
-- **Code:** AP1 + AP2 + AP3 auf `main` (PR #1, #4, #5). **AP4 „Verteidigung in
-  der Tiefe" komplett** auf `arbeitspaket-4` (5 Tickets, alle reviewed, 212
-  Tests) — **PR → `main` offen, wartet auf Merge + Spieltest.**
-- **Als Nächstes:** Nutzer mergt `arbeitspaket-4`, spielt den Kern-Bogen
-  (Checkliste unten). Trägt der Moment → AP5 („zwei Kampfsprachen": Tag-Fernkampf
-  + Nacht).
+- **Code:** AP1–AP4 auf `main` (PR #1, #4, #5, #6). Nutzer hat AP4 gespielt;
+  **unabhängiger Audit** (`AUDIT-2026-09-04-ap4.md`, Session `ki-game-c2`) fand
+  danach 4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den
+  AP4-Maschinen (Bresche öffnet Kollision nicht → Gegner stecken vor der Wand;
+  kein Stuck-Fallback; Tick-Reihenfolge Wave/Einsatz; „gewonnen" nicht
+  abschließbar).
+- **Als Nächstes:** **AP4-06 „Kern-Bogen-Fixes"** spezifiziert und an
+  `ki-game-c2` übergeben (Branch `fix/ap4-06-kern-bogen`) — kommt vor AP5, weil
+  der Kern-Bogen sonst nicht sauber durchspielbar ist.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -45,22 +48,28 @@ angesagt.
 
 ## Als Nächstes
 
-1. **Nutzer:** PR `arbeitspaket-4` → `main` mergen (`gh pr merge <N> --merge
-   --delete-branch`), dann `npm run dev` und den **Kern-Bogen** spielen.
-2. **Spieltest-Checkliste Kern-Bogen:** einmal quer durch alle 6
-   Zonen des H (headless ging nie); Feuertritt-Marge (~0,1 m über Parapet);
-   Sap-Lücken ↔ Parapet-Enden (Geometrie in AP4-02 justiert); still „gebrochener"
-   Abschnitt ohne Angreifer blutet bis `verloren` aus (AP4-03 TODO 2 — komisch?);
-   `rueckerobern` lässt Breschen offen — lohnend?; Finale ist feldunabhängig
-   („gewonnen" trotz Restgegner — richtig?); Kompass-Marker überlagern sich am
-   Spawn (Blick Nord) am rechten Rand (AP4-05 TODO 6); alle Zahlen (Zermürbung
-   je Zone, Countdowns, Reservewellen, Schwellenzeiten `T/T2/T3`) sind
-   Platzhalter. Tasten: **F3** Debug · **M** Lagekarte · **T** Ton stumm.
-   **Kernfrage:** trägt „Front halten → Abschnitt verlieren → zurückfallen →
-   Home-Line halten" als Spielgefühl? Trägt der Moment, geht es weiter.
-3. Danach: „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale
-   Generator fürs vordere Labyrinth, dann Gegner-Roster-Ausbau (`AUFGABEN.md`
-   „Arbeitspaket 5+").
+1. **AP4-06 „Kern-Bogen-Fixes"** (`tickets/AP4-06-kern-bogen-fixes.md`) — bei
+   `ki-game-c2`, Branch `fix/ap4-06-kern-bogen` von `main`. Behebt die 4
+   Audit-Bugs (Bresche/Kollision, Stuck-Fallback, Tick-Reihenfolge Wave/
+   Einsatz, „gewonnen" nicht abschließbar) + führt einen Graph-Begehbarkeits-
+   Test ein (Pflicht vor dem Generator). Reviewe ich wie jedes Ticket.
+2. **Danach: zweiter Spieltest** des Kern-Bogens (jetzt erst aussagekräftig,
+   weil der Einsatz vorher solo nicht sauber zu Ende ging). F3 auf dem Mac:
+   `fn+F3` oder Systemeinstellungen → Tastatur → Standard-Funktionstasten;
+   sonst Tasten wie gehabt: **F3** Debug · **M** Lagekarte · **T** Ton.
+   Restliche Checkliste (Zonen, Feuertritt-Marge, Sap-Lücken, Balance-Zahlen,
+   Kompass-Überlappung) weiter gültig. **Kernfrage:** trägt „Front halten →
+   Abschnitt verlieren → zurückfallen → Home-Line halten" als Spielgefühl?
+3. Danach: ein Politur-Ticket aus den Audit-Medium-Befunden (priorisieren mit
+   dem Nutzer), dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der
+   prozedurale Generator fürs vordere Labyrinth (`AUFGABEN.md` „Arbeitspaket
+   5+").
+
+**Audit-Report (2026-09-04):** `AUDIT-2026-09-04-ap4.md` — unabhängiger
+Voll-Kontext-Audit von `ki-game-c2` nach dem AP4-Merge. Architektur sauber, 4
+High-Bugs reproduziert (→ AP4-06), plus Medium-/Low-Befunde für später
+(hartkodiertes Sektor-Wissen in der Sim, `createSim`-Größe, Zonen-Überlappung,
+Perf-Vorbereitung für Horden, u. a.).
 
 ### Map-Design-Runde — Ergebnis (2026-09-03)
 
@@ -123,6 +132,19 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-04** — **Unabhängiger Audit nach AP4-Merge** (`ki-game-c2`, Firmen-
+  Account, hoher Effort, voller Projektkontext): Architektur/goldene Regel
+  sauber, aber 4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den
+  AP4-Maschinen (nicht in den Maschinen selbst) — Bresche öffnet nur den
+  Nav-Pfad, nicht die Kollision (Gegner stecken vor der Wand); kein
+  Stuck-Fallback (blockiert den Wellen-Loop); Tick-Reihenfolge Wave vor Einsatz
+  (Finale kann ohne Reservewellen laufen); „gewonnen" ohne Tastenbindung nicht
+  abschließbar, kann danach noch auf „verloren" kippen. Report:
+  `AUDIT-2026-09-04-ap4.md`. Daraus **AP4-06 „Kern-Bogen-Fixes"** spezifiziert
+  (die 4 Bugs + ein Graph-Begehbarkeits-Test), **vor** AP5 eingeschoben.
+  Medium-/Low-Befunde (hartkodiertes Sektor-Wissen in der Sim, `createSim`-
+  Größe, Zonen-Bounds-Überlappung, Konstanten-Duplikate, Perf-Vorbereitung)
+  zurückgestellt für ein späteres Politur-Ticket.
 - **2026-09-04** — **AP4 „Verteidigung in der Tiefe" komplett** (AP4-01…05, alle
   reviewed, 212 Tests, Coverage src/sim 97,3 %): Greybox-Sektor „H" aus
   modularen Bausteinen · semantischer Feind-Nav-Graph (kein NavMesh) ·

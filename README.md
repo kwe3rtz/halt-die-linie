@@ -38,6 +38,7 @@ Das frühere Tower-Defense-Skelett liegt archiviert unter
 | `SPARRING.md`           | Self-contained Briefing zum Weitergeben an externe KI — **aktuelle** Fassung          |
 | `SPARRING-LOG.md`       | Chronik der bisherigen Sparring-Briefings                                             |
 | `SPARRING-ANTWORTEN.md` | Antworten der externen KIs + Konvergenz-Analyse                                       |
+| `AUDIT-*.md`            | Unabhängige Code-Audits (voller Kontext, hoher Effort), Datum im Namen                |
 | `prototyp-td/`          | Archivierter TD-Prototyp, nur noch Referenz                                           |
 
 ## Änderungen am Konzept
