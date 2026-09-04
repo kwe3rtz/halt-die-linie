@@ -8,6 +8,8 @@ export interface DebugData {
   fps: number;
   player: Readonly<SimState["player"]>;
   command: InputCommand;
+  /** Lebende Gegner im Sektor (AP5-04 — Messgröße für den Wellen-Druck). */
+  lebendeGegner: number;
 }
 
 export interface DebugOverlay {
@@ -99,6 +101,7 @@ export function createDebugOverlay(
         `pos     ${round(p.pos.x)} ${round(p.pos.y)} ${round(p.pos.z)}`,
         `yaw/pit ${round(p.yaw)} / ${round(p.pitch)}`,
         `ground  ${p.onGround ? "ja" : "nein"}`,
+        `gegner  ${data.lebendeGegner} lebend`,
         `move    ${round(data.command.move.x, 1)} ${round(data.command.move.y, 1)}`,
         `look    ${round(data.command.look.dx, 0)} ${round(data.command.look.dy, 0)}`,
         `btn     ${heldButtons(data.command.buttons)}`,

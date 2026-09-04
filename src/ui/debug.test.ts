@@ -15,6 +15,7 @@ const sampleData: DebugData = {
     maxHp: 100,
     tot: false,
     respawnRest: 0,
+    depotInReichweite: null,
     weapon: {
       defId: "langgewehr-m98",
       imLauf: 5,
@@ -35,6 +36,7 @@ const sampleData: DebugData = {
       reload: false,
     },
   },
+  lebendeGegner: 7,
 };
 
 function pressF3(): void {
@@ -70,6 +72,7 @@ describe("debug overlay", () => {
     expect(text).toContain("fps     60");
     expect(text).toContain("pos     1.23 0.00 -3.46");
     expect(text).toContain("ground  ja");
+    expect(text).toContain("gegner  7 lebend");
     expect(text).toContain("btn     sprint");
   });
 

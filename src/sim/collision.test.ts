@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createCollisionWorld,
   moveCapsule,
+  raycast,
   raycastCylinder,
   STEP_HEIGHT,
   type LevelData,
@@ -118,6 +119,63 @@ describe("moveCapsule", () => {
     expect(r.vel.y).toBe(0);
   });
 
+  // --- AP5-01: eine Achse löst nur auf, was ihre eigene Bewegung verursacht ---
+
+  it("Rundungsrest nach dem Wand-Push: Druck gegen eine lange Wand schiebt nicht entlang der Wand (AP5-01)", () => {
+    // Lange dünne Wand entlang Z, Innenfläche x = 1,8 — wie die Wände des
+    // Verbindungsgrabens. 1,8 − 0,35 + 0,35 ist in Gleitkomma > 1,8: nach dem
+    // X-Push „steckt" die Kapsel 2e-16 m in der Wand. Vorher löste die Z-Achse
+    // diesen Rest an der nächsten Z-Fläche auf — Sprung auf z = 20,35.
+    const wall = {
+      center: { x: 2.0, y: 1, z: 0 },
+      size: { x: 0.4, y: 2, z: 40 },
+    };
+    const w = world([floor, wall]);
+    let pos = { x: 1.8 - RADIUS, y: 0, z: 3 };
+    let vel = { x: 0, y: 0, z: 0 };
+
+    for (let i = 0; i < 60; i += 1) {
+      vel = { x: 4.5, y: vel.y, z: 0 };
+      const r = moveCapsule(w, pos, vel, RADIUS, HEIGHT, DT);
+      expect(r.pos.z).toBe(3);
+      expect(r.pos.y).toBeCloseTo(0, 5); // und nicht auf die Wandkrone gehoben
+      pos = r.pos;
+      vel = r.vel;
+    }
+    expect(pos.x).toBeLessThanOrEqual(1.8 - RADIUS + 1e-9);
+  });
+
+  it("eine seitliche (fremde) Durchdringung wird nicht entlang der bewegten Achse gelöst", () => {
+    // Die Kapsel steckt seitlich in einer 40 m langen Wand — das hat die
+    // Z-Bewegung nicht verursacht. Die Z-Achse darf sie darum nicht an das
+    // Wandende setzen; die Verschiebung bleibt beim eigenen Tick-Weg.
+    const wall = {
+      center: { x: 0, y: 1, z: 0 },
+      size: { x: 0.4, y: 2, z: 40 },
+    };
+    const w = world([floor, wall]);
+    const start = { x: 0, y: 0, z: 3 };
+    const r = moveCapsule(w, start, { x: 0, y: 0, z: 4 }, RADIUS, HEIGHT, DT);
+    expect(
+      Math.hypot(r.pos.x - start.x, r.pos.z - start.z),
+    ).toBeLessThanOrEqual(4 * DT + 1e-9);
+  });
+
+  it("seitlicher Wandkontakt hebt die fallende Kapsel nicht auf die Wandkrone (Y löst nur Y)", () => {
+    const wall = { center: { x: 0, y: 1, z: 0 }, size: { x: 0.4, y: 2, z: 4 } };
+    const w = world([floor, wall]);
+    let pos = { x: 0, y: 0.5, z: 0 };
+    let vel = { x: 0, y: 0, z: 0 };
+
+    for (let i = 0; i < 60; i += 1) {
+      const r = moveCapsule(w, pos, vel, RADIUS, HEIGHT, DT);
+      expect(r.pos.y - pos.y).toBeLessThanOrEqual(STEP_HEIGHT); // kein Sprung auf y = 2
+      pos = r.pos;
+      vel = r.vel;
+    }
+    expect(pos.y).toBeLessThan(1);
+  });
+
   it("does not mutate the inputs", () => {
     const w = world([floor]);
     const pos = { x: 0, y: 3, z: 0 };
@@ -222,5 +280,41 @@ describe("raycastCylinder", () => {
       100,
     );
     expect(t).toBeCloseTo(0.4, 5);
+  });
+});
+
+describe("unsichtbare Kollider — Kartengrenze (AP5-03)", () => {
+  // Unsichtbare Wand bei z = 5, sichtbare Wand dahinter bei z = 12.
+  const unsichtbar = {
+    center: { x: 0, y: 2.5, z: 5 },
+    size: { x: 20, y: 6, z: 0.4 },
+    unsichtbar: true,
+  };
+  const wand = { center: { x: 0, y: 1, z: 12 }, size: { x: 20, y: 2, z: 1 } };
+
+  it("sperrt die Bewegung wie jede andere Wand", () => {
+    const w = world([floor, unsichtbar, wand]);
+    let pos = { x: 0, y: 0, z: 0 };
+    let vel = { x: 0, y: 0, z: 0 };
+    for (let i = 0; i < 180; i += 1) {
+      vel = { x: 0, y: vel.y, z: 6 };
+      const r = moveCapsule(w, pos, vel, RADIUS, HEIGHT, DT);
+      pos = r.pos;
+      vel = r.vel;
+    }
+    expect(pos.z).toBeLessThanOrEqual(4.8 - RADIUS + 1e-9); // vor der unsichtbaren Wand
+    expect(pos.z).toBeGreaterThan(4.0);
+    expect(pos.y).toBeCloseTo(0, 5); // nicht hochgestiegen
+  });
+
+  it("lässt den Strahl (Hitscan / Sichtlinie) durch — getroffen wird die sichtbare Wand dahinter", () => {
+    const w = world([floor, unsichtbar, wand]);
+    const hit = raycast(w, { x: 0, y: 1.6, z: 0 }, { x: 0, y: 0, z: 1 }, 100);
+    expect(hit?.distanz).toBeCloseTo(11.5, 5); // wand.minZ, nicht 4.8
+  });
+
+  it("createCollisionWorld führt das Flag parallel zu den Boxen", () => {
+    const w = world([floor, unsichtbar, wand]);
+    expect(w.unsichtbar).toEqual([false, true, false]);
   });
 });

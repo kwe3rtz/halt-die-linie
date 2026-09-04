@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand } from "./index";
-import { abschnittAt, zoneAt, type ZonenId } from "./sektor";
+import { createCollisionWorld, moveCapsule } from "./collision";
+import {
+  abschnittAt,
+  inBoundsXZ,
+  naechstesDepot,
+  zoneAt,
+  DEPOT_REICHWEITE,
+  type ZonenId,
+} from "./sektor";
+import { standardWaffe } from "../data/waffen";
 import { kuerzesterPfad } from "./navgraph";
 import { sektorGreybox } from "../data/sektor";
 
@@ -467,8 +476,10 @@ describe("Greybox-Sektor — Einsatzbogen & die Uhr (AP4-04)", () => {
     // Gleich viele Kills (Nachschub = 5/Kill), aber steht zieht mehr Angriffskraft.
     expect(sSteht.nachschub).toBeGreaterThan(0);
     expect(sSteht.nachschub).toBe(sFiel.nachschub);
-    const abbauSteht = 60 - sSteht.wave.angriffskraftRest;
-    const abbauFiel = 60 - sFiel.wave.angriffskraftRest;
+    const abbauSteht =
+      sSteht.wave.angriffskraftMax - sSteht.wave.angriffskraftRest;
+    const abbauFiel =
+      sFiel.wave.angriffskraftMax - sFiel.wave.angriffskraftRest;
     expect(abbauSteht).toBeGreaterThan(abbauFiel);
     expect(abbauSteht).toBeCloseTo(abbauFiel * 2, 0);
   });
@@ -613,13 +624,24 @@ describe("Greybox-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
     // Kante offen, aber Bresche zu (kein Kollider aus) → wie Audit H1 vor dem Fix.
     sim._setKanteOffen("bresche-B", "lab-vorfront", true);
     sim.spawnEnemy("linieninfanterie", { x: -3, y: 0.2, z: 21 }, "B");
+    // Die geschlossene Bresche (x = −3 ± 1,3, Wand um z = 16) darf nie
+    // durchquert werden. Dass der Gegner nach dem Watchdog-Eingriff über die
+    // Sap-Lücke (x = −8,5) in den Graben findet, ist erlaubt — deshalb wird
+    // die Bresche-Spur geprüft, nicht bloß „z bleibt nördlich" (AP5-04).
+    let durchDieBresche = false;
     let minZ = Infinity;
     for (let i = 0; i < 60 * 8; i += 1) {
       sim.tick(command(), DT);
       const e = sim.getState().enemies[0];
-      if (e) minZ = Math.min(minZ, e.pos.z);
+      if (!e) continue;
+      minZ = Math.min(minZ, e.pos.z);
+      if (Math.abs(e.pos.x + 3) < 1.3 + 0.35 && e.pos.z < 16.2) {
+        durchDieBresche = true;
+      }
     }
-    expect(minZ).toBeGreaterThan(16.2);
+    expect(durchDieBresche).toBe(false);
+    // Direkt vor der Wand kommt er nicht weiter als bis zur Wandfläche.
+    expect(minZ).toBeGreaterThan(15.5);
   });
 
   it("H4: nach 'gewonnen' friert der Director ein; E extrahiert (vorbei, gewonnen bleibt)", () => {
@@ -732,5 +754,291 @@ describe("Greybox-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
     expect(sim.getState().enemies.length).toBe(0);
     expect(ak).toBe(2);
     expect(sahPause).toBe(true);
+  });
+});
+
+describe("Greybox-Sektor — Munitions-Nachschub (AP5-02)", () => {
+  const { meta } = sektorGreybox;
+  const alle = [...meta.frontAbschnitte, ...meta.homeAbschnitte];
+  const depotB = meta.frontAbschnitte.find((a) => a.id === "B")!.depot;
+  const RESERVE = standardWaffe.reserve;
+
+  /** Seed, dessen Spawn der mittlere ist (0, −1,4, 13) — nahe Depot B. */
+  function mittlererSeed(): number {
+    for (let seed = 1; seed < 100; seed += 1) {
+      const p0 = createSim(seed, sektorGreybox).getState().player.pos;
+      if (p0.x === 0 && p0.z === 13) return seed;
+    }
+    throw new Error("kein Seed mit mittlerem Spawn");
+  }
+
+  /**
+   * Läuft den Spieler bis auf ~1 m an `ziel` (X/Z) heran. Die Wunschrichtung
+   * ist yaw-relativ — hier aus dem aktuellen yaw zurückgerechnet, damit der
+   * Helfer nach beliebigem Drehen funktioniert.
+   */
+  function laufeZu(
+    sim: ReturnType<typeof createSim>,
+    ziel: { x: number; z: number },
+    maxTicks = 600,
+  ): void {
+    for (let i = 0; i < maxTicks; i += 1) {
+      const pl = sim.getState().player;
+      const dx = ziel.x - pl.pos.x;
+      const dz = ziel.z - pl.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 1) return;
+      const wx = dx / d;
+      const wz = dz / d;
+      const c = Math.cos(pl.yaw);
+      const sn = Math.sin(pl.yaw);
+      sim.tick(command({ x: c * wx - sn * wz, y: sn * wx + c * wz }), DT);
+    }
+  }
+
+  const reserve = (sim: ReturnType<typeof createSim>) =>
+    sim.getState().player.weapon.reserve;
+  const depotNah = (sim: ReturnType<typeof createSim>) =>
+    sim.getState().player.depotInReichweite;
+
+  it("jedes Depot liegt in seinem Abschnitt, knapp über der Grabensohle und in keinem Kollider", () => {
+    for (const ab of alle) {
+      expect(inBoundsXZ(ab.bounds, ab.depot), ab.id).toBe(true);
+      expect(ab.depot.y).toBeCloseTo(-1.6, 6);
+      const y = ab.depot.y + 0.05;
+      const drin = sektorGreybox.boxes.filter(
+        (b) =>
+          Math.abs(ab.depot.x - b.center.x) < b.size.x / 2 &&
+          Math.abs(ab.depot.z - b.center.z) < b.size.z / 2 &&
+          y >= b.center.y - b.size.y / 2 &&
+          y < b.center.y + b.size.y / 2,
+      );
+      expect(drin, `Depot ${ab.id} steckt in einem Kollider`).toEqual([]);
+    }
+  });
+
+  it("naechstesDepot: in Reichweite / außerhalb / darüber / nicht verfügbar / nächstes gewinnt", () => {
+    expect(naechstesDepot(alle, depotB, DEPOT_REICHWEITE)).toBe("B");
+    expect(
+      naechstesDepot(alle, { ...depotB, x: depotB.x + 1.9 }, DEPOT_REICHWEITE),
+    ).toBe("B");
+    expect(
+      naechstesDepot(alle, { ...depotB, x: depotB.x + 2.1 }, DEPOT_REICHWEITE),
+    ).toBeNull();
+    // Auf der Parados-Oberkante direkt darüber: 3D-Abstand zählt.
+    expect(
+      naechstesDepot(alle, { ...depotB, y: depotB.y + 2.2 }, DEPOT_REICHWEITE),
+    ).toBeNull();
+    expect(
+      naechstesDepot(alle, depotB, DEPOT_REICHWEITE, (id) => id !== "B"),
+    ).toBeNull();
+    const zwei = [
+      { id: "nah", depot: { x: 1, y: 0, z: 0 } },
+      { id: "fern", depot: { x: -1.5, y: 0, z: 0 } },
+    ];
+    expect(naechstesDepot(zwei, { x: 0, y: 0, z: 0 }, 2)).toBe("nah");
+    expect(
+      naechstesDepot(zwei, { x: 0, y: 0, z: 0 }, 2, (id) => id !== "nah"),
+    ).toBe("fern");
+  });
+
+  it("am Depot füllt E die Reserve auf — im laufenden Einsatz, ohne zu sterben", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    expect(depotNah(sim)).toBeNull(); // am Spawn noch nicht in Reichweite
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.tick(command(), DT);
+    expect(reserve(sim)).toBe(0);
+    expect(depotNah(sim)).toBe("B");
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+    expect(sim.getState().player.tot).toBe(false);
+    expect(sim.getState().player.hp).toBe(sim.getState().player.maxHp);
+  });
+
+  it("E ist flankengesteuert: gehalten füllt nicht erneut, erst die nächste Flanke", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+    sim._setReserve(3);
+    for (let i = 0; i < 30; i += 1) sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(3);
+    sim.tick(command(), DT); // loslassen
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+  });
+
+  it("außerhalb der Reichweite ist E wirkungslos", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, { x: 0, z: 4 }); // in den Verbindungsgraben
+    expect(zoneAt(meta, sim.getState().player.pos)).toBe("verbindungsgraben");
+    expect(depotNah(sim)).toBeNull();
+    sim._setReserve(0);
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(0);
+  });
+
+  it("ein gefallener Abschnitt hat sein Depot verloren; rueckerobern gibt es zurück", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, depotB);
+    sim._setAbschnittVerloren("B", true);
+    sim._setReserve(0);
+    sim.tick(command(), DT);
+    expect(depotNah(sim)).toBeNull();
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(0);
+
+    sim.rueckerobern("B"); // Abschnitt ist leer → verloren → gebrochen, Depot zurück
+    sim.tick(command(), DT);
+    expect(sim.getState().front.find((f) => f.id === "B")?.zustand).toBe(
+      "gebrochen",
+    );
+    expect(depotNah(sim)).toBe("B");
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(RESERVE);
+  });
+
+  it("im Tod gibt es kein Depot in Reichweite und E füllt nicht", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox);
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.applyDamage(999);
+    sim.tick(command(), DT);
+    expect(sim.getState().player.tot).toBe(true);
+    expect(depotNah(sim)).toBeNull();
+    sim.tick(command({ interact: true }), DT);
+    expect(reserve(sim)).toBe(0);
+  });
+
+  it("im Finale nach 'gewonnen' bleibt E die Extraktion — auch am Depot", () => {
+    const sim = createSim(mittlererSeed(), sektorGreybox, {
+      waves: true,
+      startAngriffskraft: 3,
+    });
+    const dreheUndFeuere = (i: number) => command({ dx: 40, fire: i % 45 < 2 });
+    for (
+      let i = 0;
+      i < 30000 && sim.getState().einsatz.ergebnis !== "gewonnen";
+      i += 1
+    ) {
+      sim.tick(dreheUndFeuere(i), DT);
+    }
+    expect(sim.getState().einsatz.ergebnis).toBe("gewonnen");
+    laufeZu(sim, depotB);
+    sim._setReserve(0);
+    sim.tick(command(), DT);
+    expect(depotNah(sim)).toBe("B");
+    sim.tick(command({ interact: true }), DT);
+    expect(sim.getState().einsatz.phase).toBe("vorbei");
+    expect(reserve(sim)).toBe(0); // E war die Extraktion, kein Auffüllen
+  });
+});
+
+describe("Greybox-Sektor — Kartengrenze & Umland (AP5-03)", () => {
+  const { boxes } = sektorGreybox;
+  const oben = (b: (typeof boxes)[number]) => b.center.y + b.size.y / 2;
+  const deckt = (b: (typeof boxes)[number], x: number, y: number, z: number) =>
+    Math.abs(x - b.center.x) <= b.size.x / 2 &&
+    Math.abs(z - b.center.z) <= b.size.z / 2 &&
+    y >= b.center.y - b.size.y / 2 &&
+    y <= oben(b);
+  // Spielfeld = Innenseite der Kartengrenz-Kollider (x ±24,8 · z −36,3 … 52,8).
+  const draussen = (b: (typeof boxes)[number]) =>
+    b.center.x + b.size.x / 2 <= -24.8 ||
+    b.center.x - b.size.x / 2 >= 24.8 ||
+    b.center.z - b.size.z / 2 >= 52.8 ||
+    b.center.z + b.size.z / 2 <= -36.3;
+
+  it("die vier Kartengrenz-Kollider sind unsichtbar und umschließen den Sektor", () => {
+    const grenze = boxes.filter((b) => b.unsichtbar);
+    expect(grenze).toHaveLength(4);
+    for (const b of grenze) expect(b.size.y).toBeGreaterThanOrEqual(4);
+    const west = grenze.find((b) => Math.abs(b.center.x + 25) < 0.01);
+    const ost = grenze.find((b) => Math.abs(b.center.x - 25) < 0.01);
+    const nord = grenze.find((b) => Math.abs(b.center.z - 53) < 0.01);
+    const sued = grenze.find((b) => Math.abs(b.center.z + 36.5) < 0.01);
+    expect(west && ost && nord && sued).toBeTruthy();
+    expect(west!.size.z).toBeGreaterThanOrEqual(89); // z −38 … 54
+    expect(nord!.size.x).toBeGreaterThanOrEqual(50); // x −25 … 25
+  });
+
+  it("das Umland schließt an jede Sektorkante bündig an — Oberkante = Geländeoberfläche, bis in den Dunst", () => {
+    const proben: [number, number][] = [
+      [-26, 0],
+      [26, 0],
+      [0, 54],
+      [0, -37],
+      [-150, 100],
+      [150, -100],
+      [0, 180],
+      [0, -180],
+      [-26, 13.5], // Frontgraben-Ende: Erd-Stirnwand statt Loch
+      [26, -28], // Home-Graben-Ende
+    ];
+    for (const [x, z] of proben) {
+      const boden = boxes.filter((b) => !b.unsichtbar && deckt(b, x, -0.5, z));
+      expect(boden.length, `Umland fehlt bei (${x}, ${z})`).toBeGreaterThan(0);
+      expect(Math.max(...boden.map(oben))).toBeCloseTo(0, 6);
+    }
+  });
+
+  it("jenseits der Spielgrenze ragt kein sichtbarer Quader höher als 1,5 m — keine Wand-Silhouette", () => {
+    const aussen = boxes.filter((b) => !b.unsichtbar && draussen(b));
+    expect(aussen.length).toBeGreaterThanOrEqual(4);
+    for (const b of aussen) {
+      expect(
+        oben(b),
+        `Quader bei (${b.center.x}, ${b.center.z})`,
+      ).toBeLessThanOrEqual(1.5);
+    }
+  });
+
+  it("Zonen, Abschnitte und Nav-Graph liegen weiter komplett innerhalb der Grenze", () => {
+    const { meta } = sektorGreybox;
+    for (const z of meta.zonen) {
+      expect(z.bounds.minX).toBeGreaterThanOrEqual(-25);
+      expect(z.bounds.maxX).toBeLessThanOrEqual(25);
+      expect(z.bounds.minZ).toBeGreaterThanOrEqual(-36.5);
+      expect(z.bounds.maxZ).toBeLessThanOrEqual(53);
+    }
+    for (const k of meta.navGraph.knoten) {
+      expect(Math.abs(k.pos.x)).toBeLessThan(24.8);
+      expect(k.pos.z).toBeGreaterThan(-36.3);
+      expect(k.pos.z).toBeLessThan(52.8);
+    }
+  });
+
+  it("die Spielgrenze bleibt wirksam: Kapsel bleibt auf Feld, Labyrinth und im Home-Graben vor der Grenze", () => {
+    const world = createCollisionWorld(sektorGreybox);
+    const laufe = (
+      start: { x: number; y: number; z: number },
+      vx: number,
+      vz: number,
+    ) => {
+      let pos = start;
+      let vel = { x: 0, y: 0, z: 0 };
+      for (let t = 0; t < 600; t += 1) {
+        vel = { x: vx, y: vel.y, z: vz };
+        const r = moveCapsule(world, pos, vel, 0.35, 1.8, DT);
+        pos = r.pos;
+        vel = r.vel;
+        expect(pos.y).toBeGreaterThan(-3); // nicht aus der Welt gefallen
+      }
+      return pos;
+    };
+    const ost = laufe({ x: 10, y: 0.05, z: -5 }, 4.5, 0); // Feld → Osten
+    expect(ost.x).toBeLessThanOrEqual(24.8 - 0.35 + 1e-6);
+    expect(ost.x).toBeGreaterThan(24);
+    expect(ost.y).toBeCloseTo(0, 3); // nicht über die Grenze geklettert
+    const west = laufe({ x: -10, y: 0.05, z: -5 }, -4.5, 0);
+    expect(west.x).toBeGreaterThanOrEqual(-24.8 + 0.35 - 1e-6);
+    const nord = laufe({ x: 8, y: 0.05, z: 40 }, 0, 4.5); // Labyrinth → Norden (x = 8: frei von Turmruine und Wällen)
+    expect(nord.z).toBeLessThanOrEqual(52.8 - 0.35 + 1e-6);
+    expect(nord.z).toBeGreaterThan(52);
+    const sued = laufe({ x: 6, y: -1.75, z: -30 }, 0, -4.5); // Home-Graben → Süden
+    expect(sued.z).toBeGreaterThan(-36.3);
+    expect(sued.y).toBeCloseTo(-1.8, 3); // im Graben geblieben
   });
 });

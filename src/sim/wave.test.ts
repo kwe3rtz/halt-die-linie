@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "./rng";
 import {
+  BASIS_ANZAHL,
   createWaveState,
+  RESERVE_BASIS,
+  RESERVE_ZUWACHS,
+  SPAWN_BESCHLEUNIGUNG,
+  SPAWN_INTERVALL_MIN,
+  SPAWN_INTERVALL_START,
+  SPAWN_JITTER,
+  spawnIntervall,
   START_ANGRIFFSKRAFT,
   updateWave,
+  wellenGroesse,
+  ZUWACHS,
   type WaveContext,
   type WaveState,
 } from "./wave";
@@ -52,39 +62,46 @@ describe("wave director", () => {
     expect(s.angriffskraft).toBe(START_ANGRIFFSKRAFT);
   });
 
-  it("nach der Aufbauphase beginnt Welle 1 mit einer Spawn-Queue von 4", () => {
+  it("nach der Aufbauphase beginnt Welle 1 mit einer Spawn-Queue von BASIS_ANZAHL (5)", () => {
     const s = createWaveState();
     const { ctx } = makeCtx();
     const t = runUntil(s, ctx, () => s.phase === "welle");
     expect(t).toBeGreaterThan(0);
     expect(s.welle).toBe(1);
-    expect(s.spawnQueue.length).toBe(4);
+    expect(s.spawnQueue.length).toBe(5);
+    expect(s.spawnQueue.length).toBe(BASIS_ANZAHL);
   });
 
-  it("spawnt gestaffelt und zieht pro Spawn Angriffskraft ab", () => {
+  it("spawnt gestaffelt (Welle-1-Takt ± Jitter) und zieht pro Spawn Angriffskraft ab", () => {
     const s = createWaveState();
     const { ctx, spawns } = makeCtx(1); // ein Gegner „lebt" -> Welle endet nicht
     runUntil(s, ctx, () => spawns.length === 1);
     const t2 = runUntil(s, ctx, () => spawns.length === 2);
     const t3 = runUntil(s, ctx, () => spawns.length === 3);
-    expect(t2).toBeGreaterThan(60); // ~1.4 s Abstand
-    expect(t3).toBeGreaterThan(60);
+    // 1,4 s ± 25 % → 1,05 … 1,75 s (63 … 105 Ticks, ±1 Tick Rundung).
+    const minTicks = Math.floor(1.4 * (1 - SPAWN_JITTER) * 60) - 1;
+    const maxTicks = Math.ceil(1.4 * (1 + SPAWN_JITTER) * 60) + 1;
+    expect(t2).toBeGreaterThanOrEqual(minTicks);
+    expect(t2).toBeLessThanOrEqual(maxTicks);
+    expect(t3).toBeGreaterThanOrEqual(minTicks);
+    expect(t3).toBeLessThanOrEqual(maxTicks);
     expect(s.angriffskraft).toBe(START_ANGRIFFSKRAFT - 3);
   });
 
-  it("Welle geschafft -> Pause -> Welle 2: mehr Gegner, höherer HP-Faktor", () => {
+  it("Welle geschafft -> Pause -> Welle 2: mehr Gegner (+ZUWACHS), höherer HP-Faktor", () => {
     const s = createWaveState();
     const { ctx, spawns } = makeCtx(0);
 
     runUntil(s, ctx, () => s.phase === "pause");
-    expect(spawns.length).toBe(4);
+    expect(spawns.length).toBe(5);
     expect(spawns.every((x) => x.hpFaktor === 1)).toBe(true);
     const nachWelle1 = spawns.length;
 
     runUntil(s, ctx, () => s.phase === "welle" && s.welle === 2);
     runUntil(s, ctx, () => s.spawnQueue.length === 0);
     const welle2 = spawns.slice(nachWelle1);
-    expect(welle2.length).toBe(6);
+    expect(welle2.length).toBe(8);
+    expect(welle2.length).toBe(BASIS_ANZAHL + ZUWACHS);
     expect(welle2.every((x) => x.hpFaktor > 1)).toBe(true);
   });
 
@@ -93,7 +110,7 @@ describe("wave director", () => {
     const { ctx, spawns } = makeCtx(0);
     runUntil(s, ctx, () => s.phase === "pause");
     const vorPause = spawns.length;
-    tick(s, ctx, 240); // 4 s — Pause dauert 5 s
+    tick(s, ctx, 120); // 2 s — Pause dauert 3 s
     expect(s.phase).toBe("pause");
     expect(spawns.length).toBe(vorPause);
   });
@@ -124,11 +141,12 @@ describe("wave director — Finale-Reservewellen (AP4-04)", () => {
     expect(spawns.length).toBe(2); // der Hauptangriff ist durch
     const vorReserve = spawns.length;
 
-    // Nach ~8 s wird eine kleine Reservewelle (Basis 3) angesetzt.
+    // Nach ~8 s wird eine Reservewelle (RESERVE_BASIS = 6) angesetzt.
     runUntil(s, ctx, () => s.spawnQueue.length > 0, 900);
-    expect(s.spawnQueue.length).toBe(3);
+    expect(s.spawnQueue.length).toBe(6);
+    expect(s.spawnQueue.length).toBe(RESERVE_BASIS);
     runUntil(s, ctx, () => s.spawnQueue.length === 0, 900);
-    expect(spawns.length - vorReserve).toBe(3);
+    expect(spawns.length - vorReserve).toBe(6);
     expect(s.angriffskraft).toBe(0); // Reserve zehrt nicht an der Angriffskraft
   });
 
@@ -139,10 +157,11 @@ describe("wave director — Finale-Reservewellen (AP4-04)", () => {
     s.phaseTimer = 8;
     const { ctx } = makeCtx(0);
     ctx.finale = true;
-    ctx.reserveStufe = 2; // Basis 3 + 2*2 = 7
+    ctx.reserveStufe = 2; // Basis 6 + 2*3 = 12
 
     runUntil(s, ctx, () => s.spawnQueue.length > 0, 900);
-    expect(s.spawnQueue.length).toBe(7);
+    expect(s.spawnQueue.length).toBe(12);
+    expect(s.spawnQueue.length).toBe(RESERVE_BASIS + 2 * RESERVE_ZUWACHS);
   });
 
   it("Finale vorbei (ctx.finale=false) → 'reserve' endet in 'vorbei'", () => {
@@ -235,10 +254,10 @@ describe("wave ↔ einsatz — Verdrahtungsreihenfolge (AP4-06, Audit H3)", () =
         DT,
       );
     };
-    // Welle 1 komplett spawnen (Aufbau 3 s + 4 Spawns).
-    for (let i = 0; i < 60 * 10; i += 1) step();
+    // Welle 1 komplett spawnen (Aufbau 3 s + 5 Spawns à ≤ 1,75 s).
+    for (let i = 0; i < 60 * 12; i += 1) step();
     expect(wave.phase).toBe("welle");
-    expect(lebende).toBe(4);
+    expect(lebende).toBe(5);
     // „Die Uhr": 3 Front-Kills à −2 …
     wave.angriffskraft = Math.max(0, wave.angriffskraft - 6);
     lebende = 1;
@@ -254,5 +273,86 @@ describe("wave ↔ einsatz — Verdrahtungsreihenfolge (AP4-06, Audit H3)", () =
     const vorher = spawns.length;
     for (let i = 0; i < 60 * 30; i += 1) step();
     expect(spawns.length).toBeGreaterThan(vorher);
+  });
+});
+
+// AP5-04: erste echte Tuning-Iteration — größere, steiler wachsende, dichter
+// gespawnte Wellen und ein Budget, das die höheren Wellen überhaupt erreicht.
+describe("wave director — Eskalation (AP5-04)", () => {
+  it("Wellengröße wächst linear ab BASIS_ANZAHL: 5 · 8 · 11 · 14 · 17", () => {
+    expect([1, 2, 3, 4, 5].map(wellenGroesse)).toEqual([5, 8, 11, 14, 17]);
+    for (let w = 1; w < 12; w += 1) {
+      expect(wellenGroesse(w + 1) - wellenGroesse(w)).toBe(ZUWACHS);
+    }
+    expect(wellenGroesse(1)).toBe(BASIS_ANZAHL);
+    expect(wellenGroesse(0)).toBe(BASIS_ANZAHL); // defensiv: „aufbau" zählt wie Welle 1
+  });
+
+  it("Spawn-Takt wird je Welle kürzer und bleibt an der Untergrenze stehen", () => {
+    expect(spawnIntervall(1)).toBeCloseTo(SPAWN_INTERVALL_START, 6);
+    expect(spawnIntervall(2)).toBeCloseTo(
+      SPAWN_INTERVALL_START - SPAWN_BESCHLEUNIGUNG,
+      6,
+    );
+    expect(spawnIntervall(5)).toBeCloseTo(0.8, 6);
+    for (let w = 1; w < 15; w += 1) {
+      expect(spawnIntervall(w + 1)).toBeLessThanOrEqual(spawnIntervall(w));
+      expect(spawnIntervall(w)).toBeGreaterThanOrEqual(SPAWN_INTERVALL_MIN);
+    }
+    expect(spawnIntervall(20)).toBe(SPAWN_INTERVALL_MIN);
+  });
+
+  it("Spawn-Jitter: die Abstände einer Welle liegen im Band ±SPAWN_JITTER und sind nicht alle gleich", () => {
+    const s = createWaveState();
+    s.angriffskraft = 200; // reicht für eine große Welle
+    s.phase = "pause";
+    s.phaseTimer = 0.01;
+    s.welle = 4; // → Welle 5 mit 17 Gegnern im 0,8-s-Takt
+    const { ctx, spawns } = makeCtx(1); // Welle endet nicht (ein Gegner lebt)
+    const zeiten: number[] = [];
+    for (let i = 0; i < 60 * 40 && spawns.length < 17; i += 1) {
+      updateWave(s, ctx, DT);
+      if (spawns.length > zeiten.length) zeiten.push(i * DT);
+    }
+    expect(zeiten.length).toBe(17);
+    const abstaende = zeiten.slice(1).map((t, i) => t - (zeiten[i] ?? 0));
+    const basis = spawnIntervall(5);
+    for (const a of abstaende) {
+      expect(a).toBeGreaterThanOrEqual(basis * (1 - SPAWN_JITTER) - DT);
+      expect(a).toBeLessThanOrEqual(basis * (1 + SPAWN_JITTER) + DT);
+    }
+    const min = Math.min(...abstaende);
+    const max = Math.max(...abstaende);
+    expect(max - min).toBeGreaterThan(0.15); // gestreut, kein Metronom
+  });
+
+  it("Budget: mit Front-Zermürbung (1 je Spawn + 2 je Kill) trägt die Angriffskraft genau fünf volle Wellen", async () => {
+    const { zermuerbungProKill } = await import("./einsatz");
+    const s = createWaveState();
+    const { ctx } = makeCtx(0);
+    const proWelle = new Map<number, number>();
+    // Jeder Spawn stirbt sofort an der stehenden Front: −1 (Spawn) −2 (Uhr).
+    ctx.spawn = () => {
+      proWelle.set(s.welle, (proWelle.get(s.welle) ?? 0) + 1);
+      s.angriffskraft = Math.max(
+        0,
+        s.angriffskraft - zermuerbungProKill("frontlinie", false),
+      );
+    };
+    runUntil(
+      s,
+      ctx,
+      () => s.phase === "reserve" || s.phase === "vorbei",
+      60000,
+    );
+    expect([...proWelle.entries()].sort((a, b) => a[0] - b[0])).toEqual([
+      [1, 5],
+      [2, 8],
+      [3, 11],
+      [4, 14],
+      [5, 17],
+    ]);
+    expect(s.angriffskraft).toBe(0);
+    expect(START_ANGRIFFSKRAFT).toBe(150);
   });
 });

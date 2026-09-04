@@ -4,6 +4,77 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren) · komplett
+
+- **AP5-04** · `525716a` · **Gegner-Druck & Wellen-Eskalation.** Diagnose vor
+  dem Tuning (headless Simulator mit idealisiertem Schützen) erklärt das
+  Spieltest-Feedback exakt: Budget 60 bei 3 Uhr-Zermürbung/Front-Kill ist nach
+  ~20 Gegnern arithmetisch leer, Eskalation war unerreichbar. Fix in
+  `src/sim/wave.ts`: `START_ANGRIFFSKRAFT` 60→150, Wellenkurve 5+3 statt 4+2
+  (5·8·11·14·17), Spawn-Takt staffelt sich 1,4s→0,6s mit ±25 % Jitter, Pause
+  5s→3s, Reservewellen 6+3 statt 3+2 — Uhr/Front/Bresche (`einsatz.ts`/
+  `front.ts`) unangetastet. `src/sim/enemies.ts`: individuelles Marschtempo
+  (±15 %) + stufenlose Marschspur (ersetzt das feste `id % 7`-Raster) lassen
+  Gegnerketten sich auffächern statt im Gleichschritt zu laufen. Dabei
+  sichtbar geworden und mit Trace + Test + Gegenprobe behoben: drei latente
+  Nav-Bugs, die bei niedriger Dichte selten genug waren, um nicht aufzufallen
+  (Engstellen-Ebene falsch orientiert bei abknickenden Pfaden, Nahkampf-Sicht
+  auf Augen- statt Kniehöhe lief in Parapets, kein Re-Pathing am Zielknoten
+  außer Reichweite) — Watchdog-Despawns 7/84 → 0/84 über fünf Seeds. Ergebnis
+  (Seed 1): Peak 9→14 gleichzeitige Gegner, Kontaktzeit an der Front 28%→70%.
+  Visuell im echten Renderer geprüft (Playwright, Screenshots in
+  `tickets/erledigt/AP5-04-screenshots/`). Golden-Anker bewusst neu
+  baseliniert (Kommentar direkt am Test, Zahlen durch die Budget-/Wellen-
+  Änderung erklärt). 284 Tests (+15), Coverage src/sim 98,58 %.
+
+**Arbeitspaket 5 komplett** (AP5-01…04, alle reviewed). Als Nächstes: dritter
+Spieltest.
+
+- **AP5-03** · `ba631af` · **Kartengrenze öffnen.** Die Sektor-Umrandung
+  wirkte wie eine geschlossene Box (sichtbare 6-m-Sperrwände). Lösung: die
+  vier `kartengrenze`-Kollider bleiben unverändert (Lage/Länge/Höhe), bekommen
+  aber ein neues `LevelBox.unsichtbar`-Flag — kein Mesh mehr, Hitscan/
+  Sichtlinie gehen hindurch, Bewegung bleibt gesperrt. Sichtbar ist
+  stattdessen ein **Umland**: vier Geländeblöcke jenseits der Grenze (Oberkante
+  bündig mit dem Boden; an den offenen Grabenenden bilden ihre Flanken
+  automatisch die Erd-Stirnwand statt eines Lochs) plus zehn flache Erdhaufen
+  als Tiefenhinweise, dazu linearer Dunst (Himmelsfarbe, ab ~60 m), der die
+  Umland-Außenkante schluckt, ohne Front/Home-Sichtlinien zu trüben. Visuell
+  im laufenden Spiel gegengecheckt (Playwright + headless Chromium,
+  Screenshots in `tickets/erledigt/AP5-03-screenshots/`). 269 Tests (+10),
+  Coverage src/sim 98,43 % (unverändert), Golden-Anker unverändert.
+- **AP5-02** · `683340f` · **Munitions-Nachschub im Einsatz.** Reservemunition
+  war bisher nur durch Sterben nachfüllbar. Lösung: die seit AP4-04
+  vorhandenen Abschnitts-Depots (`FrontAbschnitt.depot`) werden zu
+  Nachfüllpunkten — drei an der Front (A/B/C, an der Parados-Rückwand hinter
+  dem Feuertritt), zwei an der Home-Line (im Munitionslager-Unterstand);
+  Positionen dafür neu gesetzt (die alten Marker steckten in Geometrie).
+  `naechstesDepot()` (`src/sim/sektor.ts`) findet das nächste Depot in 3D-
+  Reichweite (2 m); `E` als Flanke füllt dort die Reserve auf vollen Stand
+  (Extraktion im Finale hat weiterhin Vorrang vor dem Depot). Ein gefallener
+  Frontabschnitt verliert sein Depot (`depotVerloren`, „die Uhr") —
+  `rueckerobern` gibt es zurück. HUD-Hinweiszeile + sichtbare Munitionskiste
+  im Renderer (render-only, kein Kollider). 259 Tests (+9), Coverage src/sim
+  98,43 %, Golden-Anker unverändert.
+- **AP5-01** · `f4231ac` · **Mittelgang-Teleport-Bug.** Nach dem zweiten
+  Spieltest gemeldet: Spieler wurde beim Durchqueren des zentralen
+  Verbindungsgrabens gelegentlich meterweit versetzt. Ursache gefunden (nicht
+  gepflastert): `moveCapsule` (`src/sim/collision.ts`) löste die Bewegung
+  achsenweise auf, ohne zu unterscheiden, welche Durchdringung die eigene
+  Bewegung verursacht hat — ein Gleitkomma-Rest von 2e-16 m an den
+  Verbindungsgraben-Wänden (x = ±1,8) wurde von der nächsten Achse als echte
+  Kollision an die *nächstgelegene Fläche* der 33 m langen Wand aufgelöst
+  (bis zu 16,5 m Sprung in einem Tick). Fix: Kontakt-Toleranz `KONTAKT_EPS`
+  im Überlappungstest + Tiefengrenze je Achse (`|Δ_achse| + EPS`) — jede
+  Einzelauflösung ist damit strukturell auf den eigenen Tick-Weg begrenzt,
+  kein nachträgliches Clamping. Dieselbe Bugklasse in der Y-Achse (Wandkontakt
+  hätte auf die Wandkrone gehoben) mitbehoben. Neu:
+  `collision-verbindungsgraben.test.ts` (15 Tests, echte Sektor-Geometrie +
+  Spieler-Sim, Gegenprobe gegen den alten Code: 14/30 Tests schlagen ohne den
+  Fix fehl) + 3 Mechanismus-Tests in `collision.test.ts`. Alle drei
+  Golden-Anker unverändert (explizit gegengecheckt, da `moveCapsule` global
+  ist — auch für Gegner). 250 Tests (+18), Coverage src/sim 98,40 %.
+
 ## Arbeitspaket 4 — Verteidigung in der Tiefe · komplett (inkl. Nachzügler AP4-06)
 
 - **AP4-06** · `7688452` · **Kern-Bogen-Fixes** (Branch `fix/ap4-06-kern-bogen`,

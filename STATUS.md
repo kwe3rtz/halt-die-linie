@@ -23,7 +23,11 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   **Boxhead**. Neues **Arbeitspaket 5 „Boxhead-Kern"** spezifiziert (4
   Tickets, `tickets/AP5-*`), AP4-System bleibt bestehen, wird aber vorerst
   nicht weiter ausgebaut.
-- **Als Nächstes:** AP5 an eine Worker-Session geben, Ticket-Loop wie gehabt.
+- **Code:** **Arbeitspaket 5 „Boxhead-Kern" ist vollständig komplett**
+  (AP5-01…04, alle reviewed, 284 Tests, Coverage src/sim 98,58 %). PR #8
+  (`arbeitspaket-5` → `main`) offen.
+- **Als Nächstes:** PR #8 mergen, dann dritter Spieltest — trägt der Loop
+  jetzt?
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -50,11 +54,25 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP5 „Boxhead-Kern" an eine Worker-Session geben** (4 Tickets,
-   `tickets/AP5-01…04`), Ticket-Loop wie gehabt: Worker baut, Planer reviewt +
-   archiviert.
-2. Danach: dritter Spieltest — trägt der Loop jetzt? Erst dann wieder
-   Richtung Graben-Konzept vertiefen: ein Politur-Ticket aus den
+1. **Nutzer:** PR #8 (`arbeitspaket-5` → `main`) mergen.
+2. **Dritter Spieltest.** Gegenchecken:
+   - **Kernfrage:** wirken die Wellen jetzt bedrohlich/eskalierend (vorher
+     max. 8–9 gleichzeitig, jetzt Peak 14–17 laut Worker-Messung)? F3 zeigt
+     jetzt `gegner N lebend`.
+   - Mittelgang (Verbindungsgraben): keine Teleports mehr beim Anlehnen/
+     Strafen gegen die Wand (AP5-01).
+   - Munition: an den Depots (Front A/B/C an der Parados-Rückwand, Home-Line
+     im Unterstand) mit `E` auffüllbar, sichtbare Munitionskiste (AP5-02).
+   - Kartengrenze: keine sichtbare Wand mehr am Kartenrand, offenes Gelände
+     im Dunst (AP5-03) — fühlt sich die *unsichtbare* Kollisionsgrenze
+     seltsam an (Merkposten aus AP5-03)?
+   - Solo-Balance ab Welle 4 (AP5-04-Merkposten): stirbt man zu oft? Falls
+     ja: `ZUWACHS`/`START_ANGRIFFSKRAFT` in `wave.ts` sind die Stellschrauben.
+   - Tasten weiterhin: **F3** Debug (Mac: `fn+F3`) · **M** Lagekarte · **T**
+     Ton · **E** extrahieren/Munition auffüllen · **Q** verlängern.
+3. Danach, je nach Eindruck: entweder direkt an den AP5-04-Merkposten
+   nachjustieren (kleine Zahlenänderungen, kein neues Ticket nötig), oder
+   zurück Richtung Graben-Konzept vertiefen — ein Politur-Ticket aus den
    Audit-Medium-Befunden, dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht),
    dann der prozedurale Generator fürs vordere Labyrinth (`AUFGABEN.md`
    „Arbeitspaket 6+").
@@ -147,6 +165,25 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-04** — **Arbeitspaket 5 „Boxhead-Kern" komplett** (AP5-01…04,
+  alle reviewed, 284 Tests, Coverage src/sim 98,58 %, PR #8 offen). AP5-04
+  war der größte Einzelschritt: Diagnose vor dem Tuning (headless Simulator)
+  zeigte, dass das alte Angriffskraft-Budget (60) arithmetisch nach ~20
+  Gegnern erschöpft war — Eskalation war mit den alten Zahlen unerreichbar,
+  nicht nur schlecht getroffen. Wave-Director neu kalibriert
+  (`START_ANGRIFFSKRAFT` 150, Wellenkurve 5+3, gestaffelter Spawn-Takt mit
+  Jitter, größere Reservewellen) + individuelle Marsch-Streuung (Tempo +
+  Spur) an der Linieninfanterie. Dabei durch die höhere Dichte sichtbar
+  geworden und mit Trace/Test/Gegenprobe behoben: drei latente Nav-Bugs
+  (Engstellen-Ebene bei abknickenden Pfaden falsch orientiert, Nahkampf-
+  Sicht auf Augen- statt Kniehöhe, kein Re-Pathing am erreichten Zielknoten)
+  — Watchdog-Despawns 7/84 → 0/84 über fünf Seeds. Alle drei Golden-/Replay-
+  Anker bewusst neu baseliniert, Begründung direkt am Test. Ergebnis: Peak
+  gleichzeitiger Gegner 9 → 14–17, Kontaktzeit an der Front 28 % → 70 %.
+  **Lehre (Fortsetzung von AP4-06):** ein Tuning-Ticket, das nur Zahlen
+  ändert, deckt zuverlässig latente Wiring-Bugs auf, die bei niedriger
+  Systemlast unbeobachtet blieben — Messen vor dem Ändern (Ausgangsdiagnose)
+  und Gegenprobe je Fix bleiben der richtige Standard dafür.
 - **2026-09-04** — **Pivot: Arbeitspaket 5 „Boxhead-Kern".** Zweiter
   Spieltest zeigt: der Kern-Bogen läuft bugfrei, trägt aber als Gefühl noch
   nicht (zu wenige/dumme Gegner, keine Eskalation, Teleport-Bug im

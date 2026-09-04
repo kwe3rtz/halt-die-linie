@@ -72,11 +72,36 @@ const FRONT_MAX_Z = 17;
 // ---------------------------------------------------------------------------
 
 const boxes: LevelBox[] = [
-  // === Kartengrenze — hohe Sperrwände rundum ===============================
+  // === Kartengrenze — unsichtbare Sperrwände rundum (AP5-03) ================
+  //     Sperren die Bewegung wie bisher, haben aber kein Mesh mehr; sichtbar
+  //     ist stattdessen das Umland unten.
   ...modul("kartengrenze", { x: -25, y: 0, z: -38 }, 0, { laenge: 92 }),
   ...modul("kartengrenze", { x: 25, y: 0, z: -38 }, 0, { laenge: 92 }),
   ...modul("kartengrenze", { x: 25, y: 0, z: 53 }, 90, { laenge: 50 }), // Nordrand
   ...modul("kartengrenze", { x: 25, y: 0, z: -36.5 }, 90, { laenge: 50 }), // Home-Rückwand
+
+  // === Umland (AP5-03) — offenes, auslaufendes Gelände jenseits der Grenze
+  //     (KONZEPT.md §3: „Sumpf, zerbombtes Gelände"). Vier Blöcke, Oberkante
+  //     bündig mit der Geländeoberfläche (y = 0), so weit, dass der Dunst des
+  //     Renderers ihre Außenkante schluckt. An den offenen Grabenenden (Front
+  //     x = ±25, Home z = −36) bilden ihre Flanken die Erd-Stirnwand — kein
+  //     Loch, keine Wand. Unerreichbar (die Kartengrenze sperrt davor). ======
+  raw({ x: -125, y: -1.5, z: 8.5 }, { x: 200, y: 3, z: 489 }), // West
+  raw({ x: 125, y: -1.5, z: 8.5 }, { x: 200, y: 3, z: 489 }), // Ost
+  raw({ x: 0, y: -1.5, z: 153 }, { x: 50, y: 3, z: 200 }), // Nord, ab z = 53
+  raw({ x: 0, y: -1.5, z: -136 }, { x: 50, y: 3, z: 200 }), // Süd, ab z = −36
+  // Flache Trichterränder / Erdhaufen im Umland: Tiefenhinweise für Auge und
+  // Dunst, alle ≤ 1,1 m hoch — keine Wand-Silhouette. Reines Greybox-Gelände.
+  raw({ x: -40, y: 0.35, z: 20 }, { x: 7, y: 0.7, z: 5 }),
+  raw({ x: -52, y: 0.5, z: -10 }, { x: 9, y: 1.0, z: 6 }),
+  raw({ x: -34, y: 0.25, z: -30 }, { x: 5, y: 0.5, z: 4 }),
+  raw({ x: 38, y: 0.4, z: 30 }, { x: 6, y: 0.8, z: 5 }),
+  raw({ x: 55, y: 0.55, z: -5 }, { x: 10, y: 1.1, z: 7 }),
+  raw({ x: 33, y: 0.3, z: -28 }, { x: 5, y: 0.6, z: 5 }),
+  raw({ x: -12, y: 0.45, z: 68 }, { x: 8, y: 0.9, z: 6 }),
+  raw({ x: 15, y: 0.35, z: 80 }, { x: 7, y: 0.7, z: 5 }),
+  raw({ x: -8, y: 0.3, z: -52 }, { x: 6, y: 0.6, z: 5 }),
+  raw({ x: 20, y: 0.5, z: -60 }, { x: 8, y: 1.0, z: 6 }),
 
   // === Vorderes Labyrinth (Stub) — Oberflächengelände + versetzte Wälle ====
   raw({ x: 0, y: -0.5, z: 34.5 }, { x: 50, y: 1, z: 37 }), // Boden (deckt Feindzone mit)
@@ -228,8 +253,14 @@ const navKnoten: NavKnoten[] = [
   nk("graben-mitte", 0, -6, "verbindungsgraben", IN_GRABEN),
   nk("graben-sued", 0, -18, "verbindungsgraben", IN_GRABEN),
   nk("home-graben", 0, -22, "homeline", IN_GRABEN),
-  nk("home-feld-links", -18, -21, "homeline"),
-  nk("home-feld-rechts", 18, -21, "homeline"),
+  // Flankenrampen Feld ↔ Home-Graben: Knoten am Rampenfuß auf der Sohle und
+  // Engstelle (AP5-04). Vorher lagen sie oben an der Rampenkante (±18, −21,
+  // Feldniveau): vom Grabenboden aus galten sie im 3-m-Radius als „erreicht",
+  // und der nächste Wegpunkt (feld-*) lag dann quer hinter dem Home-Parapet —
+  // Gegner, die von der Home-Line zurück nach vorn wollten, hingen am
+  // Feuertritt fest, bis der Watchdog sie despawnte.
+  eng(nk("home-feld-links", -20, -23.5, "homeline", IN_GRABEN)),
+  eng(nk("home-feld-rechts", 20, -23.5, "homeline", IN_GRABEN)),
   nk("home-ziel", 0, -30, "homeline", IN_GRABEN),
 ];
 
@@ -308,6 +339,10 @@ const meta: SektorMeta = {
     { id: "homeline", bounds: aabb(-25, -36.5, 25, -20) },
     { id: "feld", bounds: aabb(-25, -20, 25, 10) },
   ],
+  // Depots = Munitionskisten (AP5-02): an der Front hinter dem Feuertritt an
+  // der Parados-Rückwand (aus der Schusslinie; A/C neben den Rampen, B neben
+  // der Grabenmündung), an der Home-Line im Munitionslager-Unterstand. Ein
+  // gefallener Abschnitt verliert sein Depot (`depotVerloren`).
   frontAbschnitte: [
     {
       id: "A",
@@ -317,7 +352,7 @@ const meta: SektorMeta = {
         { x: -15, y: IN_GRABEN, z: 13 },
         { x: -11, y: IN_GRABEN, z: 13 },
       ],
-      depot: { x: -16, y: IN_GRABEN, z: 12 },
+      depot: { x: -20, y: IN_GRABEN, z: 11.5 },
     },
     {
       id: "B",
@@ -327,7 +362,7 @@ const meta: SektorMeta = {
         { x: -3, y: IN_GRABEN, z: 13 },
         { x: 3, y: IN_GRABEN, z: 13 },
       ],
-      depot: { x: 0, y: IN_GRABEN, z: 12 },
+      depot: { x: 3, y: IN_GRABEN, z: 11.5 },
     },
     {
       id: "C",
@@ -337,7 +372,7 @@ const meta: SektorMeta = {
         { x: 11, y: IN_GRABEN, z: 13 },
         { x: 15, y: IN_GRABEN, z: 13 },
       ],
-      depot: { x: 16, y: IN_GRABEN, z: 12 },
+      depot: { x: 20, y: IN_GRABEN, z: 11.5 },
     },
   ],
   // Home-Line: zwei Abschnitte um das Nordparapet (Lücke = Verbindungsgraben-
@@ -349,14 +384,14 @@ const meta: SektorMeta = {
       bounds: aabb(-25, -36.5, 0, -19),
       parapetBreschen: BRESCHEN_H_WEST,
       bauSlots: [{ x: -9, y: IN_GRABEN, z: -23 }],
-      depot: { x: -12, y: IN_GRABEN, z: -32 },
+      depot: { x: -12, y: IN_GRABEN, z: -33.5 },
     },
     {
       id: "H-Ost",
       bounds: aabb(0, -36.5, 25, -19),
       parapetBreschen: BRESCHEN_H_OST,
       bauSlots: [{ x: 9, y: IN_GRABEN, z: -23 }],
-      depot: { x: 12, y: IN_GRABEN, z: -32 },
+      depot: { x: 12, y: IN_GRABEN, z: -33.5 },
     },
   ],
   feindAnmarsch: [

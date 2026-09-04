@@ -15,6 +15,8 @@ export interface HudData {
   einsatz?: SimState["einsatz"];
   /** Letzter Schuss (Signal für die Trefferbestätigung). */
   lastShot: SimState["lastShot"];
+  /** Munitionsdepot in Reichweite (AP5-02): Abschnitts-Id oder null. Optional. */
+  depotInReichweite?: string | null;
 }
 
 // Sichtbare Dauer der Trefferbestätigung.
@@ -52,6 +54,7 @@ const CSS = `
 .hdl-hud__row { display: flex; justify-content: space-between; gap: 12px; }
 .hdl-hud__ammo-count { font-size: 20px; font-variant-numeric: tabular-nums; }
 .hdl-hud__reload { color: #e6c66a; font-size: 12px; }
+.hdl-hud__depot { color: #b8dc8c; font-size: 12px; font-weight: 600; }
 .hdl-hud__einsatz { margin-top: 4px; color: #e6c66a; font-size: 12px; font-weight: 600; }
 .hdl-hud__bar {
   height: 7px;
@@ -195,7 +198,9 @@ export function createHud(parent: HTMLElement = document.body): Hud {
   const ammoReload = el("div", "hdl-hud__reload");
   ammoReload.textContent = "Nachladen…";
   ammoReload.hidden = true;
-  ammoPanel.append(ammoCount, ammoReload);
+  const ammoDepot = el("div", "hdl-hud__depot");
+  ammoDepot.hidden = true;
+  ammoPanel.append(ammoCount, ammoReload, ammoDepot);
 
   // Welle + Nachschub
   const wavePanel = el("div", "hdl-hud__panel hdl-hud__wave");
@@ -246,6 +251,11 @@ export function createHud(parent: HTMLElement = document.body): Hud {
 
       ammoCount.textContent = `${data.weapon.imLauf} / ${data.weapon.reserve}`;
       ammoReload.hidden = !data.weapon.reloading;
+      const depot = data.depotInReichweite ?? null;
+      ammoDepot.hidden = depot === null;
+      if (depot !== null) {
+        ammoDepot.textContent = `E · Munition auffüllen (Depot ${depot})`;
+      }
 
       const w = data.wave;
       waveText.textContent =

@@ -116,6 +116,21 @@ describe("hud", () => {
     expect(line()?.textContent).toBe("Einsatz verloren");
   });
 
+  it("zeigt den Depot-Hinweis nur, wenn ein Munitionsdepot in Reichweite ist (AP5-02)", () => {
+    const line = () => q(".hdl-hud__depot");
+    hud.update(base); // kein Feld übergeben
+    expect(line()?.hidden).toBe(true);
+
+    hud.update({ ...base, depotInReichweite: "B" });
+    expect(line()?.hidden).toBe(false);
+    expect(line()?.textContent).toContain("E");
+    expect(line()?.textContent).toContain("Munition");
+    expect(line()?.textContent).toContain("B");
+
+    hud.update({ ...base, depotInReichweite: null });
+    expect(line()?.hidden).toBe(true);
+  });
+
   it("Tod-Overlay mit Countdown, verschwindet beim Respawn", () => {
     hud.update({ ...base, tot: true, respawnRest: 2.4 });
     const death = q(".hdl-hud__death");

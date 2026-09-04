@@ -3,6 +3,7 @@ import { createSim, type InputCommand, type LevelData } from "./index";
 import { add, dirFromYawPitch, length, scale, vec3 } from "./math";
 import { createRng } from "./rng";
 import { sektorGreybox } from "../data/sektor";
+import { START_ANGRIFFSKRAFT } from "./wave";
 
 const DT = 1 / 60;
 
@@ -347,7 +348,7 @@ describe("first-person controller — wave director", () => {
     expect(s.wave.phase).toBe("welle");
     expect(s.wave.welle).toBe(1);
     expect(s.enemies.length).toBeGreaterThan(0);
-    expect(s.wave.angriffskraftRest).toBeLessThan(60);
+    expect(s.wave.angriffskraftRest).toBeLessThan(START_ANGRIFFSKRAFT);
   });
 
   it("deterministisch: gleicher Seed -> gleicher Wellenverlauf", () => {
@@ -413,8 +414,10 @@ describe("golden replay", () => {
     expect(s.player.weapon.reserve).toBe(45);
     expect(s.wave.phase).toBe("welle");
     expect(s.wave.welle).toBe(1);
-    expect(s.wave.angriffskraftRest).toBe(57);
-    expect(s.enemies.length).toBe(3);
+    // AP5-04: Start-Angriffskraft 150 (vorher 60) und gestreuter Spawn-Takt —
+    // im 6-s-Fenster kommen 2 statt 3 Gegner (vorher 57 / 3).
+    expect(s.wave.angriffskraftRest).toBe(148);
+    expect(s.enemies.length).toBe(2);
     expect(s.nachschub).toBe(0);
   });
 });
@@ -453,28 +456,35 @@ describe("golden replay — Sektor-Nav-Graph", () => {
     expect(s.player.pos.x).toBeCloseTo(5.6891, 3);
     expect(s.player.pos.z).toBeCloseTo(11.3298, 3);
     expect(s.wave.welle).toBe(1);
-    expect(s.wave.angriffskraftRest).toBe(56);
+    // AP5-04 (Neubaseline, begründet im Ticket-Bericht): Welle 1 hat 5 statt 4
+    // Gegner, Start-Angriffskraft 150 statt 60 → 145 (vorher 56 mit 4 Gegnern);
+    // die Positionen tragen jetzt Tempo-/Spur-Streuung je Gegner. Spieler-
+    // Werte, Abschnitts-Zuweisung (eigener Rng-Strom) und Zielknoten der
+    // ersten vier Gegner sind unverändert.
+    expect(s.wave.angriffskraftRest).toBe(145);
     expect(s.nachschub).toBe(0);
 
-    expect(s.enemies.length).toBe(4);
+    expect(s.enemies.length).toBe(5);
     const nach = [...s.enemies].sort((a, b) => a.id - b.id);
-    expect(nach.map((e) => e.abschnitt)).toEqual(["C", "B", "C", "A"]);
+    expect(nach.map((e) => e.abschnitt)).toEqual(["C", "B", "C", "A", "B"]);
     expect(nach.map((e) => e.zielKnoten)).toEqual([
       "front-C",
       "front-B",
       "front-C",
       "front-A",
+      "front-B",
     ]);
     expect(nach.map((e) => e.zustand)).toEqual([
       "anmarsch",
       "anmarsch",
       "anmarsch",
       "anmarsch",
+      "anmarsch",
     ]);
-    expect(nach[0]?.pos.x).toBeCloseTo(-5.316, 2);
-    expect(nach[0]?.pos.z).toBeCloseTo(34.672, 2);
-    expect(nach[3]?.pos.x).toBeCloseTo(3.891, 2);
-    expect(nach[3]?.pos.z).toBeCloseTo(40.244, 2);
+    expect(nach[0]?.pos.x).toBeCloseTo(-2.946, 2);
+    expect(nach[0]?.pos.z).toBeCloseTo(34.918, 2);
+    expect(nach[3]?.pos.x).toBeCloseTo(-4.161, 2);
+    expect(nach[3]?.pos.z).toBeCloseTo(43.1, 2);
 
     // Frontabschnitte (AP4-03): die Gegner sind noch im Anmarsch, die Linie hält.
     expect(s.front.map((f) => f.id)).toEqual(["A", "B", "C"]);
@@ -518,12 +528,14 @@ describe("golden replay — die Uhr (AP4-04)", () => {
     const steht = bau();
     feuere(steht);
     expect(steht.getState().nachschub).toBe(5); // genau ein Kill
-    expect(steht.getState().wave.angriffskraftRest).toBe(58); // 60 − 1*2
+    // AP5-04: Start-Angriffskraft 150 statt 60 — die Uhr selbst (−2 vorn, −1
+    // an gefallener Front) ist unverändert.
+    expect(steht.getState().wave.angriffskraftRest).toBe(148); // 150 − 1*2
 
     const fiel = bau();
     fiel._setAbschnittVerloren("A", true);
     feuere(fiel);
     expect(fiel.getState().nachschub).toBe(5);
-    expect(fiel.getState().wave.angriffskraftRest).toBe(59); // 60 − 1*1
+    expect(fiel.getState().wave.angriffskraftRest).toBe(149); // 150 − 1*1
   });
 });

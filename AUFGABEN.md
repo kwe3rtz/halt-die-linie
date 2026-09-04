@@ -664,10 +664,13 @@ in `tickets/`.
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP5-01 | Mittelgang-Teleport-Bug | offen |
-| AP5-02 | Munitions-Nachschub im Einsatz | offen |
-| AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | offen |
-| AP5-04 | Gegner-Druck & Wellen-Eskalation | offen |
+| AP5-01 | Mittelgang-Teleport-Bug | ✅ `erledigt/` (`f4231ac`) |
+| AP5-02 | Munitions-Nachschub im Einsatz | ✅ `erledigt/` (`683340f`) |
+| AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | ✅ `erledigt/` (`ba631af`) |
+| AP5-04 | Gegner-Druck & Wellen-Eskalation | ✅ `erledigt/` (`525716a`) |
+
+**Arbeitspaket 5 ist jetzt vollständig komplett** (4 Tickets, alle reviewed,
+284 Tests). Als Nächstes: dritter Spieltest mit dem Nutzer.
 
 **Ausdrücklich NICHT in AP5:** Front-/Bresche-/Uhr-Balancing (eigenes
 späteres Politur-Ticket aus dem Audit) · neue Gegnertypen/KI-Rollen ·

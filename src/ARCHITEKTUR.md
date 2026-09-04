@@ -71,9 +71,13 @@ String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/
 - `src/data/testlevel.ts` beschreibt ein Grabenstück als reine Quader-Liste
   (`{ center, size }`, Vec3) plus Spawn-Punkte. **Eine Quelle** für Render-Meshes
   (`src/render`) und Sim-Collider (`src/sim/collision`). Keine Babylon-Typen.
+  Render-Hinweise je Box: `tag` (schaltbar, AP4-06) und `unsichtbar` (nur
+  Kollision, AP5-03).
 - `src/sim/collision.ts`: statische AABBs, `moveCapsule()` löst die Bewegung
   achsenweise auf (X, Z, dann Schwerkraft-Y), mit Stufen-Hochsteigen bis
-  `STEP_HEIGHT` und Bodenkontakt. Reine Funktion.
+  `STEP_HEIGHT` und Bodenkontakt. Reine Funktion. Grundsatz seit AP5-01:
+  **eine Achse löst nur Durchdringungen auf, die ihre eigene Bewegung
+  verursacht haben kann** (höchstens `|Δ| + KONTAKT_EPS` tief) — siehe unten.
 - `src/sim/index.ts`: `createSim(seed, level?)`. Der Seed speist `rng.ts` und
   wählt daraus deterministisch einen Spawn-Punkt. `tick()` dreht `yaw`/`pitch`
   aus dem Maus-Delta (Pitch geklemmt ±89°), bewegt den Spieler yaw-relativ auf
@@ -185,6 +189,78 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   `WaveContext.eingefroren` (keine Reservespawns) und die Verlustprüfung in
   `einsatz.ts` kippt das Ergebnis nicht mehr; `verlaengern` → `offen` → wieder
   verlierbar.
+
+### Boxhead-Kern (AP5)
+
+- **AP5-01 Mittelgang-Teleport.** Ursache in `moveCapsule`: der X-Push setzt
+  die Kapsel auf `box.minX − radius`; für die Verbindungsgraben-Wände
+  (Innenfläche x = ±1,8, Spielerradius 0,35) ergibt das in Gleitkomma einen
+  Rest von 2e-16 m Durchdringung. Die Z-Achse behandelte diesen Rest als echte
+  Kollision und löste ihn an der _nächsten Z-Fläche_ der 33-m-Wand auf — bis
+  zu 16,5 m Sprung in einem Tick (die Y-Achse hätte die Kapsel analog auf die
+  Wandkrone gehoben). Fix: (1) Kontakt-Toleranz `KONTAKT_EPS` (1 µm) im
+  Überlappungstest — Berührung ist keine Kollision; (2) jede Achse löst nur
+  Durchdringungen ≤ ihrem eigenen Tick-Weg auf, tiefere überspringt sie (die
+  gehören einer anderen Achse). Damit ist jede Einzelauflösung von Haus aus
+  auf den Tick-Weg begrenzt — kein separates Clamping. Kehrseite: eine Kapsel,
+  die _tief_ in einer Box startet (Datenfehler), wird nicht mehr
+  herausgeschoben; dagegen schützt `navgraph-begehbarkeit.test.ts`.
+  Regressionstests: `collision-verbindungsgraben.test.ts` (Durchläufe auf
+  der echten Geometrie inkl. Spieler-Sim, Gegenprobe am exakten Zustand) und
+  Mechanismus-Tests in `collision.test.ts`.
+- **AP5-02 Munitions-Nachschub.** Die Abschnitts-Depots (`FrontAbschnitt.depot`
+  — Front A/B/C an der Parados-Rückwand, Home in den Munitionslager-
+  Unterständen, Positionen in `src/data/sektor.ts`) sind Nachfüllpunkte:
+  `naechstesDepot()` (`src/sim/sektor.ts`, rein) liefert den Abschnitt, dessen
+  Depot in `DEPOT_REICHWEITE` (2 m, 3D) liegt und nicht `depotVerloren` ist;
+  `SimState.player.depotInReichweite` trägt ihn ins HUD („E · Munition
+  auffüllen"). `E` (Flanke, wie `entscheide`) setzt die Reserve auf
+  `WeaponDef.reserve` — außer im Finale nach `gewonnen`, wo `E` weiter
+  extrahiert. Ein gefallener Abschnitt hat sein Depot verloren (KONZEPT §3 „die
+  Uhr"), `rueckerobern` gibt es zurück; im Tod kein Auffüllen (der Respawn
+  füllt ohnehin). Renderer: Kiste je Depot, ohne Kollision. Testeingang
+  `_setReserve`. Keine Kosten/Budgets — die Nachschub-Ökonomie (§9.6) bleibt
+  ein eigenes Paket.
+- **AP5-03 Kartengrenze öffnen.** Die vier `kartengrenze`-Kollider bleiben
+  (Bewegungssperre, 6 m hoch gegen Sprung + Stufe), sind aber
+  `LevelBox.unsichtbar`: der Renderer baut kein Mesh, `raycast`/`sichtlinie`
+  gehen hindurch (`CollisionWorld.unsichtbar[]`; was man nicht sieht, hält
+  keine Kugel auf), `moveCapsule` sperrt wie bisher. Sichtbar ist stattdessen
+  das **Umland** (`src/data/sektor.ts`): vier Bodenblöcke jenseits der Grenze,
+  Oberkante bündig mit der Geländeoberfläche (bilden an den offenen Graben-
+  enden die Erd-Stirnwand), dazu flache Erdhaufen ≤ 1,1 m als Tiefenhinweise;
+  der Renderer gibt Boxen außerhalb aller Zonen das `umland`-Material
+  (Sumpf-Ton) und legt linearen Dunst in Himmelsfarbe darüber (`fogStart` 60 m,
+  `fogEnd` 190 m — jenseits der längsten Sichtlinie im Sektor). Zonen, Nav-
+  Graph, Breschen und Spielfeldmaße unverändert (Test in `sektor.test.ts`).
+- **AP5-04 Gegner-Druck & Wellen-Eskalation.** Erste echte Tuning-Iteration,
+  kein neues System. _Wave-Director_ (`wave.ts`): Wellengröße
+  `wellenGroesse(w) = 5 + 3·(w−1)`, Spawn-Takt `spawnIntervall(w)` fällt von
+  1,4 s je Welle um 0,15 s bis 0,6 s, dazu ±25 % Jitter aus dem Director-Rng;
+  Pause 3 s; Start-Angriffskraft 150 (vorher 60 — bei unverändertem Uhr-Preis
+  von 3 je Front-Kill trägt das fünf volle Wellen 5·8·11·14·17, an der Home-
+  Line entsprechend mehr); Reservewellen 6 (+3 je `verlaengern`). _Linien-
+  infanterie_ (`enemies.ts`): je Gegner `tempoFaktor` (1 ± 15 %) und eine
+  stufenlose Marschspur `spur` (−1..1 × `SPREIZUNG_MAX` 2,4 m — dieselbe
+  Hüllkurve wie das alte `id % 7`-Raster), beides als Würfelwerte aus einem
+  eigenen `gegnerRng` in `createSim` (`GegnerStreuung`), Tests ohne Angabe
+  bekommen das alte Verhalten. Drei Korrekturen am bestehenden Verhalten, die
+  durch mehr Gegner und die gestreuten Spuren sichtbar wurden: (1) die
+  Engstellen-Ebene liegt senkrecht zur **Anmarschrichtung** (vorher: Richtung
+  zum nächsten Wegpunkt — bei abknickendem Pfad wie `bresche-B → front-B`
+  galt ein Gegner schräg vor der Wand schon als „durch"); (2) die Nahkampf-
+  Sicht prüft auf **Kniehöhe** wie die Erreichbarkeits-Sichtlinie des
+  Watchdogs (auf Augenhöhe sah ein Gegner den Spieler über das Parapet und
+  lief in die Wand); (3) am Zielknoten mit Spieler außer Reichweite wird
+  sofort über den Graphen zum Knoten beim Spieler weiternavigiert (vorher
+  Luftlinie durch die nächste Wand, bis der Watchdog nach 4 s dasselbe tat).
+  Nav-Daten: `home-feld-links/-rechts` liegen jetzt als Engstellen am
+  **Rampenfuß** (±20, −23,5) statt oben an der Rampenkante — von der Sohle aus
+  galten sie sonst im 3-m-Radius als erreicht, der nächste Wegpunkt lag quer
+  hinter dem Home-Parapet. F3-Overlay zeigt die lebenden Gegner. Regressions-
+  netze: `wave-eskalation.test.ts` (große Welle ohne Watchdog durchs
+  Labyrinth, Streuung zieht die Kette auseinander, ganzer Einsatz mit
+  idealisiertem Schützen), Verhaltens-Tests in `enemies.test.ts`.
 
 ## Bundle-Größe
 

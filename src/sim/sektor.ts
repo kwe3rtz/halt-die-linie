@@ -160,3 +160,40 @@ export function abschnittAt(meta: SektorMeta, pos: Vec3): string | null {
   }
   return null;
 }
+
+/**
+ * Reichweite eines Munitionsdepots in Metern (AP5-02) — 3D-Abstand vom
+ * Fußpunkt des Spielers zur Depot-Markierung. Platzhalter wie die anderen
+ * Greybox-Zahlen: groß genug, um vor der Kiste zu stehen, klein genug, dass
+ * die Parados-Oberkante darüber (Δy ≈ 2,2 m) nicht mehr zählt.
+ */
+export const DEPOT_REICHWEITE = 2.0;
+
+/**
+ * Nächstes verfügbares Munitionsdepot in Reichweite (AP5-02): die Id des
+ * Abschnitts, dessen `depot` höchstens `reichweite` (3D) entfernt liegt und
+ * für den `verfuegbar(id)` gilt — ein gefallener Abschnitt hat sein Depot
+ * verloren (`AbschnittFront.depotVerloren`, KONZEPT.md §3 „die Uhr").
+ * `null`, wenn keins passt. Rein.
+ */
+export function naechstesDepot(
+  abschnitte: readonly Pick<FrontAbschnitt, "id" | "depot">[],
+  pos: Vec3,
+  reichweite: number,
+  verfuegbar: (id: string) => boolean = () => true,
+): string | null {
+  let best: string | null = null;
+  let bestAbstand = reichweite;
+  for (const a of abschnitte) {
+    const d = Math.hypot(
+      a.depot.x - pos.x,
+      a.depot.y - pos.y,
+      a.depot.z - pos.z,
+    );
+    if (d <= bestAbstand && verfuegbar(a.id)) {
+      best = a.id;
+      bestAbstand = d;
+    }
+  }
+  return best;
+}

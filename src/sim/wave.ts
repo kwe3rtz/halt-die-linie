@@ -27,19 +27,48 @@ export interface WaveState {
   angriffskraft: number;
 }
 
-// Alle Zahlen PLATZHALTER (Balance: KONZEPT.md §9.6).
-export const START_ANGRIFFSKRAFT = 60;
+// Alle Zahlen PLATZHALTER (Balance: KONZEPT.md §9.6). Stand AP5-04 (erste
+// echte Tuning-Iteration nach dem zweiten Spieltest — „zu wenige Gegner, keine
+// Eskalation"): Wellen starten größer, wachsen steiler, spawnen dichter, und
+// das Budget reicht für die höheren Wellen. Der Uhr-Preis je Gegner (1 je
+// Spawn + Zermürbung je Kill, `einsatz.ts`) ist unverändert — mit Front-Kills
+// (3 je Gegner) trägt die Angriffskraft fünf volle Wellen (5·8·11·14·17 = 55
+// Gegner), wer sich an die Home-Line zurückzieht (1,5 je Gegner), bekommt
+// entsprechend mehr und größere Wellen.
+export const START_ANGRIFFSKRAFT = 150;
 const AUFBAU_DAUER = 3; // s bis Welle 1
-const PAUSE_DAUER = 5; // s zwischen Wellen
-const SPAWN_INTERVALL = 1.4; // s zwischen gestaffelten Spawns
-const BASIS_ANZAHL = 4;
-const ZUWACHS = 2; // Gegner mehr pro Welle
+const PAUSE_DAUER = 3; // s zwischen Wellen (der Anmarsch dauert ohnehin ~16 s)
+/** Gegner in Welle 1. */
+export const BASIS_ANZAHL = 5;
+/** Gegner mehr je weiterer Welle. */
+export const ZUWACHS = 3;
+/** Sekunden zwischen gestaffelten Spawns in Welle 1 … */
+export const SPAWN_INTERVALL_START = 1.4;
+/** … je Welle um so viel kürzer … */
+export const SPAWN_BESCHLEUNIGUNG = 0.15;
+/** … bis zu dieser Untergrenze. */
+export const SPAWN_INTERVALL_MIN = 0.6;
+/** Zufällige Streuung des Spawn-Abstands (±Anteil) — kein Metronom-Takt. */
+export const SPAWN_JITTER = 0.25;
 const HP_FAKTOR_PRO_WELLE = 0.12;
 const STANDARD_GEGNER = "linieninfanterie";
 // Finale-Reservewellen (AP4-04).
 const RESERVE_INTERVALL = 8; // s zwischen Reservewellen
-const RESERVE_BASIS = 3; // Gegner je Reservewelle bei reserveStufe 0
-const RESERVE_ZUWACHS = 2; // + pro reserveStufe (je „verlaengern")
+export const RESERVE_BASIS = 6; // Gegner je Reservewelle bei reserveStufe 0
+export const RESERVE_ZUWACHS = 3; // + pro reserveStufe (je „verlaengern")
+
+/** Geplante Gegnerzahl einer Hauptwelle (vor der Kappung an der Angriffskraft). */
+export function wellenGroesse(welle: number): number {
+  return BASIS_ANZAHL + (Math.max(1, welle) - 1) * ZUWACHS;
+}
+
+/** Nominaler Spawn-Abstand einer Welle in Sekunden (ohne Jitter). */
+export function spawnIntervall(welle: number): number {
+  return Math.max(
+    SPAWN_INTERVALL_MIN,
+    SPAWN_INTERVALL_START - (Math.max(1, welle) - 1) * SPAWN_BESCHLEUNIGUNG,
+  );
+}
 
 export interface WaveContext {
   /** Anzahl lebender (nicht toter) Gegner. */
@@ -73,7 +102,7 @@ export function createWaveState(): WaveState {
 function starteWelle(state: WaveState, welle: number): void {
   state.welle = welle;
   state.phase = "welle";
-  const geplant = BASIS_ANZAHL + (welle - 1) * ZUWACHS;
+  const geplant = wellenGroesse(welle);
   // Nie mehr planen, als Angriffskraft übrig ist.
   const anzahl = Math.max(0, Math.min(geplant, state.angriffskraft));
   const hpFaktor = 1 + (welle - 1) * HP_FAKTOR_PRO_WELLE;
@@ -108,7 +137,12 @@ function leereQueue(state: WaveState, ctx: WaveContext, dt: number): boolean {
       gespawnt = true;
     }
   }
-  state.spawnTimer = SPAWN_INTERVALL;
+  // Dichter in höheren Wellen, dazu gestreut: Gegner kommen als unregelmäßiger
+  // Strom, nicht im Takt (AP5-04). Auch Reservewellen nutzen den Takt der
+  // zuletzt erreichten Hauptwelle.
+  state.spawnTimer =
+    spawnIntervall(state.welle) *
+    ctx.rng.range(1 - SPAWN_JITTER, 1 + SPAWN_JITTER);
   return gespawnt;
 }
 

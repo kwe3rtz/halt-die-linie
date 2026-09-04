@@ -5,7 +5,6 @@ import {
   createCollisionWorld,
   moveCapsule,
   setKolliderAktiv,
-  type Aabb,
   type CollisionWorld,
   type LevelData,
 } from "./collision";
@@ -37,8 +36,15 @@ import {
   type NavKontext,
 } from "./enemies";
 import { imSichtkegel } from "./navgraph";
-import type { NavGraph, SektorData } from "./sektor";
-import { inBoundsXZ, zoneAt, abschnittAt, brescheTag } from "./sektor";
+import type { FrontAbschnitt, NavGraph, SektorData } from "./sektor";
+import {
+  inBoundsXZ,
+  zoneAt,
+  abschnittAt,
+  brescheTag,
+  naechstesDepot,
+  DEPOT_REICHWEITE,
+} from "./sektor";
 import {
   createFrontState,
   updateFront,
@@ -103,6 +109,12 @@ export interface SimState {
     tot: boolean;
     /** Sekunden bis zum Respawn (0, solange lebendig). */
     respawnRest: number;
+    /**
+     * Abschnitts-Id, dessen Munitionsdepot gerade in Reichweite und verfügbar
+     * ist (AP5-02) — `E` füllt dort die Reserve auf. `null` sonst, auch im
+     * Tod und ohne Sektor-Meta.
+     */
+    depotInReichweite: string | null;
     /** Waffenzustand für HUD/Render. */
     weapon: {
       defId: string;
@@ -257,6 +269,8 @@ export interface Sim {
    * solo respawnt der Spieler ewig). Setzt den Einsatz auf `verloren`.
    */
   _setTruppAus: (aus: boolean) => void;
+  /** AP5-02-Testeingang: Reservemunition direkt setzen (≥ 0, ganzzahlig). */
+  _setReserve: (menge: number) => void;
 }
 
 // First-Person-Controller — Platzhalterwerte, Balancing kommt später.
@@ -335,6 +349,7 @@ export function createSim(
   let abilityPrev = false;
   let lastShot: Readonly<ShotEvent> | null = null;
   let nachschub = 0;
+  let depotInReichweite: string | null = null;
   let nextEnemyId = 1;
   let enemies: EnemyEntity[] = [];
   const weapon: WeaponState = createWeaponState(weaponDef);
@@ -345,6 +360,10 @@ export function createSim(
   }
   const angriffskraftMax = wave.angriffskraft;
   const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
+  // Individuelle Tempo-/Spur-Streuung je Gegner (AP5-04) aus einem eigenen
+  // Strom, damit weder die Spawnpunkt-Wahl (`waveRng`) noch die Abschnitts-
+  // Zuweisung (`abschnittRng`) verschoben werden.
+  const gegnerRng = createRng((seed ^ 0x2b2b2b2b) >>> 0);
   const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
 
   const player = {
@@ -376,7 +395,7 @@ export function createSim(
   const homeState: AbschnittFront[] = sektorMeta
     ? createFrontState(sektorMeta.homeAbschnitte, HOME_BRESCHE_FAKTOR)
     : [];
-  const alleAbschnitte: readonly { id: string; bounds: Aabb }[] = sektorMeta
+  const alleAbschnitte: readonly FrontAbschnitt[] = sektorMeta
     ? [...sektorMeta.frontAbschnitte, ...sektorMeta.homeAbschnitte]
     : [];
   // Einsatzbogen (AP4-04). Ohne Sektor-Meta bleibt der Einsatz im `aufbau`.
@@ -568,7 +587,12 @@ export function createSim(
         p = rk.pos;
       }
     }
-    enemies.push(spawnEnemy(def, nextEnemyId, p, hpFaktor, a));
+    enemies.push(
+      spawnEnemy(def, nextEnemyId, p, hpFaktor, a, {
+        tempo: gegnerRng.next(),
+        spur: gegnerRng.next(),
+      }),
+    );
     nextEnemyId += 1;
   };
 
@@ -782,10 +806,24 @@ export function createSim(
       );
     }
 
+    // Munitionsdepot in Reichweite (AP5-02)? Nur lebendig — nach den Gegner-
+    // Treffern dieses Ticks geprüft, damit HUD-Hinweis und Tod nie zusammen
+    // stehen. Ein gefallener Abschnitt hat sein Depot verloren (`depotVerloren`,
+    // KONZEPT.md §3 „die Uhr"); `rueckerobern` gibt es zurück.
+    depotInReichweite = combat.tot
+      ? null
+      : naechstesDepot(
+          alleAbschnitte,
+          player.pos,
+          DEPOT_REICHWEITE,
+          (id) => abschnittState(id)?.depotVerloren === false,
+        );
+
     // Finale-Entscheidung als Eingabe-Kommando (AP4-06, Audit H4): nach
     // „Entsatz eingetroffen" beendet `interact` (E) den Einsatz, `ability` (Q)
     // verlängert. Flanken, damit ein gehaltener Knopf nicht mehrfach zündet;
-    // auch im Tod erlaubt (eine Entscheidung, keine Bewegung).
+    // auch im Tod erlaubt (eine Entscheidung, keine Bewegung). Die Extraktion
+    // hat Vorrang vor dem Munitionsdepot — sonst ist E am Depot „auffüllen".
     const interactFlanke = cmd.buttons.interact && !interactPrev;
     const abilityFlanke = cmd.buttons.ability && !abilityPrev;
     interactPrev = cmd.buttons.interact;
@@ -800,6 +838,12 @@ export function createSim(
       } else if (abilityFlanke) {
         entscheide(einsatzState, "verlaengern");
       }
+    } else if (interactFlanke && depotInReichweite !== null) {
+      // Munition auffüllen (AP5-02): volle Reserve, keine Kosten — die
+      // Nachschub-Ökonomie (KONZEPT.md §9.6) kommt als eigenes Paket. Ein
+      // laufendes Nachladen läuft weiter und liest die Reserve beim nächsten
+      // Block; das Magazin bleibt, wie es ist.
+      weapon.reserve = weaponDef.reserve;
     }
 
     // Einsatzbogen (AP4-04): aufbau → wellen → finale → vorbei + die Uhr.
@@ -838,6 +882,7 @@ export function createSim(
         maxHp: combat.maxHp,
         tot: combat.tot,
         respawnRest: combat.respawnRest,
+        depotInReichweite,
         weapon: Object.freeze({
           defId: weapon.defId,
           imLauf: weapon.imLauf,
@@ -889,6 +934,9 @@ export function createSim(
     _setAbschnittVerloren: forceAbschnittVerloren,
     _setTruppAus: (aus) => {
       truppAus = aus;
+    },
+    _setReserve: (menge) => {
+      weapon.reserve = Math.max(0, Math.floor(menge));
     },
   };
 }
