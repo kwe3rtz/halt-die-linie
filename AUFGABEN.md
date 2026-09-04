@@ -675,7 +675,7 @@ Nutzers, als Nachzügler nachgeschoben:
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP5-05 | Leit-Spines: Linien entfernen ("Stricke" verwirren) | offen |
+| AP5-05 | Leit-Spines: komplett unsichtbar (Linien + Pfosten + Symbole) | ✅ `erledigt/` (`a4f1f1a`) |
 | AP5-06 | Gegner-Klassen (Normal/Schnell-Schwach/Langsam-Stark) | offen |
 
 **AP5-06 nimmt die AP5-Ausnahme „Klassen" bewusst und eng zurück:**

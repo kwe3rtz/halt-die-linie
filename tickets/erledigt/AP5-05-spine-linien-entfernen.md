@@ -1,6 +1,6 @@
 # AP5-05 — Leit-Spines: Linien entfernen (Nachzügler zu AP5)
 
-**Status:** review
+**Status:** erledigt · `a4f1f1a` · reviewed 2026-09-04
 **Arbeitspaket:** 5 (Nachzügler) · **Branch:** `arbeitspaket-5` (von `main`,
 neu von `main` abzweigen — AP5-01…04 sind bereits gemergt, PR #8)
 **Referenz:** Dritter Spieltest (Anspielen) 2026-09-04 (Nutzer-Feedback),
@@ -141,3 +141,31 @@ cyanfarbene „feld-rechts" östlich — derselbe Code-Pfad, mit entfernt.
   bereit.
 - Der `SpineRoute`-Doc-Kommentar in `src/sim/sektor.ts` beschreibt noch das
   Kabel (Entscheidung 2).
+
+## Review — AP5-05 · 2026-09-04
+
+**Grünes Licht.** Lokal nachvollzogen: `git fetch` + `git reset --hard
+origin/arbeitspaket-5` (amendierter Einzel-Commit `a4f1f1a`, sauber von
+`main` nach PR #8 abgezweigt), `typecheck`/`lint`/`format:check` grün,
+`test:coverage` 284/284 grün (Coverage src/sim 98,58 %, unverändert), `build`
+grün. CI + Pages Preview auf GitHub beide `success`.
+
+Diff gelesen (`render/index.ts`) — sauber und minimal: die komplette
+Spine-Erzeugung (Linie, Pfosten, Symbole samt Helfer/Materialien) ist raus,
+`leitMeshes`/`leitMats`/`emissivMat` bleiben zu Recht, weil Schilder und
+Zonen-Tore sie weiter brauchen. `src/sim/**` unangetastet, Datenmodell
+(`spineRouten`) bewusst erhalten für eine mögliche spätere Darstellung.
+
+Den Vorher/Nachher-Vergleich selbst nachvollzogen: `vorher-02-feld-blick-sued`
+zeigt exakt den gemeldeten "Strick" — eine weiße Linie vom Pfosten diagonal
+über das Feld auf die Kamera zu, quer über die Munitionskiste. In
+`nachher-02` ist das Feld sauber leer, nur noch die Home-Line-Silhouette am
+Horizont. Die Nachtrags-Erweiterung (Pfosten + Symbole mit raus, nicht nur
+die Linie) war genau richtig — ein freischwebendes Symbol ohne Pfosten hätte
+vermutlich als neuer Bug gewirkt statt als Verbesserung.
+
+Der offene Merkposten ("trägt Kompass/Schilder/Zonen-Tore die Orientierung
+allein?") ist der richtige Punkt fürs nächste echte Spieltest-Urteil — hier
+nicht weiter zu klären.
+
+Ticket archiviert (`tickets/erledigt/AP5-05-spine-linien-entfernen.md`).

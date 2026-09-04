@@ -27,13 +27,12 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   (AP5-01…04, alle reviewed, 284 Tests, Coverage src/sim 98,58 %). PR #8
   gemergt nach `main`.
 - **Anspielen (nicht der volle dritte Spieltest):** Nutzer hat nur die
-  ersten Wellen gespielt, noch kein Eindruck zur AP5-04-Eskalation. Zwei
-  sofortige Wünsche → **Nachzügler AP5-05/06** spezifiziert: die Leit-Spine-
-  Linien wirken wie verwirrende „Stricke" (raus, Pfosten/Symbole bleiben),
-  dazu 2–3 einfache Gegner-Klassen (normal/schnell-schwach/langsam-stark,
-  reine Statistik-Varianten, keine neue KI-Rolle).
-- **Als Nächstes:** AP5-05 (klein) an den Worker, danach AP5-06
-  (mittelgroß — Context vorher ggf. leeren), dann der **eigentliche** dritte
+  ersten Wellen gespielt, noch kein Eindruck zur AP5-04-Eskalation. **AP5-05
+  erledigt** (`a4f1f1a`, reviewed): die Leit-Spines (AP4-05) sind komplett
+  unsichtbar — Linie, Pfosten und Symbole, nicht nur die „Stricke". Kompass +
+  A/B/C-Schilder + Zonen-Tore tragen die Orientierung jetzt allein.
+- **Als Nächstes:** AP5-06 (Gegner-Klassen, mittelgroß — Worker meldet
+  Context unkritisch, direkt weiter möglich), dann der **eigentliche** dritte
   Spieltest über mehrere Wellen.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 

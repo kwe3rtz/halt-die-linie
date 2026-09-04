@@ -6,6 +6,15 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren) · komplett
 
+- **AP5-05** · `a4f1f1a` · **Leit-Spines: komplett unsichtbar.** Beim
+  Anspielen nach dem AP5-Merge gemeldet: die AP4-05-„Leit-Spines" (farbige
+  Polylinien Front→Home als Wegweiser) wirkten wie verwirrende Stricke,
+  die Pfosten „stehen im Boden". Auf Nachtrag hin die gesamte Sichtbarkeit
+  entfernt — Linie, Pfosten und Symbole (nicht nur die Linie, sonst hätten
+  die Symbol-Billboards frei in der Luft geschwebt). `src/sim/**`
+  unangetastet, `SpineRoute`/`spineRouten` bleiben als Datenmodell für eine
+  mögliche spätere Darstellung. Reine Render-Änderung, alle Golden-Anker
+  unverändert, 284 Tests (unverändert), Bundle −1,2 kB.
 - **AP5-04** · `525716a` · **Gegner-Druck & Wellen-Eskalation.** Diagnose vor
   dem Tuning (headless Simulator mit idealisiertem Schützen) erklärt das
   Spieltest-Feedback exakt: Budget 60 bei 3 Uhr-Zermürbung/Front-Kill ist nach
