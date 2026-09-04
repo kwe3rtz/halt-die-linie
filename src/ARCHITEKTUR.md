@@ -145,6 +145,47 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   Director im Finale (`ctx.finale`) auf kleine Nachschub-Reservewellen
   (`RESERVE_*`, mit `ctx.reserveStufe` skaliert); `ctx.finale` false → `vorbei`.
 
+### Kern-Bogen-Fixes (AP4-06, nach dem Audit `AUDIT-2026-09-04-ap4.md`)
+
+- **Bresche = echtes Loch.** `LevelBox.tag` + `CollisionWorld.aktiv[]`:
+  `setKolliderAktiv(world, tag, aktiv)` schaltet getaggte Boxen für Bewegung,
+  Hitscan und Sichtlinie ab. Das Parapet-Modul baut je Bresche ein eigenes,
+  getaggtes Segment (`ModulOpt.luecken`, `BRESCHE_BREITE` 2,6 m); Tag-Konvention
+  `brescheTag(abschnittId, index)` in `src/sim/sektor.ts` — Daten, Sim und
+  Renderer nutzen dieselbe. `createSim.syncBreschen()` hält nach jedem
+  `updateFront` (und nach `rueckerobern` / Reset) Kollision **und** Nav-Kante
+  `bresche-<id> ↔ lab-vorfront` synchron; die Kante öffnet nur für die Bresche,
+  auf der der Knoten liegt. Renderer blendet das Segment über `brescheTag` aus,
+  Trümmer/Rauch jetzt auch für die Home-Line.
+- **Begehbarkeits-Test** `src/sim/navgraph-begehbarkeit.test.ts`: jede Kante des
+  Sektor-Graphen wird in beide Richtungen mit einer Gegner-Kapsel begangen —
+  Ist-Zustand (Breschen zu, Knoten in einem getaggten Segment gelten als
+  Kontaktpunkte) und „alles offen" (alle Kanten + alle Bresche-Kollider aus).
+  Knoten in einem festen Kollider sind ein Datenfehler. Pflicht-Sicherheitsnetz
+  für den Generator.
+- **Engstellen** sind ein Knoten-Flag (`NavKnoten.engstelle`, in den Daten:
+  Sap-Lücken, Breschen, Grabenmündung, Parados-Rampen): enger Wegpunkt-Radius
+  und erst „erreicht", wenn der Gegner die Engstelle in Richtung des nächsten
+  Wegpunkts passiert hat (Ebenen-Test). Der seitliche Anti-Stau-Versatz ist im
+  Graben (Fußpunkt < −0,5) auf ±1 m gekappt (3,6-m-Graben).
+- **Stuck-Watchdog** (`enemies.ts`): `stillstand` zählt Sekunden ohne
+  Fortschritt im Anmarsch (`FEST_ZEIT` 4 s); gestaffelt: 1. Pfad neu von einem in
+  Kniehöhe sichtbaren Knoten, die blockierte Kante gesperrt · 2. Relokation auf
+  `reinforcement-<abschnitt>` · 3. Despawn über `NavKontext.onDespawn` —
+  `createSim` schreibt +1 Angriffskraft zurück (kein Nachschub, keine Uhr).
+  Die Wave-Bedingung `lebendeGegner === 0` bleibt dadurch korrekt.
+- **Tick-Reihenfolge Wave ↔ Einsatz:** `updateWave` läuft weiter vor
+  `updateEinsatz`, aber bei erschöpfter Angriffskraft geht der Director immer
+  zuerst auf `reserve` und fällt erst im nächsten Tick bei `!ctx.finale` auf
+  `vorbei`; im Tick eines Spawns findet kein Phasenwechsel statt (der frische
+  Gegner steckt noch nicht in `lebendeGegner`).
+- **Finale-Entscheidung als Eingabe:** `interact` (E) = `extrahieren`,
+  `ability` (Q) = `verlaengern`, flankengesteuert in `createSim.step`, nur bei
+  `finale` + `gewonnen`. Solange `gewonnen` und nicht entschieden:
+  `WaveContext.eingefroren` (keine Reservespawns) und die Verlustprüfung in
+  `einsatz.ts` kippt das Ergebnis nicht mehr; `verlaengern` → `offen` → wieder
+  verlierbar.
+
 ## Bundle-Größe
 
 Produktions-Build (`npm run build`), gemessen 2026-09-02, nur `src/main.ts`

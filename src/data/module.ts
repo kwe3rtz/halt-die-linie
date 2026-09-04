@@ -49,7 +49,29 @@ export interface ModulOpt {
   laenge?: number;
   /** Lichte Breite entlang der lokalen X-Achse. Default: Rasterzelle − Wände. */
   breite?: number;
+  /**
+   * Nur `parapet`: Stellen, an denen die Brustwehr als **eigenes, getaggtes
+   * Segment** gebaut wird (AP4-06). Die Sim schaltet den Kollider ab, sobald
+   * die Bresche offen ist — die Bresche wird ein echtes Loch. Der Feuertritt
+   * bleibt durchgehend.
+   */
+  luecken?: readonly ParapetLuecke[];
 }
+
+export interface ParapetLuecke {
+  /** Mitte der Lücke entlang der lokalen Längsachse (0..laenge). */
+  z: number;
+  /** Breite der Lücke in Metern. */
+  breite: number;
+  /** Etikett des schaltbaren Segments (`brescheTag(id, i)` aus `src/sim/sektor`). */
+  tag: string;
+}
+
+/**
+ * Breite eines Bresche-Segments in der Brustwehr. Passt zu den Trümmern des
+ * Renderers (AP4-03: 2,6 m) und lässt eine Gegner-Kapsel (Ø 0,7 m) durch.
+ */
+export const BRESCHE_BREITE = 2.6;
 
 function box(
   cx: number,
@@ -110,18 +132,33 @@ function grabenknick(breite: number): LevelBox[] {
   ];
 }
 
-function parapet(laenge: number): LevelBox[] {
+function parapet(
+  laenge: number,
+  luecken: readonly ParapetLuecke[] = [],
+): LevelBox[] {
   const wandHoehe = PARAPET_OBERKANTE - GRABEN_SOHLE;
+  const wandY = (GRABEN_SOHLE + PARAPET_OBERKANTE) / 2;
+  // Brustwehr-Wand bei lokal x = 0 — in Segmente geteilt: zwischen den Lücken
+  // feste Wand, an jeder Lücke ein eigenes, getaggtes (schaltbares) Segment.
+  const wand: LevelBox[] = [];
+  const segment = (z0: number, z1: number, tag?: string): void => {
+    if (z1 - z0 <= 1e-6) {
+      return;
+    }
+    const b = box(0, wandY, (z0 + z1) / 2, WAND, wandHoehe, z1 - z0);
+    wand.push(tag === undefined ? b : { ...b, tag });
+  };
+  let cursor = 0;
+  for (const l of [...luecken].sort((a, b) => a.z - b.z)) {
+    const z0 = Math.max(cursor, Math.min(laenge, l.z - l.breite / 2));
+    const z1 = Math.max(z0, Math.min(laenge, l.z + l.breite / 2));
+    segment(cursor, z0);
+    segment(z0, z1, l.tag);
+    cursor = z1;
+  }
+  segment(cursor, laenge);
   return [
-    // Brustwehr-Wand bei lokal x = 0.
-    box(
-      0,
-      (GRABEN_SOHLE + PARAPET_OBERKANTE) / 2,
-      laenge / 2,
-      WAND,
-      wandHoehe,
-      laenge,
-    ),
+    ...wand,
     // Feuertritt Stufe 1 (Oberkante −1,4; Δ0,4 von der Sohle), lokal −X.
     box(-0.7, GRABEN_SOHLE + 0.2, laenge / 2, 0.4, 0.4, laenge),
     // Feuertritt-Bank (Oberkante FEUERTRITT_OBERKANTE; Δ0,45), an der Wand.
@@ -199,14 +236,19 @@ function drehXZ(x: number, z: number, d: Drehung): [number, number] {
   }
 }
 
-function bauLokal(typ: ModulTyp, laenge: number, breite: number): LevelBox[] {
+function bauLokal(
+  typ: ModulTyp,
+  laenge: number,
+  breite: number,
+  luecken: readonly ParapetLuecke[],
+): LevelBox[] {
   switch (typ) {
     case "grabengerade":
       return grabengerade(laenge, breite);
     case "grabenknick":
       return grabenknick(breite);
     case "parapet":
-      return parapet(laenge);
+      return parapet(laenge, luecken);
     case "unterstand":
       return unterstand(breite, laenge);
     case "rampe":
@@ -233,9 +275,9 @@ export function modul(
   const laenge = opt.laenge ?? RASTER;
   const breite = opt.breite ?? RASTER - 2 * WAND;
   const swap = drehung === 90 || drehung === 270;
-  return bauLokal(typ, laenge, breite).map((b) => {
+  return bauLokal(typ, laenge, breite, opt.luecken ?? []).map((b) => {
     const [cx, cz] = drehXZ(b.center.x, b.center.z, drehung);
-    return {
+    const welt: LevelBox = {
       center: { x: at.x + cx, y: at.y + b.center.y, z: at.z + cz },
       size: {
         x: swap ? b.size.z : b.size.x,
@@ -243,5 +285,6 @@ export function modul(
         z: swap ? b.size.x : b.size.z,
       },
     };
+    return b.tag === undefined ? welt : { ...welt, tag: b.tag };
   });
 }

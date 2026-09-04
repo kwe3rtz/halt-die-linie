@@ -17,7 +17,7 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import type { EnemyView, SimState, SektorMeta, ZonenId } from "../sim";
-import { zoneAt } from "../sim";
+import { brescheTag, zoneAt } from "../sim";
 import type { LevelBox, LevelData } from "../sim/collision";
 
 const SHOT_EFFECT_MS = 50;
@@ -320,6 +320,9 @@ export function createRenderer(
     return box.center.y > 0.25 ? parapetMat : groundMat;
   };
 
+  // Getaggte Boxen (Bresche-Segmente, AP4-06) werden ausgeblendet, sobald die
+  // Sim den Kollider abschaltet — dieselbe Konvention `brescheTag`.
+  const tagMeshes = new Map<string, Mesh>();
   const meshes = level.boxes.map((box, i) => {
     const mesh = MeshBuilder.CreateBox(
       `level_${i}`,
@@ -329,6 +332,9 @@ export function createRenderer(
     mesh.position.set(box.center.x, box.center.y, box.center.z);
     mesh.material = boxMaterial(box);
     mesh.renderingGroupId = GROUP_WORLD;
+    if (box.tag !== undefined) {
+      tagMeshes.set(box.tag, mesh);
+    }
     return mesh;
   });
 
@@ -355,8 +361,8 @@ export function createRenderer(
     landmarkMesh.renderingGroupId = GROUP_WORLD;
   }
 
-  // Frontabschnitte (AP4-03): Trümmer je aufgerissener Bresche, Rauch über
-  // gebrochenen/verlorenen Abschnitten. Grob — Feinschliff in AP4-05.
+  // Front- und Home-Abschnitte (AP4-03/06): Trümmer je aufgerissener Bresche,
+  // Rauch über gebrochenen/verlorenen Abschnitten. Grob — Feinschliff in AP4-05.
   interface FrontVisual {
     truemmer: Mesh[];
     rauch: Mesh;
@@ -366,7 +372,7 @@ export function createRenderer(
   let truemmerMat: StandardMaterial | null = null;
   if (meta) {
     truemmerMat = flachMat("truemmer", 0.2, 0.18, 0.16);
-    for (const ab of meta.frontAbschnitte) {
+    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
       const truemmer = ab.parapetBreschen.map((pos, i) => {
         const m = MeshBuilder.CreateBox(
           `bresche_${ab.id}_${i}`,
@@ -403,6 +409,11 @@ export function createRenderer(
 
   const syncFront = (front: Readonly<SimState>["front"]): void => {
     for (const f of front) {
+      // Offene Bresche: Parapet-Segment weg (die Sim hat den Kollider
+      // abgeschaltet), Trümmer an.
+      f.breschen.forEach((offen, i) => {
+        tagMeshes.get(brescheTag(f.id, i))?.setEnabled(!offen);
+      });
       const v = frontVisuals.get(f.id);
       if (!v) {
         continue;
@@ -648,6 +659,7 @@ export function createRenderer(
 
       syncEnemies(state.enemies, now);
       syncFront(state.front);
+      syncFront(state.home);
 
       // Schadens-Flash / Tod-Abdunkeln.
       const hp = state.player.hp;

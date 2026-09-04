@@ -35,6 +35,10 @@ export interface EnemyEntity {
   pfad: string[];
   /** Index des nächsten noch anzulaufenden Wegpunkts in `pfad`. */
   pfadIndex: number;
+  /** Sekunden ohne nennenswerten Fortschritt im Anmarsch (Watchdog, AP4-06). */
+  stillstand: number;
+  /** Bisherige Watchdog-Eingriffe: 1 = Pfad neu, 2 = Relokation, 3 = Despawn. */
+  festVersuche: number;
 }
 
 export const ENEMY_RADIUS = 0.35;
@@ -51,14 +55,36 @@ const AUGE = 1.55; // Augenhöhe für Sichtlinien-Checks
 const WEGPUNKT_RADIUS = 3.0; // ab hier gilt ein Wegpunkt als erreicht (Ecken schneiden)
 const WEGPUNKT_RADIUS_ENG = 1.4; // Engstellen (Sap-Lücke, Bresche) genau treffen
 const WEGPUNKT_SPREIZUNG = 0.8; // seitl. Versatz je Gegner (× -3..3) gegen Stau
+// Im Graben (Fußpunkt unter der Geländeoberkante) ist der Versatz gekappt:
+// der Verbindungsgraben ist 3,6 m breit, ±2,4 m Versatz zielte in die Wand
+// (AP4-06). Greybox-Heuristik über die Höhe; sauber wäre eine Korridorbreite
+// am Knoten — TODO(Rückfrage): mit dem Generator als Knoten-/Kanten-Datum.
+const GRABEN_Y = -0.5;
+const SPREIZUNG_GRABEN_MAX = 1.0;
 const NAHKAMPF_SICHT = 6; // in dieser Nähe + Sichtlinie: direkt auf den Spieler
 const MARSCH_SEPARATION = 0.35; // Separation ist im Fern-Anmarsch schwächer
+
+// Stuck-Watchdog (AP4-06, Audit H2). Ein Gegner, der laufen will, aber nicht
+// vom Fleck kommt, bekommt gestaffelt Hilfe — sonst friert ein einzelner
+// hängender Gegner den Wellen-Loop ein (`lebendeGegner === 0` gatet Pause und
+// Reservewellen). Zahlen sind Platzhalter.
+/** Sekunden ohne Fortschritt bis zum nächsten Eingriff. */
+export const FEST_ZEIT = 4;
+/** Unter diesem Anteil des Soll-Wegs je Tick gilt „kein Fortschritt". */
+const FEST_MIN_FORTSCHRITT = 0.2;
+/** Höhe über dem Fußpunkt für die Erreichbarkeits-Sichtlinie (Kniehöhe: Wände blocken, Stufen nicht). */
+const KNIE = 0.3;
 
 /** Nav-Kontext, den `updateEnemies` je Tick bekommt (fehlt → gerader Weg). */
 export interface NavKontext {
   graph: NavGraph;
   /** Abschnitts-Ids, die als „verloren" gelten → Gegner fluten zur Home-Line. */
   verloren: ReadonlySet<string>;
+  /**
+   * Watchdog-Ausgang (AP4-06): der Gegner ist endgültig festgefahren und wird
+   * aus der Liste entfernt — der Aufrufer schreibt die Angriffskraft zurück.
+   */
+  onDespawn?: (e: EnemyEntity) => void;
 }
 
 // Muss zu PLAYER_RADIUS in `src/sim/index.ts` passen (beides Platzhalter).
@@ -92,6 +118,8 @@ export function spawnEnemy(
     ziel: "",
     pfad: [],
     pfadIndex: 0,
+    stillstand: 0,
+    festVersuche: 0,
   };
 }
 
@@ -143,6 +171,98 @@ function zielKnoten(e: EnemyEntity, nav: NavKontext): string {
   return best;
 }
 
+/**
+ * Nächster Graph-Knoten, den der Gegner in Kniehöhe frei sieht — also einer,
+ * den er ohne Wand dazwischen tatsächlich erreichen kann (`undefined`: keiner).
+ */
+function erreichbarerKnoten(
+  world: CollisionWorld,
+  graph: NavGraph,
+  pos: Vec3,
+): string | undefined {
+  let best: string | undefined;
+  let bestD = Infinity;
+  const von = { x: pos.x, y: pos.y + KNIE, z: pos.z };
+  for (const k of graph.knoten) {
+    const dx = k.pos.x - pos.x;
+    const dz = k.pos.z - pos.z;
+    const d = dx * dx + dz * dz;
+    if (d >= bestD) {
+      continue;
+    }
+    if (sichtlinie(world, von, { x: k.pos.x, y: k.pos.y + KNIE, z: k.pos.z })) {
+      bestD = d;
+      best = k.id;
+    }
+  }
+  return best;
+}
+
+/**
+ * Watchdog-Eingriff, gestaffelt nach `festVersuche` (AP4-06):
+ *  1. Pfad neu — von einem tatsächlich erreichbaren Knoten zum Ziel (bzw. zum
+ *     Knoten beim Spieler, wenn der Gegner schon am Zielknoten war).
+ *  2. Relokation auf den verdeckten `reinforcement-<abschnitt>`-Knoten (wie die
+ *     Infiltration; alle liegen im Labyrinth, nie im Feld).
+ *  3. Despawn (Aufrufer bekommt `onDespawn`, schreibt die Angriffskraft zurück).
+ * Liefert `false`, wenn der Gegner entfernt wurde.
+ */
+function loeseFest(
+  e: EnemyEntity,
+  world: CollisionWorld,
+  playerPos: Vec3,
+  nav: NavKontext,
+): boolean {
+  e.stillstand = 0;
+  e.festVersuche += 1;
+
+  if (e.festVersuche === 1) {
+    const start = erreichbarerKnoten(world, nav.graph, e.pos);
+    const amZiel = e.pfadIndex >= e.pfad.length;
+    const ziel = amZiel ? naechsterKnoten(nav.graph, playerPos) : e.ziel;
+    // Die Kante, auf der der Gegner hängt (letzter erreichter → aktueller
+    // Wegpunkt), ist offensichtlich nicht begehbar: für diese Planung sperren,
+    // sonst liefert BFS denselben Weg noch einmal.
+    const blockVon = e.pfad[e.pfadIndex - 1];
+    const blockNach = e.pfad[e.pfadIndex];
+    const graph: NavGraph =
+      blockVon !== undefined && blockNach !== undefined
+        ? {
+            knoten: nav.graph.knoten,
+            kanten: nav.graph.kanten.map((k) =>
+              (k.von === blockVon && k.nach === blockNach) ||
+              (k.von === blockNach && k.nach === blockVon)
+                ? { ...k, offen: false }
+                : k,
+            ),
+          }
+        : nav.graph;
+    if (start !== undefined && ziel !== "") {
+      const pfad = kuerzesterPfad(graph, start, ziel);
+      if (pfad.length > 0) {
+        e.pfad = pfad;
+        e.pfadIndex = 0;
+      }
+    }
+    return true;
+  }
+
+  if (e.festVersuche === 2 && e.abschnitt !== "") {
+    const rk = nav.graph.knoten.find(
+      (k) => k.id === `reinforcement-${e.abschnitt}`,
+    );
+    if (rk) {
+      e.pos = { x: rk.pos.x, y: rk.pos.y, z: rk.pos.z };
+      e.vel = { x: 0, y: 0, z: 0 };
+      e.ziel = ""; // Pfad im nächsten Tick frisch vom neuen Standort
+      return true;
+    }
+  }
+
+  nav.onDespawn?.(e);
+  return false;
+}
+
 /** Konsumiert erreichte Wegpunkte und liefert den nächsten anzulaufenden. */
 function wegpunkt(e: EnemyEntity, graph: NavGraph): Vec3 | undefined {
   while (e.pfadIndex < e.pfad.length) {
@@ -154,14 +274,31 @@ function wegpunkt(e: EnemyEntity, graph: NavGraph): Vec3 | undefined {
     }
     const dx = knoten.pos.x - e.pos.x;
     const dz = knoten.pos.z - e.pos.z;
-    // Engstellen (Sap-Lücke, Bresche) müssen wirklich durchlaufen werden —
-    // sonst „erreicht" ein Gegner den Knoten von der falschen Seite und
-    // steuert das nächste Ziel quer durchs Parapet an.
-    const radius =
-      id !== undefined && (id.startsWith("sap-") || id.startsWith("bresche-"))
-        ? WEGPUNKT_RADIUS_ENG
-        : WEGPUNKT_RADIUS;
-    if (Math.hypot(dx, dz) < radius) {
+    const dist = Math.hypot(dx, dz);
+    // Engstellen (Sap-Lücke, Bresche, Grabenmündung, Rampen-Lücke — Flag in
+    // den Sektor-Daten) müssen wirklich durchlaufen werden — sonst „erreicht"
+    // ein Gegner den Knoten von der falschen Seite und steuert das nächste
+    // Ziel quer durchs Parapet an. AP4-06: zusätzlich gilt eine Engstelle erst
+    // als passiert, wenn der Gegner sie in Richtung des nächsten Wegpunkts
+    // hinter sich hat (Ebenen-Test) — sonst schneidet er beim Abbiegen die
+    // Ecke und rutscht an der Wand neben der Lücke fest.
+    if (knoten.engstelle === true) {
+      const naechsteId = e.pfad[e.pfadIndex + 1];
+      const naechste = naechsteId
+        ? graph.knoten.find((k) => k.id === naechsteId)
+        : undefined;
+      const passiert =
+        !naechste ||
+        (e.pos.x - knoten.pos.x) * (naechste.pos.x - knoten.pos.x) +
+          (e.pos.z - knoten.pos.z) * (naechste.pos.z - knoten.pos.z) >=
+          0;
+      if (dist < WEGPUNKT_RADIUS_ENG && passiert) {
+        e.pfadIndex += 1;
+        continue;
+      }
+      return knoten.pos;
+    }
+    if (dist < WEGPUNKT_RADIUS) {
       e.pfadIndex += 1;
       continue;
     }
@@ -271,8 +408,15 @@ export function updateEnemies(
           // Deterministischer seitlicher Versatz je Gegner: fächert die Kette
           // während des Transits auf (gegen Stau), läuft zum Wegpunkt hin aber
           // wieder zusammen — sonst zielt der Versatz neben die enge Sap-Lücke.
-          const seit =
+          const roh =
             ((e.id % 7) - 3) * WEGPUNKT_SPREIZUNG * Math.min(1, rl / 8);
+          const seit =
+            e.pos.y < GRABEN_Y
+              ? Math.max(
+                  -SPREIZUNG_GRABEN_MAX,
+                  Math.min(SPREIZUNG_GRABEN_MAX, roh),
+                )
+              : roh;
           zielX = rl > 1e-3 ? wp.x + (-rz / rl) * seit : wp.x;
           zielZ = rl > 1e-3 ? wp.z + (rx / rl) * seit : wp.z;
         }
@@ -346,8 +490,25 @@ export function updateEnemies(
       ENEMY_HEIGHT,
       dt,
     );
+
+    // Watchdog (AP4-06): will der Gegner laufen, kommt aber nicht vom Fleck?
+    if (nav && e.zustand === "anmarsch") {
+      const soll = BASIS_TEMPO * e.def.tempo * dt;
+      const ist = Math.hypot(moved.pos.x - e.pos.x, moved.pos.z - e.pos.z);
+      e.stillstand = ist < FEST_MIN_FORTSCHRITT * soll ? e.stillstand + dt : 0;
+    } else {
+      e.stillstand = 0;
+    }
     e.pos = moved.pos;
     e.vel = moved.vel;
+
+    if (
+      nav &&
+      e.stillstand >= FEST_ZEIT &&
+      !loeseFest(e, world, playerPos, nav)
+    ) {
+      continue; // despawnt
+    }
     survivors.push(e);
   }
 

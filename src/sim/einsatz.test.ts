@@ -169,3 +169,30 @@ describe("einsatz — Phasenmaschine", () => {
     expect(run()).toBe(run());
   });
 });
+
+describe("einsatz — 'gewonnen' ist geschützt (AP4-06, Audit H4)", () => {
+  it("Home-Verlust / Trupp aus kippen ein erreichtes 'gewonnen' nicht mehr", () => {
+    const s = createEinsatzState();
+    s.phase = "finale";
+    s.ergebnis = "gewonnen";
+    updateEinsatz(s, ctx({ homeVerloren: true }), DT);
+    updateEinsatz(s, ctx({ truppAus: true }), DT);
+    expect(s.phase).toBe("finale");
+    expect(s.ergebnis).toBe("gewonnen");
+    // Extrahieren bleibt möglich und behält das Ergebnis.
+    entscheide(s, "extrahieren");
+    expect(s.phase).toBe("vorbei");
+    expect(s.ergebnis).toBe("gewonnen");
+  });
+
+  it("nach 'verlaengern' ist der Einsatz wieder verlierbar", () => {
+    const s = createEinsatzState();
+    s.phase = "finale";
+    s.ergebnis = "gewonnen";
+    entscheide(s, "verlaengern");
+    expect(s.ergebnis).toBe("offen");
+    updateEinsatz(s, ctx({ homeVerloren: true }), DT);
+    expect(s.phase).toBe("vorbei");
+    expect(s.ergebnis).toBe("verloren");
+  });
+});

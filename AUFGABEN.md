@@ -623,15 +623,17 @@ Branch: `arbeitspaket-4` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien in
 | AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | ✅ `erledigt/` (`6af9326`) |
 | AP4-05 | Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | ✅ `erledigt/` (`9c9af56`) |
 
-**Arbeitspaket 4 ist komplett** (alle 5 Tickets reviewed, 212 Tests), auf `main`
-gemergt (PR #6). Ein unabhängiger Audit (`AUDIT-2026-09-04-ap4.md`) fand danach
+Ein unabhängiger Audit (`AUDIT-2026-09-04-ap4.md`) fand nach dem Merge (PR #6)
 4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen —
-daraus **AP4-06 „Kern-Bogen-Fixes"** (`tickets/AP4-06-kern-bogen-fixes.md`),
-Branch `fix/ap4-06-kern-bogen` von `main`. Kommt **vor** AP5.
+daraus **AP4-06 „Kern-Bogen-Fixes"** (`tickets/erledigt/AP4-06-kern-bogen-fixes.md`),
+Branch `fix/ap4-06-kern-bogen` von `main`.
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP4-06 | Kern-Bogen-Fixes (Bresche/Kollision, Stuck-Fallback, Tick-Reihenfolge, Finale-Abschluss, Begehbarkeits-Test) | offen |
+| AP4-06 | Kern-Bogen-Fixes (Bresche/Kollision, Stuck-Fallback, Tick-Reihenfolge, Finale-Abschluss, Begehbarkeits-Test) | ✅ `erledigt/` (`7688452`) |
+
+**Arbeitspaket 4 ist jetzt vollständig komplett** (5 Tickets + 1 Nachzügler,
+alle reviewed, 232 Tests). PR für `fix/ap4-06-kern-bogen` → `main` offen.
 
 **Ausdrücklich NICHT in AP4:** prozeduraler Generator · neue Gegnertypen /
 Gegner-Fernkampf · Tag/Nacht · Klassen + Fähigkeiten · Bauen / Platzierungen /

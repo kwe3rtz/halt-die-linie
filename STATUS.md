@@ -1,6 +1,6 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-03
+**Stand:** 2026-09-04
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions.
 
@@ -13,15 +13,14 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 - **Konzept:** beschlossen. §3 (Sektor) am 2026-09-03 aus der Map-Design-Runde
   neu gefasst — H-Grundriss, offenes Feld statt hartem Korridor, „die Uhr",
   Generator später.
-- **Code:** AP1–AP4 auf `main` (PR #1, #4, #5, #6). Nutzer hat AP4 gespielt;
-  **unabhängiger Audit** (`AUDIT-2026-09-04-ap4.md`, Session `ki-game-c2`) fand
-  danach 4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den
-  AP4-Maschinen (Bresche öffnet Kollision nicht → Gegner stecken vor der Wand;
-  kein Stuck-Fallback; Tick-Reihenfolge Wave/Einsatz; „gewonnen" nicht
-  abschließbar).
-- **Als Nächstes:** **AP4-06 „Kern-Bogen-Fixes"** spezifiziert und an
-  `ki-game-c2` übergeben (Branch `fix/ap4-06-kern-bogen`) — kommt vor AP5, weil
-  der Kern-Bogen sonst nicht sauber durchspielbar ist.
+- **Code:** AP1–AP4 auf `main` (PR #1, #4, #5, #6). Nach dem AP4-Spieltest fand
+  ein **unabhängiger Audit** (`AUDIT-2026-09-04-ap4.md`, Session `ki-game-c2`)
+  4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen —
+  **AP4-06 „Kern-Bogen-Fixes" ist jetzt auch fertig** (`7688452`, reviewed,
+  232 Tests), Bresche ist ein echtes Loch, Stuck-Watchdog, Tick-Reihenfolge und
+  „gewonnen" behoben.
+- **Als Nächstes:** PR `fix/ap4-06-kern-bogen` → `main` mergen, dann **zweiter
+  Spieltest** — erst jetzt ist der Kern-Bogen Ende-zu-Ende sauber spielbar.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -48,17 +47,17 @@ angesagt.
 
 ## Als Nächstes
 
-1. **AP4-06 „Kern-Bogen-Fixes"** (`tickets/AP4-06-kern-bogen-fixes.md`) — bei
-   `ki-game-c2`, Branch `fix/ap4-06-kern-bogen` von `main`. Behebt die 4
-   Audit-Bugs (Bresche/Kollision, Stuck-Fallback, Tick-Reihenfolge Wave/
-   Einsatz, „gewonnen" nicht abschließbar) + führt einen Graph-Begehbarkeits-
-   Test ein (Pflicht vor dem Generator). Reviewe ich wie jedes Ticket.
-2. **Danach: zweiter Spieltest** des Kern-Bogens (jetzt erst aussagekräftig,
-   weil der Einsatz vorher solo nicht sauber zu Ende ging). F3 auf dem Mac:
-   `fn+F3` oder Systemeinstellungen → Tastatur → Standard-Funktionstasten;
-   sonst Tasten wie gehabt: **F3** Debug · **M** Lagekarte · **T** Ton.
-   Restliche Checkliste (Zonen, Feuertritt-Marge, Sap-Lücken, Balance-Zahlen,
-   Kompass-Überlappung) weiter gültig. **Kernfrage:** trägt „Front halten →
+1. **Nutzer:** PR `fix/ap4-06-kern-bogen` → `main` mergen.
+2. **Zweiter Spieltest** des Kern-Bogens (jetzt erst aussagekräftig, weil der
+   Einsatz vorher solo nicht sauber zu Ende ging). Zusätzlich zur alten
+   Checkliste gegenchecken: aufgerissene Bresche = sichtbares Loch mit
+   Trümmern, Gegner strömen hindurch; nach „Entsatz eingetroffen" **E**
+   extrahiert, **Q** verlängert; kein Gegner steht dauerhaft vor einer Wand.
+   F3 auf dem Mac: `fn+F3` oder Systemeinstellungen → Tastatur → Standard-
+   Funktionstasten; Tasten: **F3** Debug · **M** Lagekarte · **T** Ton · **E**
+   extrahieren · **Q** verlängern. Restliche Checkliste (Zonen, Feuertritt-
+   Marge, Sap-Lücken, Balance-Zahlen, Kompass-Überlappung) weiter gültig.
+   **Kernfrage:** trägt „Front halten →
    Abschnitt verlieren → zurückfallen → Home-Line halten" als Spielgefühl?
 3. Danach: ein Politur-Ticket aus den Audit-Medium-Befunden (priorisieren mit
    dem Nutzer), dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht), dann der
@@ -132,6 +131,17 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-04** — **AP4-06 „Kern-Bogen-Fixes" komplett** (`7688452`, reviewed,
+  232 Tests, Coverage src/sim 98,38 %, alle drei Golden-Anker unverändert).
+  H1 als echte Lösung: Bresche ist jetzt ein physisches Loch (schaltbare
+  Kollider, `CollisionWorld.tags`/`aktiv`), nicht nur ein offener Nav-Pfad. H2:
+  dreistufiger Stuck-Watchdog + Engstellen-Flag im Nav-Graph. H3: Wave-Director
+  geht bei erschöpfter Angriffskraft immer zuerst auf `reserve`. H4: `E`/`Q`
+  (extrahieren/verlängern) als echte `InputCommand`s, `gewonnen` gegen
+  Home-Verlust geschützt. Neuer Graph-Begehbarkeits-Test fand dabei 3 echte
+  Datenfehler im Nav-Graph und wird zum Sicherheitsnetz für den späteren
+  Generator. Damit ist AP4 (inkl. Nachzügler) vollständig komplett — zweiter
+  Spieltest fällig.
 - **2026-09-04** — **Unabhängiger Audit nach AP4-Merge** (`ki-game-c2`, Firmen-
   Account, hoher Effort, voller Projektkontext): Architektur/goldene Regel
   sauber, aber 4 reproduzierte Gameplay-Bugs in der Verdrahtung zwischen den
