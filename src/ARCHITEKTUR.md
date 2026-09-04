@@ -48,6 +48,24 @@ pro Frame übergeben (`update()`), pollt nichts selbst. Bei aktivem Pointer-Lock
 bleibt es sichtbar und lesbar — Pointer-Lock betrifft nur den Cursor und die
 Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
 
+Dasselbe Muster: `src/ui/hud.ts` (HP / Munition / Welle / Nachschub / Finale-
+Text), `src/ui/kompass.ts` (AP4-05 — Peil-Band oben: HOME-Marker + je
+Frontabschnitt ein Zustands-Marker, **Farbe UND Glyph** redundant, **keine
+Gegner-Marker**; `relPeilung()` rein), `src/ui/lagekarte.ts` (AP4-05 — statisches
+Sektor-Schema mit Abschnitts-Zuständen, Umschalten **M**; kein Echtzeit-Nav).
+Alle bekommen den State pro Frame, pollen nichts.
+
+## Audio
+
+`src/audio/` (AP4-05) — reiner Client, **außerhalb der Sim** (goldene Regel:
+darf `window` / `AudioContext`, importiert aus `src/sim` nur Typen und liest den
+State). `createAudio()` diffed den State frame-zu-frame (`beobachteEreignisse` —
+rein) und spielt Platzhalter-Töne (Oszillatoren) auf strategische Ereignisse:
+Abschnitt `verloren` → **Signalhorn aus Richtung Home-Line** (StereoPanner,
+`panFuerPeilung(relPeilung(...))`), Phase `finale` → Signalhorn + Truppen-Ruf.
+Default leise, stummschaltbar mit **T**. Feste Callout-Grammatik als
+String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/VO.
+
 ## First-Person-Controller, Kollision, Test-Level
 
 - `src/data/testlevel.ts` beschreibt ein Grabenstück als reine Quader-Liste
@@ -61,12 +79,71 @@ Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
   aus dem Maus-Delta (Pitch geklemmt ±89°), bewegt den Spieler yaw-relativ auf
   der x/z-Bodenebene, wendet Sprint/Sprung an und kollidiert gegen die
   `CollisionWorld`.
-- `src/render/index.ts`: `createRenderer(canvas, level)`. Baut die Boxen einmalig,
-  `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
+- `src/render/index.ts`: `createRenderer(canvas, level, meta?)`. Baut die Boxen
+  einmalig, `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
   Spielerposition (+ Augenhöhe) und Rotation aus `yaw`/`pitch` — kein
-  `attachControl`, die Sim ist die Wahrheit.
+  `attachControl`, die Sim ist die Wahrheit. Mit `meta` (Sektor): Zonen-Material
+  je Box (`zoneAt`), Landmark-Pfosten, `syncFront` (Trümmer/Rauch je Abschnitt,
+  AP4-03) und (AP4-05) die Leit-„Spines" je Route (`meta.spineRouten`:
+  Farb-Polylinie + Pfosten + geometrische Symbole), A/B/C-Schilder
+  (`DynamicTexture`), Zonen-Tore an den zwei Rückzugs-Übergängen, geschärfte
+  Zonen-Farbtöne.
 - Regressionsschutz: Golden-/Replay-Test in `src/sim/sim.test.ts`
-  (Seed + Kommandosequenz → identischer End-State).
+  (Seed + Kommandosequenz → identischer End-State; nutzt ein Inline-Testlevel,
+  nicht den Sektor).
+
+## Sektor (AP4)
+
+- `src/data/module.ts` — Rasterbaukasten (`RASTER = 4`), `modul(typ, at, drehung,
+opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
+  zweistufiger Feuertritt, ohne Sprung begehbar), `unterstand`, `rampe`,
+  `kartengrenze`. Vertikale Kennwerte (`GRABEN_SOHLE` −1,8 / `PARAPET_OBERKANTE`
+  +0,55 / `FEUERTRITT_OBERKANTE` −0,95) als Greybox-Startwerte. **Derselbe
+  Baukasten ist für den späteren Labyrinth-Generator gedacht.**
+- `src/data/sektor.ts` — `sektorGreybox: SektorData`, das „H" aus KONZEPT.md §3,
+  aus `modul(...)` + Roh-Quadern. EINE Quelle für Render + Sim. `main.ts` fährt
+  den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
+- `src/sim/sektor.ts` — Typen (`ZonenId`, `SektorMeta`,
+  `SektorData extends LevelData`, `FrontAbschnitt`, `NavGraph`, `SpineRoute` …) +
+  reine Helfer `zoneAt` / `abschnittAt` / `inBoundsXZ`. Kein Babylon, keine
+  Logik — `SektorMeta.spineRouten` (AP4-05) ist ein reines Datenfeld, Werte in
+  `src/data/sektor.ts`, nur der Renderer liest es.
+- `src/sim/navgraph.ts` (AP4-02) — `kuerzesterPfad` (BFS über offene Kanten,
+  deterministisch), `naechsterKnoten`, `imSichtkegel`. Der `SektorMeta.navGraph`
+  ist handgepflegt in `src/data/sektor.ts`. `updateEnemies` bekommt einen
+  optionalen `nav`-Kontext: damit folgen Gegner Wegpunkten (Anmarsch → Labyrinth
+  → Front, nach Durchbruch → Home), ohne = gerader Weg wie bisher. Neuberechnung
+  nur bei Zielwechsel. `createSim` arbeitet auf einer Graph-Kopie (die
+  exportierte `sektorGreybox` bleibt unmutiert).
+- `src/sim/front.ts` (AP4-03) — Zustandsmaschine je Abschnitt:
+  `stabil → bedraengt → gebrochen → verloren` aus Feinddruck (lebende Gegner im
+  `bounds`) und aufgerissenen Parapet-Breschen (ungehalten sinkt die Bresche-HP,
+  bei 0 offen). Erholung nur eine Stufe zurück Richtung `stabil`, nie aus
+  `verloren`. `updateFront(front, ctx, dt)` ist rein/in-place und läuft **zweimal
+  je Tick** — einmal für die Frontlinie A/B/C, einmal für die Home-Line
+  (`ctx.abschnitte` sagt welche; die Home-Line startet befestigt,
+  `createFrontState(..., faktor)`). Der `onVerloren(id)`-Callback verdrahtet in
+  `createSim` das AP4-02-Verhalten (Nav-Kanten nach hinten öffnen,
+  Infiltrations-Spawn, Depot verloren); eine offene Bresche öffnet zusätzlich
+  `bresche-<id> ↔ lab-vorfront`. `SimState.front` / `SimState.home` (Zustand +
+  offene Breschen) fürs HUD/Render. Sim-Eingänge: `rueckerobern(id)`
+  (`verloren → gebrochen`, nur bei leerem Abschnitt) und der Testeingang
+  `_setAbschnittVerloren` (dünn über der Maschine, erzwingt den Endzustand).
+- `src/sim/einsatz.ts` (AP4-04) — der Einsatzbogen über dem Wave-Director:
+  `aufbau → wellen → finale → vorbei` mit `ergebnis: offen | gewonnen | verloren`.
+  Ist die endliche `wave.angriffskraft` gebrochen und die Spawn-Queue leer, läuft
+  im `finale` ein fester Countdown („Entsatz in N s"); abgelaufen → `gewonnen`,
+  dann wartet die Maschine auf `entscheide("extrahieren" | "verlaengern")`
+  (verlängern = zweiter, kürzerer Countdown, `reserveStufe++`). Alle
+  Home-Abschnitte `verloren` **oder** `truppAus` → `verloren`, in jeder Phase.
+  **Die Uhr:** `zermuerbungProKill(zone, abschnittVerloren)` — jeder Kill zieht
+  zusätzlich Angriffskraft ab, je Todeszone (`frontlinie` am meisten, `homeline`
+  am wenigsten; ein schon verlorener Frontabschnitt zählt wie offenes Feld).
+  `createSim` ruft das im tödlichen Treffer. `SimState.einsatz`
+  (`phase / finaleRest / ergebnis`).
+- `src/sim/wave.ts` (AP4-04) — neue Phase `reserve`: statt `vorbei` schaltet der
+  Director im Finale (`ctx.finale`) auf kleine Nachschub-Reservewellen
+  (`RESERVE_*`, mit `ctx.reserveStufe` skaliert); `ctx.finale` false → `vorbei`.
 
 ## Bundle-Größe
 

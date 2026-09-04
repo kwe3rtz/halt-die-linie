@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand, type LevelData } from "./index";
 import { add, dirFromYawPitch, length, scale, vec3 } from "./math";
 import { createRng } from "./rng";
+import { sektorGreybox } from "../data/sektor";
 
 const DT = 1 / 60;
 
@@ -415,5 +416,114 @@ describe("golden replay", () => {
     expect(s.wave.angriffskraftRest).toBe(57);
     expect(s.enemies.length).toBe(3);
     expect(s.nachschub).toBe(0);
+  });
+});
+
+// Golden-/Replay-Test mit dem Sektor-Graphen (AP4-02): fängt zusätzlich stille
+// Änderungen an der Feind-Navigation ab — stabile Gegnerpositionen + Ziele.
+describe("golden replay — Sektor-Nav-Graph", () => {
+  function script(): InputCommand[] {
+    const out: InputCommand[] = [];
+    for (let i = 0; i < 600; i += 1) {
+      out.push(
+        command({
+          move: { x: i % 5 === 0 ? 1 : 0, y: i % 3 === 0 ? -1 : 0 },
+          look: { dx: i % 17 === 0 ? 25 : 0, dy: 0 },
+          fire: i % 9 === 0,
+          reload: i % 110 === 55,
+        }),
+      );
+    }
+    return out;
+  }
+
+  function replay() {
+    const sim = createSim(40404, sektorGreybox, { waves: true });
+    for (const cmd of script()) sim.tick(cmd, DT);
+    return sim.getState();
+  }
+
+  it("liefert bei zwei Läufen exakt denselben State", () => {
+    expect(replay()).toEqual(replay());
+  });
+
+  it("trifft den Nav-Golden-Anker", () => {
+    const s = replay();
+    expect(s.tick).toBe(600);
+    expect(s.player.pos.x).toBeCloseTo(5.6891, 3);
+    expect(s.player.pos.z).toBeCloseTo(11.3298, 3);
+    expect(s.wave.welle).toBe(1);
+    expect(s.wave.angriffskraftRest).toBe(56);
+    expect(s.nachschub).toBe(0);
+
+    expect(s.enemies.length).toBe(4);
+    const nach = [...s.enemies].sort((a, b) => a.id - b.id);
+    expect(nach.map((e) => e.abschnitt)).toEqual(["C", "B", "C", "A"]);
+    expect(nach.map((e) => e.zielKnoten)).toEqual([
+      "front-C",
+      "front-B",
+      "front-C",
+      "front-A",
+    ]);
+    expect(nach.map((e) => e.zustand)).toEqual([
+      "anmarsch",
+      "anmarsch",
+      "anmarsch",
+      "anmarsch",
+    ]);
+    expect(nach[0]?.pos.x).toBeCloseTo(-5.316, 2);
+    expect(nach[0]?.pos.z).toBeCloseTo(34.672, 2);
+    expect(nach[3]?.pos.x).toBeCloseTo(3.891, 2);
+    expect(nach[3]?.pos.z).toBeCloseTo(40.244, 2);
+
+    // Frontabschnitte (AP4-03): die Gegner sind noch im Anmarsch, die Linie hält.
+    expect(s.front.map((f) => f.id)).toEqual(["A", "B", "C"]);
+    expect(s.front.map((f) => f.zustand)).toEqual([
+      "stabil",
+      "stabil",
+      "stabil",
+    ]);
+    expect(s.front.every((f) => f.breschenOffen === 0)).toBe(true);
+
+    // Einsatzbogen (AP4-04): im Wellen-Regime, kein Kill → die Uhr ruht.
+    expect(s.home.map((f) => f.id)).toEqual(["H-West", "H-Ost"]);
+    expect(s.einsatz.phase).toBe("wellen");
+    expect(s.einsatz.ergebnis).toBe("offen");
+    expect(s.einsatz.finaleRest).toBe(0);
+  });
+});
+
+// Golden-/Replay-Anker für „die Uhr" (AP4-04): ein Kill an der Frontlinie
+// zermürbt die Angriffskraft stärker als an einer gefallenen Front.
+describe("golden replay — die Uhr (AP4-04)", () => {
+  const bau = () =>
+    createSim(1, sektorGreybox, {
+      enemies: [{ defId: "linieninfanterie", pos: { x: -12, y: 0, z: 15 } }],
+      aktiveAchsen: ["A"],
+    });
+  const feuere = (sim: ReturnType<typeof createSim>) => {
+    for (let i = 0; i < 500; i += 1)
+      sim.tick(command({ fire: i % 40 < 2 }), DT);
+  };
+
+  it("ist deterministisch", () => {
+    const a = bau();
+    const b = bau();
+    feuere(a);
+    feuere(b);
+    expect(a.getState()).toEqual(b.getState());
+  });
+
+  it("trifft den Uhr-Golden-Anker", () => {
+    const steht = bau();
+    feuere(steht);
+    expect(steht.getState().nachschub).toBe(5); // genau ein Kill
+    expect(steht.getState().wave.angriffskraftRest).toBe(58); // 60 − 1*2
+
+    const fiel = bau();
+    fiel._setAbschnittVerloren("A", true);
+    feuere(fiel);
+    expect(fiel.getState().nachschub).toBe(5);
+    expect(fiel.getState().wave.angriffskraftRest).toBe(59); // 60 − 1*1
   });
 });

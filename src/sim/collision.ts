@@ -174,6 +174,31 @@ export interface RayHit {
 }
 
 /**
+ * Grobe Sichtlinie zwischen zwei Weltpunkten: `true`, wenn kein statischer
+ * Quader dazwischen liegt (AP4-02: Gegner sieht Spieler). Reine Funktion.
+ */
+export function sichtlinie(
+  world: CollisionWorld,
+  von: Vec3,
+  nach: Vec3,
+): boolean {
+  const dx = nach.x - von.x;
+  const dy = nach.y - von.y;
+  const dz = nach.z - von.z;
+  const dist = Math.hypot(dx, dy, dz);
+  if (dist < 1e-6) {
+    return true;
+  }
+  const hit = raycast(
+    world,
+    von,
+    { x: dx / dist, y: dy / dist, z: dz / dist },
+    dist,
+  );
+  return hit === undefined || hit.distanz >= dist - 0.05;
+}
+
+/**
  * Hitscan: nächster Schnittpunkt eines Strahls mit den statischen AABBs.
  * `richtung` muss normalisiert sein. Liefert `undefined`, wenn innerhalb von
  * `maxDistanz` nichts getroffen wird. Slab-Verfahren pro Box; Strahlen, die

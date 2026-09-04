@@ -11,6 +11,8 @@ export interface HudData {
   weapon: { imLauf: number; reserve: number; reloading: boolean };
   wave: SimState["wave"];
   nachschub: number;
+  /** Einsatzbogen (AP4-04) — Finale-Countdown / Ergebnis. Optional. */
+  einsatz?: SimState["einsatz"];
   /** Letzter Schuss (Signal für die Trefferbestätigung). */
   lastShot: SimState["lastShot"];
 }
@@ -50,6 +52,7 @@ const CSS = `
 .hdl-hud__row { display: flex; justify-content: space-between; gap: 12px; }
 .hdl-hud__ammo-count { font-size: 20px; font-variant-numeric: tabular-nums; }
 .hdl-hud__reload { color: #e6c66a; font-size: 12px; }
+.hdl-hud__einsatz { margin-top: 4px; color: #e6c66a; font-size: 12px; font-weight: 600; }
 .hdl-hud__bar {
   height: 7px;
   margin-top: 5px;
@@ -129,8 +132,21 @@ const PHASE_LABEL: Record<WavePhase, string> = {
   aufbau: "Aufbau",
   welle: "Angriff",
   pause: "Sammeln",
+  reserve: "Reservewellen",
   vorbei: "Angriff gebrochen",
 };
+
+function einsatzText(e: NonNullable<HudData["einsatz"]>): string {
+  if (e.phase === "vorbei") {
+    return e.ergebnis === "gewonnen" ? "Einsatz gewonnen" : "Einsatz verloren";
+  }
+  if (e.phase === "finale") {
+    return e.ergebnis === "gewonnen"
+      ? "Entsatz eingetroffen — extrahieren oder verlängern"
+      : `Home-Line halten — Entsatz in ${Math.max(0, Math.ceil(e.finaleRest))} s`;
+  }
+  return "";
+}
 
 function ensureStyle(doc: Document): void {
   if (doc.getElementById(STYLE_ID)) {
@@ -188,7 +204,9 @@ export function createHud(parent: HTMLElement = document.body): Hud {
   const akFill = el("span");
   akBar.append(akFill);
   const nachschubText = el("div");
-  wavePanel.append(waveText, akBar, nachschubText);
+  const einsatzLine = el("div", "hdl-hud__einsatz");
+  einsatzLine.hidden = true;
+  wavePanel.append(waveText, akBar, nachschubText, einsatzLine);
 
   // Fadenkreuz + Trefferbestätigung (exakte Bildmitte)
   const crosshair = el("div", "hdl-hud__crosshair");
@@ -241,6 +259,12 @@ export function createHud(parent: HTMLElement = document.body): Hud {
       akFill.style.width = `${akRatio * 100}%`;
       akFill.style.background = "#b6402f";
       nachschubText.textContent = `Nachschub ${data.nachschub}`;
+
+      const et = data.einsatz ? einsatzText(data.einsatz) : "";
+      einsatzLine.hidden = et === "";
+      if (et !== "") {
+        einsatzLine.textContent = et;
+      }
 
       death.classList.toggle("hdl-hud__death--on", data.tot);
       if (data.tot) {

@@ -4,6 +4,74 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · komplett
+
+- **AP4-05** · `9c9af56` · **Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio.**
+  Renderer: geschärfte Zonen-Farbtöne + render-only Zonen-Tore an den
+  Rückzugs-Übergängen; Leit-„Spines" je Route (`SektorMeta.spineRouten` —
+  reines Typ-Feld, Werte in `src/data/sektor.ts`) als Farb-Polylinie + Pfosten
+  + geometrisches Symbol (Dreieck/Doppelstrich/Kreis, redundant zur Farbe);
+  A/B/C-Schilder (`DynamicTexture`). `src/ui/kompass.ts` (Peil-Band, HOME +
+  Frontabschnitt-Zustände über Farbe **und** Glyph, keine Gegner-Marker).
+  `src/ui/lagekarte.ts` (statisches Schema, Taste `M`). `src/audio/` (neu:
+  reiner Client außerhalb der Sim, State-Diff → Signalhorn aus Richtung
+  Home-Line bei Abschnittsverlust / im Finale, `StereoPanner`, Taste `T` stumm,
+  Callout-Grammatik-Konstanten). `src/sim` nur um das eine Typ-Feld ergänzt —
+  beide Golden-Anker unverändert. 212 Tests (+26), Coverage src/sim 97,26 %.
+- **AP4-04** · `6af9326` · **Die Uhr, der Rückzug & das Home-Line-Finale.**
+  `src/sim/einsatz.ts` (Phasenmaschine `aufbau → wellen → finale → vorbei`,
+  `ergebnis offen/gewonnen/verloren`, `entscheide(extrahieren|verlaengern)`,
+  `zermuerbungProKill(zone, verloren)`). **Die Uhr:** jeder Kill zermürbt die
+  `angriffskraft` zonengewichtet (Front 2 · Labyrinth 1,5 · Feld/Graben 1 · Home
+  0,5; verlorener Frontabschnitt = wie Feld) — im tödlichen Treffer verdrahtet.
+  **Home-Line** über dieselbe `front.ts`-Maschine (`meta.homeAbschnitte` H-West/
+  H-Ost, 2,5× Bresche-HP). Verlust: alle Home-Abschnitte `verloren` **oder**
+  `_setTruppAus`, in jeder Phase. `wave.ts`: neue Phase `reserve` (Finale-
+  Reservewellen, `reserveStufe`-skaliert). `SimState.home` + `SimState.einsatz`,
+  Sim-Eingänge `entscheide` / `_setTruppAus`, `SimOptions.startAngriffskraft`.
+  HUD-Textzeile für den Countdown. Neuer Uhr-Golden-Anker (Seed 1); Nav-Anker
+  unverändert (kein Kill in seinem Fenster). 186 Tests (+26), Coverage src/sim
+  97,26 %.
+- **AP4-03** · `1701ff1` · **Frontabschnitte: Besitz, Bresche, Fall.**
+  `src/sim/front.ts` (Zustandsmaschine je Abschnitt `stabil → bedraengt →
+  gebrochen → verloren` aus Feinddruck + aufgerissenen Parapet-Breschen;
+  Erholung eine Stufe, nie aus `verloren`; `updateFront` rein/in-place).
+  `onVerloren(id)` verdrahtet in `createSim` das AP4-02-Verhalten (Nav-Kanten
+  nach hinten, Infiltration, Depot verloren); eine offene Bresche öffnet
+  `bresche-<id> ↔ lab-vorfront`. `SimState.front` (Zustand + offene Breschen).
+  Neuer Sim-Eingang `rueckerobern(id)` (`verloren → gebrochen`, nur bei leerem
+  Abschnitt). `_setAbschnittVerloren` bleibt als dünner Testeingang.
+  Renderer: Trümmer je Bresche, Rauch je `gebrochen`/`verloren` (grob, Feinschliff
+  AP4-05). Beide Golden-Anker unverändert. 160 Tests (+21), Coverage src/sim
+  96,86 %.
+- **AP4-02** · `20bf9a0` · **Feind-Navigation: semantischer Graph.**
+  `src/sim/navgraph.ts` (`kuerzesterPfad` = deterministische BFS über offene
+  Kanten, `naechsterKnoten`, `imSichtkegel` — reine Sim-Helfer).
+  `SektorMeta.navGraph` handgepflegt in `src/data/sektor.ts` (~30 Knoten / ~40
+  Kanten: Anmarsch → Labyrinth-Serpentine → `front-<id>`/`bresche-<id>`,
+  verdeckte `reinforcement-<id>`, Parados/Feld/Verbindungsgraben/Home,
+  `home-ziel`; Front→hinten + Labyrinth→Bresche starten `offen: false`).
+  `enemies.ts`: `updateEnemies(…, nav?)` — ohne `nav` unverändert (alter
+  Golden-Anker hält), mit `nav` Wegpunkt-Folgen (Neuberechnung nur bei
+  Zielwechsel), Umschalten aufs direkte Nahkampf-Verhalten am Zielknoten oder
+  bei Spieler < 6 m + Sichtlinie. `index.ts`: eigene Graph-Kopie je Sim, eigener
+  `abschnittRng`-Strom, Infiltrations-Relokation mit Sichtkegel-Guard,
+  Testeingänge `_setKanteOffen` / `_setAbschnittVerloren`. `collision.ts`:
+  `sichtlinie()`. Neuer Golden-/Replay-Anker (Seed 40404, Sektor-Graph).
+  Labyrinth-/Parapet-Geometrie leicht justiert (AP4-01-Stub hatte eine
+  Sackgasse). 139 Tests (+23), Coverage src/sim 96,32 %.
+- **AP4-01** · `a0badbf` · **Sektor-Geometrie (das „H") als Daten + Renderer.**
+  `src/data/module.ts` (Rasterbaukasten `RASTER = 4`, `modul(typ, at, drehung,
+  opt)` → `LevelBox[]`: grabengerade/-knick, parapet mit zweistufigem Feuertritt
+  ohne Sprung, unterstand, rampe, kartengrenze; vertikale Greybox-Kennwerte).
+  `src/data/sektor.ts` (`sektorGreybox: SektorData` — das H aus KONZEPT §3, 74
+  Quader: Kartengrenze, Frontlinie A/B/C, Labyrinth-Stub + Landmark, offenes
+  Feld, gerader Verbindungsgraben, Home-Line mit 3 Unterständen). `src/sim/
+  sektor.ts` (`SektorData extends LevelData` + `SektorMeta`; reine Helfer
+  `zoneAt`/`abschnittAt`, kein Babylon). Renderer färbt je Zone + Landmark-Akzent.
+  `main.ts` fährt den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
+  116 Tests (+16), Coverage src/sim 98,58 %.
+
 ## Arbeitspaket 3 — Basis solide machen · Branch `arbeitspaket-3` · komplett
 
 - **AP3-05** · `d21cc08` · **Gegner stapeln sich nicht mehr ineinander.**

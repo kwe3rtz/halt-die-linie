@@ -617,14 +617,14 @@ Branch: `arbeitspaket-4` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien in
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP4-01 | Sektor-Geometrie (das „H") als Daten + Renderer | offen |
-| AP4-02 | Feind-Navigation: semantischer Graph | offen |
-| AP4-03 | Frontabschnitte: Besitz, Bresche, Fall | offen |
-| AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | offen |
-| AP4-05 | Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | offen |
+| AP4-01 | Sektor-Geometrie (das „H") als Daten + Renderer | ✅ `erledigt/` (`a0badbf`) |
+| AP4-02 | Feind-Navigation: semantischer Graph | ✅ `erledigt/` (`20bf9a0`) |
+| AP4-03 | Frontabschnitte: Besitz, Bresche, Fall | ✅ `erledigt/` (`1701ff1`) |
+| AP4-04 | Die Uhr, der Rückzug & das Home-Line-Finale | ✅ `erledigt/` (`6af9326`) |
+| AP4-05 | Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | ✅ `erledigt/` (`9c9af56`) |
 
-Reihenfolge einhalten — 02 vor 03/04, weil sonst auf Platzhalter-Geradeauslauf
-aufgebaut wird.
+**Arbeitspaket 4 ist komplett** (alle 5 Tickets reviewed, 212 Tests). PR
+`arbeitspaket-4` → `main`, dann Spieltest des Kern-Bogens.
 
 **Ausdrücklich NICHT in AP4:** prozeduraler Generator · neue Gegnertypen /
 Gegner-Fernkampf · Tag/Nacht · Klassen + Fähigkeiten · Bauen / Platzierungen /
