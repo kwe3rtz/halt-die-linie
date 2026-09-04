@@ -669,13 +669,24 @@ in `tickets/`.
 | AP5-03 | Kartengrenze öffnen (offenes Gelände statt sichtbarer Wände) | ✅ `erledigt/` (`ba631af`) |
 | AP5-04 | Gegner-Druck & Wellen-Eskalation | ✅ `erledigt/` (`525716a`) |
 
-**Arbeitspaket 5 ist jetzt vollständig komplett** (4 Tickets, alle reviewed,
-284 Tests). Als Nächstes: dritter Spieltest mit dem Nutzer.
+PR #8 (`arbeitspaket-5` → `main`) gemergt. Beim Anspielen danach (nicht der
+volle dritte Spieltest — nur die ersten Wellen) zwei sofortige Wünsche des
+Nutzers, als Nachzügler nachgeschoben:
 
-**Ausdrücklich NICHT in AP5:** Front-/Bresche-/Uhr-Balancing (eigenes
-späteres Politur-Ticket aus dem Audit) · neue Gegnertypen/KI-Rollen ·
-zweite Waffe · volle Nachschub-Ökonomie (§9.6) · prozeduraler Generator ·
-Tag/Nacht · Klassen. Das kommt danach.
+| Nr | Ticket | Status |
+|---|---|---|
+| AP5-05 | Leit-Spines: Linien entfernen ("Stricke" verwirren) | offen |
+| AP5-06 | Gegner-Klassen (Normal/Schnell-Schwach/Langsam-Stark) | offen |
+
+**AP5-06 nimmt die AP5-Ausnahme „Klassen" bewusst und eng zurück:**
+Statistik-Varianten des bestehenden Gegners (Tempo/HP/Schaden), kein neues
+Verhalten/keine KI-Rolle — der volle Roster-Ausbau mit eigenen Rollen bleibt
+weiterhin ausgeschlossen, siehe unten.
+
+**Ausdrücklich NICHT in AP5 (weiterhin gültig):** Front-/Bresche-/Uhr-
+Balancing (eigenes späteres Politur-Ticket aus dem Audit) · neue KI-Rollen
+(Charger/Suppressor/Disruptor) · zweite Waffe · volle Nachschub-Ökonomie
+(§9.6) · prozeduraler Generator · Tag/Nacht.
 
 ## Arbeitspaket 6+ (Skizze — nach AP5)
 

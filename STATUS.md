@@ -25,9 +25,16 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   nicht weiter ausgebaut.
 - **Code:** **Arbeitspaket 5 „Boxhead-Kern" ist vollständig komplett**
   (AP5-01…04, alle reviewed, 284 Tests, Coverage src/sim 98,58 %). PR #8
-  (`arbeitspaket-5` → `main`) offen.
-- **Als Nächstes:** PR #8 mergen, dann dritter Spieltest — trägt der Loop
-  jetzt?
+  gemergt nach `main`.
+- **Anspielen (nicht der volle dritte Spieltest):** Nutzer hat nur die
+  ersten Wellen gespielt, noch kein Eindruck zur AP5-04-Eskalation. Zwei
+  sofortige Wünsche → **Nachzügler AP5-05/06** spezifiziert: die Leit-Spine-
+  Linien wirken wie verwirrende „Stricke" (raus, Pfosten/Symbole bleiben),
+  dazu 2–3 einfache Gegner-Klassen (normal/schnell-schwach/langsam-stark,
+  reine Statistik-Varianten, keine neue KI-Rolle).
+- **Als Nächstes:** AP5-05 (klein) an den Worker, danach AP5-06
+  (mittelgroß — Context vorher ggf. leeren), dann der **eigentliche** dritte
+  Spieltest über mehrere Wellen.
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar

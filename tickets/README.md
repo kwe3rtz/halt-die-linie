@@ -45,14 +45,13 @@ Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen).
 | AP4-05 Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | ✅ `erledigt/` |
 | AP4-06 Kern-Bogen-Fixes (Nachzügler, Branch `fix/ap4-06-kern-bogen`) | ✅ `erledigt/` |
 
-## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren) · ✅ komplett
+## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren)
 
 Zweiter Spieltest (2026-09-04): Kern-Bogen läuft bugfrei durch, trug als
 Gefühl aber noch nicht (zu wenige/dumme Gegner, Teleport-Bug im
 Verbindungsgraben, Munition nur durch Sterben, Karte fühlte sich wie eine Box
 an). Vorbild **Boxhead** — Loop repariert, bevor das Graben-Konzept weiter
-vertieft wird. Branch `arbeitspaket-5` von `main`. Alle Tickets in
-`erledigt/`. Als Nächstes: dritter Spieltest.
+vertieft wird. Branch `arbeitspaket-5` von `main`, PR #8 gemergt.
 
 | Ticket | Status |
 |---|---|
@@ -60,6 +59,14 @@ vertieft wird. Branch `arbeitspaket-5` von `main`. Alle Tickets in
 | AP5-02 Munitions-Nachschub im Einsatz | ✅ `erledigt/` |
 | AP5-03 Kartengrenze öffnen | ✅ `erledigt/` |
 | AP5-04 Gegner-Druck & Wellen-Eskalation | ✅ `erledigt/` |
+
+Nachzügler nach dem (unvollständigen) dritten Spieltest — Nutzer hat nur die
+ersten Wellen gespielt, aber zwei Punkte sofort gemeldet:
+
+| Ticket | Status |
+|---|---|
+| AP5-05 Leit-Spines: Linien entfernen | offen |
+| AP5-06 Gegner-Klassen (Normal/Schnell-Schwach/Langsam-Stark) | offen |
 
 ## Arbeitspaket 6+
 
