@@ -31,7 +31,7 @@ export const FEUERTRITT_OBERKANTE = -0.95;
 export const PARAPET_OBERKANTE = 0.55;
 
 const WAND = 0.4; // Wandstärke
-const GRENZE_HOEHE = 6; // Kartengrenze-Sperrwand
+const GRENZE_HOEHE = 6; // Kartengrenze-Sperrwand (unsichtbar, AP5-03)
 const LIP = 0.3; // wie weit eine Grabenwand über die Oberfläche ragt
 
 export type Drehung = 0 | 90 | 180 | 270;
@@ -206,16 +206,25 @@ function unterstand(breite: number, laenge: number): LevelBox[] {
   ];
 }
 
+/**
+ * Kartengrenze: sperrt die Bewegung (hoch genug gegen Sprung + Stufe), ist
+ * aber seit AP5-03 **unsichtbar** — kein Mesh, kein Hitscan-Treffer. Die
+ * sichtbare Grenze bildet das auslaufende Umland (`src/data/sektor.ts`),
+ * nicht eine Wand (KONZEPT.md §3: „Sumpf, zerbombtes Gelände").
+ */
 function kartengrenze(laenge: number): LevelBox[] {
   return [
-    box(
-      0,
-      OBERFLAECHE + GRENZE_HOEHE / 2 - 0.5,
-      laenge / 2,
-      WAND,
-      GRENZE_HOEHE,
-      laenge,
-    ),
+    {
+      ...box(
+        0,
+        OBERFLAECHE + GRENZE_HOEHE / 2 - 0.5,
+        laenge / 2,
+        WAND,
+        GRENZE_HOEHE,
+        laenge,
+      ),
+      unsichtbar: true,
+    },
   ];
 }
 
@@ -285,6 +294,7 @@ export function modul(
         z: swap ? b.size.x : b.size.z,
       },
     };
-    return b.tag === undefined ? welt : { ...welt, tag: b.tag };
+    const mitTag = b.tag === undefined ? welt : { ...welt, tag: b.tag };
+    return b.unsichtbar ? { ...mitTag, unsichtbar: true } : mitTag;
   });
 }

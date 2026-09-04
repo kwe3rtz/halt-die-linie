@@ -71,6 +71,8 @@ String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/
 - `src/data/testlevel.ts` beschreibt ein Grabenstück als reine Quader-Liste
   (`{ center, size }`, Vec3) plus Spawn-Punkte. **Eine Quelle** für Render-Meshes
   (`src/render`) und Sim-Collider (`src/sim/collision`). Keine Babylon-Typen.
+  Render-Hinweise je Box: `tag` (schaltbar, AP4-06) und `unsichtbar` (nur
+  Kollision, AP5-03).
 - `src/sim/collision.ts`: statische AABBs, `moveCapsule()` löst die Bewegung
   achsenweise auf (X, Z, dann Schwerkraft-Y), mit Stufen-Hochsteigen bis
   `STEP_HEIGHT` und Bodenkontakt. Reine Funktion. Grundsatz seit AP5-01:
@@ -219,6 +221,18 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   füllt ohnehin). Renderer: Kiste je Depot, ohne Kollision. Testeingang
   `_setReserve`. Keine Kosten/Budgets — die Nachschub-Ökonomie (§9.6) bleibt
   ein eigenes Paket.
+- **AP5-03 Kartengrenze öffnen.** Die vier `kartengrenze`-Kollider bleiben
+  (Bewegungssperre, 6 m hoch gegen Sprung + Stufe), sind aber
+  `LevelBox.unsichtbar`: der Renderer baut kein Mesh, `raycast`/`sichtlinie`
+  gehen hindurch (`CollisionWorld.unsichtbar[]`; was man nicht sieht, hält
+  keine Kugel auf), `moveCapsule` sperrt wie bisher. Sichtbar ist stattdessen
+  das **Umland** (`src/data/sektor.ts`): vier Bodenblöcke jenseits der Grenze,
+  Oberkante bündig mit der Geländeoberfläche (bilden an den offenen Graben-
+  enden die Erd-Stirnwand), dazu flache Erdhaufen ≤ 1,1 m als Tiefenhinweise;
+  der Renderer gibt Boxen außerhalb aller Zonen das `umland`-Material
+  (Sumpf-Ton) und legt linearen Dunst in Himmelsfarbe darüber (`fogStart` 60 m,
+  `fogEnd` 190 m — jenseits der längsten Sichtlinie im Sektor). Zonen, Nav-
+  Graph, Breschen und Spielfeldmaße unverändert (Test in `sektor.test.ts`).
 
 ## Bundle-Größe
 

@@ -20,6 +20,12 @@ export interface LevelBox {
    * blendet das Segment über dasselbe Etikett aus.
    */
   tag?: string;
+  /**
+   * Nur Kollision, kein Mesh (AP5-03): die Kartengrenze sperrt die Bewegung,
+   * bleibt aber unsichtbar — der Renderer baut kein Mesh, und Hitscan wie
+   * Sichtlinie gehen hindurch (was man nicht sieht, hält keine Kugel auf).
+   */
+  unsichtbar?: boolean;
 }
 
 export interface LevelData {
@@ -53,6 +59,11 @@ export interface CollisionWorld {
    * Hitscan und Sichtlinie nicht vorhanden. Nur über `setKolliderAktiv` ändern.
    */
   readonly aktiv: boolean[];
+  /**
+   * Unsichtbar-Flag je Box, parallel zu `boxes` (AP5-03): sperrt nur die
+   * Bewegung, nicht den Strahl (`raycast` / `sichtlinie`).
+   */
+  readonly unsichtbar: readonly boolean[];
 }
 
 /** Wie hoch eine Kante sein darf, damit der Spieler sie hochsteigt statt anzustoßen. */
@@ -79,6 +90,7 @@ export function createCollisionWorld(level: LevelData): CollisionWorld {
     boxes: level.boxes.map(aabbFromBox),
     tags: level.boxes.map((b) => b.tag),
     aktiv: level.boxes.map(() => true),
+    unsichtbar: level.boxes.map((b) => b.unsichtbar === true),
   };
 }
 
@@ -301,6 +313,7 @@ export function sichtlinie(
  * `richtung` muss normalisiert sein. Liefert `undefined`, wenn innerhalb von
  * `maxDistanz` nichts getroffen wird. Slab-Verfahren pro Box; Strahlen, die
  * innerhalb einer Box starten, werden ignoriert (Eintritts-`t` < 0).
+ * Unsichtbare Kollider (Kartengrenze, AP5-03) zählen nicht.
  */
 export function raycast(
   world: CollisionWorld,
@@ -313,7 +326,7 @@ export function raycast(
 
   for (let i = 0; i < world.boxes.length; i += 1) {
     const box = world.boxes[i];
-    if (!box || !world.aktiv[i]) {
+    if (!box || !world.aktiv[i] || world.unsichtbar[i]) {
       continue;
     }
     let tNear = 0;

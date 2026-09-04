@@ -95,3 +95,29 @@ describe("module — Rasterbaukasten", () => {
     }
   });
 });
+
+describe("kartengrenze — unsichtbarer Kollider (AP5-03)", () => {
+  const O = { x: 0, y: 0, z: 0 };
+
+  it("markiert ihre Box als unsichtbar — in jeder Drehung", () => {
+    for (const d of [0, 90, 180, 270] as const) {
+      const [b] = modul("kartengrenze", O, d, { laenge: 12 });
+      expect(b?.unsichtbar).toBe(true);
+      expect(b?.size.y).toBeGreaterThanOrEqual(4); // Sprung + Stufe kommen nicht drüber
+    }
+  });
+
+  it("alle anderen Module bleiben sichtbar", () => {
+    for (const typ of [
+      "grabengerade",
+      "grabenknick",
+      "parapet",
+      "unterstand",
+      "rampe",
+    ] as const) {
+      for (const b of modul(typ, O)) {
+        expect(b.unsichtbar, typ).toBeUndefined();
+      }
+    }
+  });
+});

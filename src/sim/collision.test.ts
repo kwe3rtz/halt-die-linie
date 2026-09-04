@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createCollisionWorld,
   moveCapsule,
+  raycast,
   raycastCylinder,
   STEP_HEIGHT,
   type LevelData,
@@ -279,5 +280,41 @@ describe("raycastCylinder", () => {
       100,
     );
     expect(t).toBeCloseTo(0.4, 5);
+  });
+});
+
+describe("unsichtbare Kollider — Kartengrenze (AP5-03)", () => {
+  // Unsichtbare Wand bei z = 5, sichtbare Wand dahinter bei z = 12.
+  const unsichtbar = {
+    center: { x: 0, y: 2.5, z: 5 },
+    size: { x: 20, y: 6, z: 0.4 },
+    unsichtbar: true,
+  };
+  const wand = { center: { x: 0, y: 1, z: 12 }, size: { x: 20, y: 2, z: 1 } };
+
+  it("sperrt die Bewegung wie jede andere Wand", () => {
+    const w = world([floor, unsichtbar, wand]);
+    let pos = { x: 0, y: 0, z: 0 };
+    let vel = { x: 0, y: 0, z: 0 };
+    for (let i = 0; i < 180; i += 1) {
+      vel = { x: 0, y: vel.y, z: 6 };
+      const r = moveCapsule(w, pos, vel, RADIUS, HEIGHT, DT);
+      pos = r.pos;
+      vel = r.vel;
+    }
+    expect(pos.z).toBeLessThanOrEqual(4.8 - RADIUS + 1e-9); // vor der unsichtbaren Wand
+    expect(pos.z).toBeGreaterThan(4.0);
+    expect(pos.y).toBeCloseTo(0, 5); // nicht hochgestiegen
+  });
+
+  it("lässt den Strahl (Hitscan / Sichtlinie) durch — getroffen wird die sichtbare Wand dahinter", () => {
+    const w = world([floor, unsichtbar, wand]);
+    const hit = raycast(w, { x: 0, y: 1.6, z: 0 }, { x: 0, y: 0, z: 1 }, 100);
+    expect(hit?.distanz).toBeCloseTo(11.5, 5); // wand.minZ, nicht 4.8
+  });
+
+  it("createCollisionWorld führt das Flag parallel zu den Boxen", () => {
+    const w = world([floor, unsichtbar, wand]);
+    expect(w.unsichtbar).toEqual([false, true, false]);
   });
 });

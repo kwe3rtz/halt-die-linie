@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand } from "./index";
+import { createCollisionWorld, moveCapsule } from "./collision";
 import {
   abschnittAt,
   inBoundsXZ,
@@ -919,5 +920,112 @@ describe("Greybox-Sektor — Munitions-Nachschub (AP5-02)", () => {
     sim.tick(command({ interact: true }), DT);
     expect(sim.getState().einsatz.phase).toBe("vorbei");
     expect(reserve(sim)).toBe(0); // E war die Extraktion, kein Auffüllen
+  });
+});
+
+describe("Greybox-Sektor — Kartengrenze & Umland (AP5-03)", () => {
+  const { boxes } = sektorGreybox;
+  const oben = (b: (typeof boxes)[number]) => b.center.y + b.size.y / 2;
+  const deckt = (b: (typeof boxes)[number], x: number, y: number, z: number) =>
+    Math.abs(x - b.center.x) <= b.size.x / 2 &&
+    Math.abs(z - b.center.z) <= b.size.z / 2 &&
+    y >= b.center.y - b.size.y / 2 &&
+    y <= oben(b);
+  // Spielfeld = Innenseite der Kartengrenz-Kollider (x ±24,8 · z −36,3 … 52,8).
+  const draussen = (b: (typeof boxes)[number]) =>
+    b.center.x + b.size.x / 2 <= -24.8 ||
+    b.center.x - b.size.x / 2 >= 24.8 ||
+    b.center.z - b.size.z / 2 >= 52.8 ||
+    b.center.z + b.size.z / 2 <= -36.3;
+
+  it("die vier Kartengrenz-Kollider sind unsichtbar und umschließen den Sektor", () => {
+    const grenze = boxes.filter((b) => b.unsichtbar);
+    expect(grenze).toHaveLength(4);
+    for (const b of grenze) expect(b.size.y).toBeGreaterThanOrEqual(4);
+    const west = grenze.find((b) => Math.abs(b.center.x + 25) < 0.01);
+    const ost = grenze.find((b) => Math.abs(b.center.x - 25) < 0.01);
+    const nord = grenze.find((b) => Math.abs(b.center.z - 53) < 0.01);
+    const sued = grenze.find((b) => Math.abs(b.center.z + 36.5) < 0.01);
+    expect(west && ost && nord && sued).toBeTruthy();
+    expect(west!.size.z).toBeGreaterThanOrEqual(89); // z −38 … 54
+    expect(nord!.size.x).toBeGreaterThanOrEqual(50); // x −25 … 25
+  });
+
+  it("das Umland schließt an jede Sektorkante bündig an — Oberkante = Geländeoberfläche, bis in den Dunst", () => {
+    const proben: [number, number][] = [
+      [-26, 0],
+      [26, 0],
+      [0, 54],
+      [0, -37],
+      [-150, 100],
+      [150, -100],
+      [0, 180],
+      [0, -180],
+      [-26, 13.5], // Frontgraben-Ende: Erd-Stirnwand statt Loch
+      [26, -28], // Home-Graben-Ende
+    ];
+    for (const [x, z] of proben) {
+      const boden = boxes.filter((b) => !b.unsichtbar && deckt(b, x, -0.5, z));
+      expect(boden.length, `Umland fehlt bei (${x}, ${z})`).toBeGreaterThan(0);
+      expect(Math.max(...boden.map(oben))).toBeCloseTo(0, 6);
+    }
+  });
+
+  it("jenseits der Spielgrenze ragt kein sichtbarer Quader höher als 1,5 m — keine Wand-Silhouette", () => {
+    const aussen = boxes.filter((b) => !b.unsichtbar && draussen(b));
+    expect(aussen.length).toBeGreaterThanOrEqual(4);
+    for (const b of aussen) {
+      expect(
+        oben(b),
+        `Quader bei (${b.center.x}, ${b.center.z})`,
+      ).toBeLessThanOrEqual(1.5);
+    }
+  });
+
+  it("Zonen, Abschnitte und Nav-Graph liegen weiter komplett innerhalb der Grenze", () => {
+    const { meta } = sektorGreybox;
+    for (const z of meta.zonen) {
+      expect(z.bounds.minX).toBeGreaterThanOrEqual(-25);
+      expect(z.bounds.maxX).toBeLessThanOrEqual(25);
+      expect(z.bounds.minZ).toBeGreaterThanOrEqual(-36.5);
+      expect(z.bounds.maxZ).toBeLessThanOrEqual(53);
+    }
+    for (const k of meta.navGraph.knoten) {
+      expect(Math.abs(k.pos.x)).toBeLessThan(24.8);
+      expect(k.pos.z).toBeGreaterThan(-36.3);
+      expect(k.pos.z).toBeLessThan(52.8);
+    }
+  });
+
+  it("die Spielgrenze bleibt wirksam: Kapsel bleibt auf Feld, Labyrinth und im Home-Graben vor der Grenze", () => {
+    const world = createCollisionWorld(sektorGreybox);
+    const laufe = (
+      start: { x: number; y: number; z: number },
+      vx: number,
+      vz: number,
+    ) => {
+      let pos = start;
+      let vel = { x: 0, y: 0, z: 0 };
+      for (let t = 0; t < 600; t += 1) {
+        vel = { x: vx, y: vel.y, z: vz };
+        const r = moveCapsule(world, pos, vel, 0.35, 1.8, DT);
+        pos = r.pos;
+        vel = r.vel;
+        expect(pos.y).toBeGreaterThan(-3); // nicht aus der Welt gefallen
+      }
+      return pos;
+    };
+    const ost = laufe({ x: 10, y: 0.05, z: -5 }, 4.5, 0); // Feld → Osten
+    expect(ost.x).toBeLessThanOrEqual(24.8 - 0.35 + 1e-6);
+    expect(ost.x).toBeGreaterThan(24);
+    expect(ost.y).toBeCloseTo(0, 3); // nicht über die Grenze geklettert
+    const west = laufe({ x: -10, y: 0.05, z: -5 }, -4.5, 0);
+    expect(west.x).toBeGreaterThanOrEqual(-24.8 + 0.35 - 1e-6);
+    const nord = laufe({ x: 8, y: 0.05, z: 40 }, 0, 4.5); // Labyrinth → Norden (x = 8: frei von Turmruine und Wällen)
+    expect(nord.z).toBeLessThanOrEqual(52.8 - 0.35 + 1e-6);
+    expect(nord.z).toBeGreaterThan(52);
+    const sued = laufe({ x: 6, y: -1.75, z: -30 }, 0, -4.5); // Home-Graben → Süden
+    expect(sued.z).toBeGreaterThan(-36.3);
+    expect(sued.y).toBeCloseTo(-1.8, 3); // im Graben geblieben
   });
 });

@@ -89,6 +89,14 @@ export function createRenderer(
   const engine = new Engine(canvas, true, { stencil: true });
   const scene = new Scene(engine);
   scene.clearColor = new Color4(0.63, 0.66, 0.69, 1); // diesiger Himmel
+  // Sichtweite (AP5-03): linearer Dunst in Himmelsfarbe — das Umland läuft in
+  // den Himmel aus, statt an einer Kante zu enden. Setzt erst jenseits der
+  // längsten Sichtlinie im Sektor (~90 m) spürbar ein: Front und Home-Line
+  // bleiben scharf lesbar, die Umland-Außenkante (200 m) verschwindet.
+  scene.fogMode = Scene.FOGMODE_LINEAR;
+  scene.fogColor = new Color3(0.63, 0.66, 0.69);
+  scene.fogStart = 60;
+  scene.fogEnd = 190;
 
   const sky = new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
   sky.intensity = 0.75;
@@ -301,7 +309,11 @@ export function createRenderer(
 
   const groundMat = flachMat("ground", 0.46, 0.43, 0.37);
   const parapetMat = flachMat("parapet", 0.52, 0.49, 0.34);
-  const grenzeMat = flachMat("grenze", 0.22, 0.22, 0.24); // hohe Sperrwände
+  const grenzeMat = flachMat("grenze", 0.22, 0.22, 0.24); // hohe Betonsilhouette
+  // Umland jenseits der Kartengrenze (AP5-03): Sumpf / zerbombtes Gelände —
+  // stumpfer und kälter als der Sektorboden, damit „hier geht es nicht weiter"
+  // ohne Wand lesbar ist.
+  const umlandMat = flachMat("umland", 0.33, 0.36, 0.28);
 
   const zonenMat = new Map<ZonenId, StandardMaterial>();
   for (const id of Object.keys(ZONEN_TON) as ZonenId[]) {
@@ -311,19 +323,26 @@ export function createRenderer(
 
   const boxMaterial = (box: LevelBox): StandardMaterial => {
     if (box.center.y + box.size.y / 2 > 2) {
-      return grenzeMat; // Kartengrenze / hohe Betonsilhouette
+      return grenzeMat; // hohe Betonsilhouette (Turmruine)
     }
-    const zone = meta ? zoneAt(meta, box.center) : null;
+    if (!meta) {
+      return box.center.y > 0.25 ? parapetMat : groundMat;
+    }
+    const zone = zoneAt(meta, box.center);
     if (zone) {
       return zonenMat.get(zone) ?? groundMat;
     }
-    return box.center.y > 0.25 ? parapetMat : groundMat;
+    return umlandMat; // außerhalb aller Zonen = Umland (AP5-03)
   };
 
   // Getaggte Boxen (Bresche-Segmente, AP4-06) werden ausgeblendet, sobald die
   // Sim den Kollider abschaltet — dieselbe Konvention `brescheTag`.
   const tagMeshes = new Map<string, Mesh>();
-  const meshes = level.boxes.map((box, i) => {
+  const meshes: Mesh[] = [];
+  level.boxes.forEach((box, i) => {
+    if (box.unsichtbar) {
+      return; // Kartengrenze (AP5-03): Kollision ohne Mesh
+    }
     const mesh = MeshBuilder.CreateBox(
       `level_${i}`,
       { width: box.size.x, height: box.size.y, depth: box.size.z },
@@ -335,7 +354,7 @@ export function createRenderer(
     if (box.tag !== undefined) {
       tagMeshes.set(box.tag, mesh);
     }
-    return mesh;
+    meshes.push(mesh);
   });
 
   // Landmark-Akzent: leuchtender Pfosten über dem Panzerwrack-Hulk, damit der
@@ -762,6 +781,7 @@ export function createRenderer(
         m.dispose();
       }
       grenzeMat.dispose();
+      umlandMat.dispose();
       for (const mesh of meshes) {
         mesh.material?.dispose();
         mesh.dispose();
