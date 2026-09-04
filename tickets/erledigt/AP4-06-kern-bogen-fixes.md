@@ -1,6 +1,6 @@
 # AP4-06 — Kern-Bogen-Fixes (vor AP5)
 
-**Status:** review
+**Status:** erledigt · `7688452` · reviewed 2026-09-04
 **Arbeitspaket:** 4 (Nachzügler) · **Branch:** `fix/ap4-06-kern-bogen` (von `main`)
 **Referenz:** `AUDIT-2026-09-04-ap4.md` (voller Audit-Report, `ki-game-c2`),
 `KONZEPT.md` §3 (Bresche, Rückzug, Uhr, Finale), `tickets/erledigt/AP4-01…05`.
@@ -354,3 +354,65 @@ sichtbares Loch im Parapet mit Trümmern, Gegner strömen hindurch; (2) nach
 „Entsatz eingetroffen" beendet **E** den Einsatz, **Q** verlängert; (3) kein
 Gegner steht dauerhaft vor einer Wand (Watchdog: nach ~4 s neuer Weg, nach ~8 s
 Relokation ins Labyrinth).
+
+---
+
+## Review — AP4-06 · 2026-09-04
+
+Verdikt: **grünes Licht**. Herausragend saubere Arbeit — genau das, was ein
+Fix-Ticket dieser Kategorie braucht.
+
+Geprüft: lokal typecheck / lint / format:check / test:coverage / build alle
+grün (232 Tests, +20; Coverage src/sim 98,38 %, über dem AP4-05-Stand). CI +
+Pages-Preview grün auf `7688452`. Gelesen: `collision.ts` (getaggte, schaltbare
+Kollider — `moveCapsule`/`raycast`/`sichtlinie` überspringen inaktive Boxen,
+sauber und minimal), `module.ts`/`data/sektor.ts` (Parapet in feste + getaggte
+Segmente geteilt, `breschenLuecken` als eine Quelle für Geometrie und Meta),
+`sim/sektor.ts` (`brescheTag`, `NavKnoten.engstelle`), `index.ts` (`syncBreschen`
+hält Kollision und Nav synchron, `brescheUnterKnoten` löst die B-Mehrfach-
+Bresche so gut wie ohne Schema-Erweiterung geht, Watchdog-`onDespawn` schreibt
+Angriffskraft zurück, E/Q als echte `InputCommand`s), `wave.ts` (die im Ticket
+als „kleinerer Eingriff" vorgeschlagene Variante für H3, plus der eigenständig
+gefundene Spawn-Tick-Nebenbefund), `einsatz.ts` (gewonnen-Schutz), `enemies.ts`
+(Watchdog dreistufig, Engstellen-Passiert-Test, Versatz-Kappung im Graben),
+`render/index.ts` (`tagMeshes`, `syncFront` jetzt auch für Home).
+
+**Besonders gut:**
+- H1 wurde die **echte** Lösung gebaut, nicht die Notlösung aus dem Ticket.
+- Der Begehbarkeits-Test ist TDD-artig zuerst geschrieben worden und hat dabei
+  **drei echte Datenfehler** im Nav-Graph gefunden (`bresche-B` in der festen
+  Wand, `reinforcement-A` im Trichter, Parados-Knoten in der Rampenstufe) —
+  genau der Fall, für den der Test gebaut wurde. Der „Nachweis Test hätte H1
+  rot gemacht"-Abschnitt im Bericht mit konkreten Traces ist vorbildlich.
+- Zwei **eigenständig gefundene** Zusatzbugs (Engstellen-Eckenschneiden, Versatz
+  zielt im Verbindungsgraben in die Wand) wurden nicht nur umschifft, sondern
+  sauber behoben (Daten-Flag statt Id-Präfix-Heuristik) — nicht bloß der
+  Watchdog hätte sie kaschiert.
+- Der H3-Regressionstest reproduziert exakt die Tick-Race in `createSim`-
+  Reihenfolge, nicht nur isoliert in `wave.ts`.
+- `E`/`Q` als `InputCommand`-Flanken statt Methodenaufrufe — greift von sich
+  aus einen Netcode-Punkt aus dem eigenen Audit auf (1b).
+
+**Ehrliche Lücke:** kein Browser-/CDP-Check in dieser Session möglich — offen
+gelegt, mit einer konkreten Spieltest-Checkliste (Bresche sichtbar + begehbar,
+E/Q im Finale, kein dauerhaft feststehender Gegner). Angesichts des neuen
+Begehbarkeits-Tests, der exakt dieselbe Kollisions-/Bewegungs-Pipeline wie der
+Browser nutzt, ist das Risiko hier klein — trotzdem beim nächsten Spieltest
+zuerst prüfen.
+
+Zu den 3 `TODO(Rückfrage)` — Planer-Entscheidung: alle akzeptiert.
+1. Ein Nav-Knoten pro Abschnitt bei B's zweiter Bresche ohne eigene Route —
+   sauberer Fix gehört ins Politur-Ticket „Sektor-Wissen aus der Sim" (Audit
+   M1), hier war die pragmatische Lösung (`brescheUnterKnoten`) richtig.
+2. Versatz-Kappung ist eine Höhen-Heuristik statt eines Korridorbreite-Datums —
+   ok für den Greybox, Generator-Datum später.
+3. Verbindungsgraben-Knicke/Feld-Tiefe unverändert — bekannter AP4-01-Punkt,
+   nicht Teil dieses Tickets.
+
+Anmerkung (nicht blockierend): `tagMeshes` im Renderer wird nicht explizit
+geleert beim `dispose()` — unkritisch, da die referenzierten Meshes über die
+bestehende `meshes`-Schleife disponiert werden.
+
+Folge: **AP4-06 komplett.** PR `fix/ap4-06-kern-bogen` → `main`, danach ist der
+Kern-Bogen erstmals wirklich Ende-zu-Ende spielbar — zweiter Spieltest fällig,
+danach das Politur-Ticket aus den Audit-Medium-Befunden priorisieren, dann AP5.

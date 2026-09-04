@@ -31,19 +31,10 @@ Fixes aus dem ersten Spieltest. Branch `arbeitspaket-3` von `main`.
 ## Arbeitspaket 4 — Verteidigung in der Tiefe
 
 Der handgebaute Greybox-Sektor (das „H", `KONZEPT.md` §3) + der Kern-Bogen:
-Front halten → Abschnitt verlieren → zurückfallen → Home-Line halten. Branch
-`arbeitspaket-4` von `main`. Kein Generator, keine neuen Gegner, kein Tag/Nacht.
-**Komplett und gemergt** (PR #6). Danach fand ein unabhängiger Audit
-(`../AUDIT-2026-09-04-ap4.md`) 4 reproduzierte Gameplay-Bugs → **AP4-06** (siehe
-unten), kommt vor AP5.
-
-## AP4-06 — Kern-Bogen-Fixes (Nachzügler, vor AP5)
-
-Branch `fix/ap4-06-kern-bogen` von `main`.
-
-| Ticket | Status |
-|---|---|
-| AP4-06 Kern-Bogen-Fixes | offen |
+Front halten → Abschnitt verlieren → zurückfallen → Home-Line halten. Kein
+Generator, keine neuen Gegner, kein Tag/Nacht. **Komplett, inkl. Nachzügler
+AP4-06** (nach unabhängigem Audit `../AUDIT-2026-09-04-ap4.md`, 4 reproduzierte
+Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen).
 
 | Ticket | Status |
 |---|---|
@@ -52,6 +43,7 @@ Branch `fix/ap4-06-kern-bogen` von `main`.
 | AP4-03 Frontabschnitte: Besitz, Bresche, Fall | ✅ `erledigt/` |
 | AP4-04 Die Uhr, der Rückzug & das Home-Line-Finale | ✅ `erledigt/` |
 | AP4-05 Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio | ✅ `erledigt/` |
+| AP4-06 Kern-Bogen-Fixes (Nachzügler, Branch `fix/ap4-06-kern-bogen`) | ✅ `erledigt/` |
 
 ## Arbeitspaket 5+
 

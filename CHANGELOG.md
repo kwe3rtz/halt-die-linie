@@ -4,8 +4,26 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
-## Arbeitspaket 4 — Verteidigung in der Tiefe · Branch `arbeitspaket-4` · komplett
+## Arbeitspaket 4 — Verteidigung in der Tiefe · komplett (inkl. Nachzügler AP4-06)
 
+- **AP4-06** · `7688452` · **Kern-Bogen-Fixes** (Branch `fix/ap4-06-kern-bogen`,
+  nach unabhängigem Audit `AUDIT-2026-09-04-ap4.md`). Vier reproduzierte
+  Gameplay-Bugs in der Verdrahtung zwischen den AP4-Maschinen behoben:
+  **H1** Bresche ist jetzt ein echtes Loch — Parapet je Bresche als getaggtes,
+  zur Laufzeit abschaltbares Kollisionssegment (`CollisionWorld.tags`/`aktiv`,
+  `setKolliderAktiv`), Sim synchronisiert Kollider + Nav-Kante (`syncBreschen`),
+  Renderer blendet das Segment aus (Front **und** Home-Line). **H2**
+  dreistufiger Stuck-Watchdog für Gegner (Pfad neu → Relokation → Despawn mit
+  Angriffskraft-Refund) + Engstellen als Nav-Knoten-Flag (exaktes Passieren
+  statt Ecken schneiden). **H3** Wave-Director geht bei erschöpfter
+  Angriffskraft immer zuerst auf `reserve`, kein Phasenwechsel im Spawn-Tick.
+  **H4** `E`/`Q` (extrahieren/verlängern) als echte `InputCommand`s, Reserve-
+  spawns bei `gewonnen` eingefroren, `gewonnen` gegen Home-Verlust geschützt.
+  Neu: `navgraph-begehbarkeit.test.ts` — jede Nav-Kante wird per Kapsel-
+  Simulation begangen (Ist-Zustand + „alles offen"), fand dabei 3 echte
+  Datenfehler im Nav-Graph (Bresche-Knoten in fester Wand, Verstärkungs-Knoten
+  im Trichter, Parados-Knoten in der Rampe). Alle drei Golden-/Replay-Anker
+  unverändert grün. 232 Tests (+20), Coverage src/sim 98,38 %.
 - **AP4-05** · `9c9af56` · **Lesbarkeit: Silhouetten, Spine, Schilder, Kompass, Audio.**
   Renderer: geschärfte Zonen-Farbtöne + render-only Zonen-Tore an den
   Rückzugs-Übergängen; Leit-„Spines" je Route (`SektorMeta.spineRouten` —
