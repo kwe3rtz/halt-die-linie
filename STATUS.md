@@ -42,9 +42,11 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     Repetierer-Startwaffe macht jede Welle zäh; Nacht etwas zu dunkel.
   - **AP6-06** (nächstes, `ki-game-e6`): Reibung raus — automatische Testwaffe
     + glatte Rampen + Nacht heller. Klein, schnell, Golden-Anker unberührt.
-  - **AP6-01b** (danach, ENTWURF/Design-Runde): Sektor als **echtes
-    Grabensystem** neu (gezähnter Feuergraben, Traversen, Zickzack-
-    Verbindungsgräben, begehbare Unterstände) + Jank-Pass.
+  - **AP6-01b** (danach, ENTWURF): Sektor als **echtes Grabensystem** neu.
+    Layout beschlossen: gezähnter Feuergraben + Home-Line (Nischen +
+    Traversen), Hinterland lockerer · echte Unterstände (Raum unter Flur) ·
+    ~30 % größer (~x±44, z−60…92, Nav ~80–100 Knoten). Offen nur noch: was
+    war der „Jank" (Nutzer-Screenshot). Dann Planer-Kickoff, Worker `/clear`.
   - **AP6-02b** (wartet auf AP6-01b — Halte-Punkte/Breschen/Nav hängen am
     Layout): Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
   - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
@@ -83,11 +85,11 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
    unberührt) + `rampe()` glatt (mehr/flachere Stufen, breiter) + Nacht heller
    (Renderer-Dreh). Spec: `tickets/AP6-06-spieltest-reibung.md`. Klein, kein
    `/clear` nötig.
-2. **AP6-01b (Map-Neubau)** — Design-Runde mit dem Nutzer läuft
-   (`tickets/AP6-01b-sektor-neubau-grabensystem.md`, Abschnitt „Offen": wie
-   stark gezähnt · Unterstände echt vs. simpel · Größe · was war der Jank).
-   Danach schreibt der Planer den Kickoff, Worker `/clear` vorher (großer
-   Brocken). Sektor als echtes Grabensystem, noch Greybox.
+2. **AP6-01b (Map-Neubau)** — Layout beschlossen
+   (`tickets/AP6-01b-sektor-neubau-grabensystem.md`). Offen nur noch: der
+   „Jank"-Punkt (Nutzer-Screenshot / Stelle). Dann schreibt der Planer den
+   Kickoff, Worker `/clear` vorher (großer Brocken). Sektor als echtes
+   Grabensystem, noch Greybox.
 3. **AP6-02b** — erst wenn der neue Sektor steht. Bresche → Durchbruch →
    Linienfall (Halte-Punkte je Bresche, lokaler Druck öffnet die Bresche
    physisch, Gegner hinter der Linie → „DURCHBRUCH" → Fall) + Uhr-Regel
@@ -134,7 +136,10 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   (2) Zuerst ein schnelles Reibungs-Ticket **AP6-06** (autom. Testwaffe,
   glatte Rampen, Nacht heller), damit das nächste Anspielen taugt. (3)
   **AP6-02b pausiert**, bis der neue Sektor steht. Grafik/Punkte/Upgrades/
-  Fähigkeiten bleiben Zukunftsmusik (KONZEPT §4/§7/§8/§9.10).
+  Fähigkeiten bleiben Zukunftsmusik (KONZEPT §4/§7/§8/§9.10). **AP6-01b-Layout
+  (2. AskUserQuestion):** gezähnter Feuergraben + Home-Line (Nischen +
+  Traversen), Hinterland lockerer · echte Unterstände (Raum unter Flur,
+  Treppe hinab) · Sektor ~30 % größer.
 - **2026-09-08** — **Design-Runde nach Sparring Runde 3 (AP6-Kern).** Drei
   externe KIs deckungsgleich: der binäre „ganze Linie fällt bei Drucksumme X"
   ist der Hauptfehler (unfair/unlesbar für Solo). **Beschlüsse:** (1) Frontfall

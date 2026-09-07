@@ -1,7 +1,8 @@
 # AP6-01b — Sektor-Neubau: echtes Grabensystem (kein Box-Labyrinth)
 
-**Status:** ENTWURF — Design-Runde mit dem Nutzer läuft. Noch **kein**
-Worker-Ticket. Wird nach AP6-06 gebaut, **vor** AP6-02b.
+**Status:** ENTWURF — Design-Runde weitgehend durch (Layout-Beschlüsse unten),
+offen nur noch der „Jank"-Punkt. Danach schreibt der Planer den Kickoff. Wird
+nach AP6-06 gebaut, **vor** AP6-02b. Worker `/clear` davor (großer Brocken).
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** 4. Spieltest 2026-09-08 — Nutzer: die Map ist „zu abstrakt" (gerade
 Box-Korridore als Gräben, dünne Wände, leere Flächen — liest sich als
@@ -77,7 +78,7 @@ denselben Kasten fürs *ganze* Netz.
 
 ## Nav-Graph
 
-Wächst deutlich (grob 60–80 Knoten). Jede Feuernische = ein Knoten, jeder
+Wächst deutlich (grob 80–100 Knoten bei +30 % Größe). Jede Feuernische = ein Knoten, jeder
 Traversen-Durchgang = `engstelle`, jeder Verbindungsgraben = eine Knotenkette,
 Stütz-/Reservegraben = Knoten. Die 3 `frontLinie.hintenKanten` werden die 3
 Verbindungsgraben-Mündungen (starten `zu`, öffnen beim Linienfall — wie jetzt).
@@ -115,20 +116,29 @@ baselinieren** mit Begründung direkt am Test + Gegenprobe wie AP6-01
   Durchfallen. Begehbarkeits-Test grün (Ist + „alles offen").
 - Headless-Einsatz bis „gewonnen" spielbar, 0 Despawns.
 - Runback Feuergraben → Home-Line für Solo in überschaubarer Zeit trotz Zickzack
-  (Zielwert im Ticket festzurren — grob ≤ 20 s ohne Feinddruck).
+  + 30 % Größe (Zielwert ~20–25 s ohne Feinddruck — im Ticket festzurren).
 - Alle Checks grün.
 
-## Offen — Design-Runde (vor Finalisierung zu klären)
+## Design-Runde — Beschlüsse (2026-09-08, AskUserQuestion)
 
-1. **Wie stark gezähnt / wie labyrinthisch?** Voll-Zickzack überall (am
-   authentischsten, am langsamsten zu durchqueren) · **gezähnt an Feuergraben +
-   Home-Line, lockerer im Hinterland** (Vorschlag) · nur sanfte Dog-Legs
-   (schnellste Navigation, am wenigsten „Graben").
-2. **Unterstände** — echte Räume unter Flur mit Treppe hinab (mehr Modul-Arbeit)
-   · vorerst einfache Halb-Unterstände, echte Dugouts später.
-3. **Größe** — aktueller Footprint (x ±34, z −46…72) mit mehr Dichte · ~30 %
-   größer für echtes „System"-Gefühl.
-4. **Der Jank** — was genau sah kaputt aus? (Nutzer-Screenshot / Stelle.)
+1. **Gezähnt vorn + hinten, Hinterland lockerer.** Feuergraben und Home-Line
+   richtig gezähnt (Feuernischen ~8 m, Erd-Traversen dazwischen — Zickzack-
+   Bewegung). Hinterland-Verbindungsgräben nur leicht dog-legged, damit der
+   Runback zügig bleibt.
+2. **Echte Unterstände** — Raum unter Flur, Treppe hinab, Kopffreiheit. Das
+   `unterstand()`-Modul wird dafür neu gebaut. Falls die Kamera-/Kollisions-
+   Marge einen vollen Raum nicht hergibt: als `// TODO(Rückfrage)` festhalten
+   und den flachsten Verbau wählen, der noch klar „hinein" ist.
+3. **~30 % größer.** Grob x ±44 (Breite ~88), z −60…92 (Tiefe ~152) — im
+   Ticket-Feintuning festzurren. Nav-Graph wächst auf ~80–100 Knoten; der
+   Begehbarkeits-Test wird entsprechend teurer (in Kauf genommen — er ist das
+   Sicherheitsnetz). Runback trotz Zickzack + Größe für Solo machbar halten
+   (Zielwert ~20–25 s ohne Feinddruck).
+
+### Noch offen
+
+4. **Der Jank** — was genau sah kaputt aus? Nutzer-Screenshot / Stelle, sobald
+   da → hier eintragen, damit der Worker gezielt draufschaut.
 
 ## Ausdrücklich NICHT
 
