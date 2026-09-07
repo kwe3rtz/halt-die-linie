@@ -135,8 +135,7 @@ Nach diesem Ticket:
 
 ## Bericht — AP6-02
 
-COMMIT: `<hash>` (Branch `arbeitspaket-6`) — exakter Hash in der Nachricht an
-ki-game-f1 + im `git log`.
+COMMIT: `f427ef1` (Branch `arbeitspaket-6`)
 CI: läuft auf dem Push (Ergebnis in der Nachricht an ki-game-f1).
 TODO(Rückfrage): **keine.**
 
