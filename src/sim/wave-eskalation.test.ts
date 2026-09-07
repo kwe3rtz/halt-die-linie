@@ -17,7 +17,7 @@ import {
 import { createSim, type InputCommand } from "./index";
 import { createRng } from "./rng";
 import type { NavGraph } from "./sektor";
-import { spawnIntervall, wellenGroesse } from "./wave";
+import { GEGNER_MISCHUNG, spawnIntervall, wellenGroesse } from "./wave";
 import { linieninfanterie } from "../data/gegner";
 import { sektorGreybox } from "../data/sektor";
 
@@ -152,6 +152,7 @@ describe("Wellen-Eskalation — ganzer Einsatz mit idealisiertem Schützen (Seed
 
     const gesehen = new Map<number, { tot: boolean; zuletzt: number }>();
     const proWelle = new Map<number, number>();
+    const klassen = new Map<string, number>(); // AP5-06: Spawns je Gegner-Klasse
     let despawns = 0;
     let maxLebend = 0;
     let letzterSchuss = -99;
@@ -165,6 +166,7 @@ describe("Wellen-Eskalation — ganzer Einsatz mit idealisiertem Schützen (Seed
         const g = gesehen.get(e.id);
         if (!g) {
           gesehen.set(e.id, { tot: e.zustand === "tot", zuletzt: tick });
+          klassen.set(e.defId, (klassen.get(e.defId) ?? 0) + 1);
           if (s.wave.phase === "welle") {
             proWelle.set(s.wave.welle, (proWelle.get(s.wave.welle) ?? 0) + 1);
           }
@@ -239,5 +241,18 @@ describe("Wellen-Eskalation — ganzer Einsatz mit idealisiertem Schützen (Seed
     expect(wellen.length).toBeGreaterThanOrEqual(5);
     expect(maxLebend).toBeGreaterThanOrEqual(12); // vor AP5-04: 9
     expect(despawns).toBe(0);
+    // AP5-06: der ganze Einsatz mischt alle drei Klassen (gemessen ≈ 57/22/22 %
+    // bei Seed 1), keine Klasse geht unter, die Basis bleibt die Mehrheit.
+    expect([...klassen.keys()].sort()).toEqual(
+      GEGNER_MISCHUNG.map((a) => a.defId).sort(),
+    );
+    for (const a of GEGNER_MISCHUNG) {
+      expect(klassen.get(a.defId) ?? 0).toBeGreaterThanOrEqual(
+        0.1 * gesehen.size,
+      );
+    }
+    expect(klassen.get(linieninfanterie.id) ?? 0).toBeGreaterThanOrEqual(
+      0.4 * gesehen.size,
+    );
   });
 });

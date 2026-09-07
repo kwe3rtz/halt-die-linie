@@ -92,6 +92,8 @@ String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/
   Rückzugs-Übergängen, geschärfte Zonen-Farbtöne. Die Leit-„Spines" aus
   AP4-05 (`meta.spineRouten`: Farb-Polylinie + Pfosten + geometrische Symbole
   je Route) werden seit AP5-05 nicht mehr gezeichnet — nur noch Datenmodell.
+  Gegner: eine Kapsel je Id (Hitbox = Sichtbares), Tönung je `defId`
+  (Gegner-Klasse, AP5-06), HP-Balken als Billboard.
 - Regressionsschutz: Golden-/Replay-Test in `src/sim/sim.test.ts`
   (Seed + Kommandosequenz → identischer End-State; nutzt ein Inline-Testlevel,
   nicht den Sektor).
@@ -267,6 +269,28 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   „stehen im Boden", Symbole allein würden schweben). `SpineRoute` /
   `meta.spineRouten` bleiben als Daten für eine spätere Lesbarkeits-Lösung;
   A/B/C-Schilder, Zonen-Tore und Kompass sind unverändert.
+- **AP5-06 Gegner-Klassen.** Drei `EnemyDef`s der Linieninfanterie in
+  `src/data/gegner.ts` — normal (Tempo 1 / 100 HP / 10 Schaden), schnell
+  (`linieninfanterie-schnell`: 1,5 / 60 / 7) und schwer
+  (`linieninfanterie-schwer`: 0,65 / 180 / 16) — reine Statistik-Varianten:
+  derselbe `verhaltensTag`, dieselbe Bewegungs-/Nahkampflogik in `enemies.ts`
+  (dort wirkt nur `def.tempo`/`def.hp`/`def.schaden`, keine Verzweigung nach
+  Klasse). HP auf das Langgewehr M98 (85) gerechnet: 1 · 2 · 3 Treffer bis
+  Welle 4; die Tempo-Bänder überlappen auch mit ±15 % Marsch-Streuung nicht,
+  und die schnellste schnelle (4,49 m/s) holt einen gehenden Spieler
+  (`WALK_SPEED` 4,5) nicht ein. Der Wave-Director (`wave.ts`) zieht die Klasse
+  je geplantem Gegner gewichtet aus `GEGNER_MISCHUNG` (60/20/20, Platzhalter)
+  über `waehleGegner(ctx.rng)` — beim Planen der Haupt- **und** Reservewellen
+  aus demselben Director-Rng (kein neuer Zufallsstrom); `wellenHpFaktor(w)`
+  ist der bisherige HP-Faktor als exportierter Helfer. Renderer: Kapsel-
+  Tönung je `defId` (Feldgrau / Sand / dunkles Blaugrau), im Angriff halb zum
+  bisherigen Rotbraun gemischt; keine Kapsel-Skalierung, damit Hitbox und
+  Sichtbares deckungsgleich bleiben. Regressionsnetze: `gegner.test.ts`
+  (Daten), `wave.test.ts` (Mischung, Verteilung, Reserve),
+  `gegner-klassen.test.ts` (Treffer-Tabelle, Tempo-Bänder, gemischte Welle
+  durchs Labyrinth ohne Watchdog), Klassen-Anteile im Einsatz-Test von
+  `wave-eskalation.test.ts`. Beide Wave-abhängigen Golden-Anker in
+  `sim.test.ts` neu baseliniert (Klassenwahl verschiebt die Director-Würfe).
 
 ## Bundle-Größe
 

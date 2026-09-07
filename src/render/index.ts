@@ -19,6 +19,11 @@ import {
 import type { EnemyView, SimState, SektorMeta, ZonenId } from "../sim";
 import { brescheTag, zoneAt } from "../sim";
 import type { LevelBox, LevelData } from "../sim/collision";
+import {
+  linieninfanterie,
+  linieninfanterieSchnell,
+  linieninfanterieSchwer,
+} from "../data/gegner";
 
 const SHOT_EFFECT_MS = 50;
 const ENEMY_HIT_FLASH_MS = 90;
@@ -27,6 +32,20 @@ const BILLBOARD_ALL = 7;
 const EYE_HEIGHT = 1.6;
 const ENEMY_RADIUS = 0.35;
 const ENEMY_HEIGHT = 1.8;
+
+// Gegner-Klassen (AP5-06): dieselbe Kapsel (Hitbox = Sichtbares), nur die
+// Tönung unterscheidet die Klasse — dezent, Greybox-Niveau. Basis in
+// gesichtslosem Feldgrau, die schnelle Klasse heller und sandfarben, die
+// schwere dunkler und kühler. Unbekannte Ids fallen auf Feldgrau zurück.
+const ENEMY_FELDGRAU = new Color3(0.34, 0.36, 0.31);
+const ENEMY_KLASSEN_FARBE: ReadonlyMap<string, Color3> = new Map([
+  [linieninfanterie.id, ENEMY_FELDGRAU],
+  [linieninfanterieSchnell.id, new Color3(0.6, 0.54, 0.34)],
+  [linieninfanterieSchwer.id, new Color3(0.2, 0.21, 0.26)],
+]);
+// Im Angriff halb zur alten Rotbraun-Tönung hin gemischt: der Zustand bleibt
+// lesbar, die Klasse auch.
+const ENEMY_ANGRIFF_TON = new Color3(0.5, 0.32, 0.28);
 
 // Gegner-HP-Balken: Maße in Weltmetern, Höhe über dem Kopf.
 const BAR_W = 0.9;
@@ -180,6 +199,9 @@ export function createRenderer(
   interface EnemyVisual {
     body: Mesh;
     bodyMat: StandardMaterial;
+    /** Klassen-Tönung im Anmarsch bzw. im Angriff (AP5-06). */
+    farbe: Color3;
+    farbeAngriff: Color3;
     barBg: Mesh;
     barFill: Mesh;
     barFillMat: StandardMaterial;
@@ -192,9 +214,12 @@ export function createRenderer(
   enemyBarBgMat.disableLighting = true;
   enemyBarBgMat.emissiveColor = new Color3(0.05, 0.05, 0.05);
 
-  const makeEnemyVisual = (): EnemyVisual => {
+  const makeEnemyVisual = (defId: string): EnemyVisual => {
+    const farbe = ENEMY_KLASSEN_FARBE.get(defId) ?? ENEMY_FELDGRAU;
+    const farbeAngriff = Color3.Lerp(farbe, ENEMY_ANGRIFF_TON, 0.5);
     const bodyMat = new StandardMaterial("enemy", scene);
     bodyMat.specularColor = new Color3(0, 0, 0);
+    bodyMat.diffuseColor = farbe.clone();
     const body = MeshBuilder.CreateCapsule(
       "enemy",
       { radius: ENEMY_RADIUS, height: ENEMY_HEIGHT },
@@ -231,6 +256,8 @@ export function createRenderer(
     return {
       body,
       bodyMat,
+      farbe,
+      farbeAngriff,
       barBg,
       barFill,
       barFillMat,
@@ -253,7 +280,7 @@ export function createRenderer(
       alive.add(e.id);
       let v = enemyVisuals.get(e.id);
       if (!v) {
-        v = makeEnemyVisual();
+        v = makeEnemyVisual(e.defId);
         enemyVisuals.set(e.id, v);
       }
 
@@ -285,10 +312,10 @@ export function createRenderer(
         v.bodyMat.emissiveColor.set(0.9, 0.9, 0.9);
       } else if (e.zustand === "angriff") {
         v.bodyMat.emissiveColor.set(0.35, 0.12, 0.1);
-        v.bodyMat.diffuseColor.set(0.5, 0.32, 0.28);
+        v.bodyMat.diffuseColor.copyFrom(v.farbeAngriff);
       } else {
         v.bodyMat.emissiveColor.set(0, 0, 0);
-        v.bodyMat.diffuseColor.set(0.34, 0.36, 0.31); // gesichtsloses Feldgrau
+        v.bodyMat.diffuseColor.copyFrom(v.farbe); // Klassen-Tönung
       }
     }
 

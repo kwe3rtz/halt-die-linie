@@ -1,0 +1,124 @@
+   2 s real · sim    9 s · fps  54 · Welle 1 welle   · lebend  4 · im Blick: li 22.5m
+   3 s real · sim   13 s · fps  52 · Welle 1 welle   · lebend  5 · im Blick: li 23.6m, li 19.9m
+   5 s real · sim   16 s · fps  50 · Welle 1 welle   · lebend  4 · im Blick: li 18m, li 17.8m, li 23.3m
+   6 s real · sim   19 s · fps  46 · Welle 1 welle   · lebend  3 · im Blick: li 14.4m, li 18.3m
+   8 s real · sim   22 s · fps  42 · Welle 1 welle   · lebend  2 · im Blick: li 15.6m, li-schwer 17.9m
+   shot 11-welle1-sim22s-li+schwer.png
+   9 s real · sim   26 s · fps  34 · Welle 1 welle   · lebend  1 · im Blick: li-schwer 15.1m
+  11 s real · sim   30 s · fps  51 · Welle 1 welle   · lebend  1 · im Blick: li-schwer 16.7m
+  12 s real · sim   34 s · fps  52 · Welle 2 welle   · lebend  1 · im Blick: 
+  14 s real · sim   38 s · fps  56 · Welle 2 welle   · lebend  4 · im Blick: 
+  15 s real · sim   41 s · fps  51 · Welle 2 welle   · lebend  6 · im Blick: 
+  17 s real · sim   45 s · fps  52 · Welle 2 welle   · lebend  7 · im Blick: li 19.6m, li 20.6m, li-schnell 23.6m
+  18 s real · sim   49 s · fps  54 · Welle 2 welle   · lebend  7 · im Blick: li 16.5m, li-schwer 22.2m, li 18.9m, li 17.1m, li-schnell 16.6m, li-schnell 17.8m, li 23.7m
+  20 s real · sim   53 s · fps  51 · Welle 2 welle   · lebend  6 · im Blick: li 19.1m, li-schwer 18.3m, li 15.3m, li 6.6m, li-schnell 9.8m, li 18.8m
+  21 s real · sim   57 s · fps  50 · Welle 2 welle   · lebend  4 · im Blick: li-schwer 16.2m, li 7.3m, li 16.2m
+  23 s real · sim   61 s · fps  52 · Welle 2 welle   · lebend  3 · im Blick: li 14.9m, li-schwer 14.8m, li 21.4m
+  24 s real · sim   65 s · fps  53 · Welle 2 welle   · lebend  2 · im Blick: li-schwer 17.9m, li 19.6m
+  26 s real · sim   69 s · fps  51 · Welle 2 pause   · lebend  0 · im Blick: 
+  27 s real · sim   73 s · fps  57 · Welle 3 welle   · lebend  2 · im Blick: 
+  29 s real · sim   77 s · fps  51 · Welle 3 welle   · lebend  6 · im Blick: 
+  30 s real · sim   81 s · fps  55 · Welle 3 welle   · lebend  9 · im Blick: 
+  32 s real · sim   85 s · fps  46 · Welle 3 welle   · lebend 10 · im Blick: li-schwer 19.6m, li-schwer 21m, li 17.6m, li 18.7m, li-schnell 18.3m
+   shot 12-welle3-sim85s-li+schnell+schwer.png
+  34 s real · sim   88 s · fps  41 · Welle 3 welle   · lebend  9 · im Blick: li-schwer 17.9m, li-schwer 17.6m, li 12.6m, li 15.6m, li 16.4m, li 19.2m, li-schnell 19.5m
+  35 s real · sim   91 s · fps  42 · Welle 3 welle   · lebend  8 · im Blick: li-schwer 16.6m, li-schwer 15.3m, li 20.4m, li 10.1m, li 16m, li-schwer 22.4m, li-schnell 12.4m, li 20.6m
+  37 s real · sim   95 s · fps  54 · Welle 3 welle   · lebend  6 · im Blick: li-schwer 20.4m, li-schwer 9.7m, li 15.8m, li-schwer 19.1m, li 17.1m
+  38 s real · sim   98 s · fps  49 · Welle 3 welle   · lebend  6 · im Blick: li-schwer 3.6m, li-schwer 17.6m, li 17.3m
+  40 s real · sim  102 s · fps  46 · Welle 3 welle   · lebend  5 · im Blick: li-schwer 16.9m, li 3.7m, li 17.3m, li-schwer 15.8m, li 22.9m
+  41 s real · sim  105 s · fps  47 · Welle 3 welle   · lebend  4 · im Blick: li-schwer 10.2m, li 9.4m, li-schwer 18.8m, li 13.8m
+  43 s real · sim  109 s · fps  47 · Welle 3 welle   · lebend  3 · im Blick: li-schwer 3.2m, li-schwer 23m, li 4.4m
+  44 s real · sim  112 s · fps  43 · Welle 3 welle   · lebend  2 · im Blick: li-schwer 21.7m, li 1.6m!
+  46 s real · sim  116 s · fps  53 · Welle 3 welle   · lebend  1 · im Blick: li-schwer 16.1m
+  47 s real · sim  120 s · fps  53 · Welle 3 pause   · lebend  0 · im Blick: 
+  49 s real · sim  124 s · fps  52 · Welle 4 welle   · lebend  2 · im Blick: 
+  50 s real · sim  128 s · fps  52 · Welle 4 welle   · lebend  7 · im Blick: li-schwer 24.6m, li 23.4m, li 24.9m
+  52 s real · sim  132 s · fps  50 · Welle 4 welle   · lebend 11 · im Blick: li-schnell 17.2m, li 16.4m, li-schwer 19.8m, li 17.3m, li 19.5m, li-schwer 23.8m, li-schnell 22.7m, li-schnell 20.5m
+  53 s real · sim  135 s · fps  51 · Welle 4 welle   · lebend 13 · im Blick: li-schnell 5.8m, li 20.2m, li-schwer 16.7m, li 18.5m, li 16.1m, li-schnell 13.3m, li-schnell 16.2m, li 22.9m
+   shot 13-welle4-sim135s-li+schnell+schwer.png
+  55 s real · sim  139 s · fps  40 · Welle 4 welle   · lebend 13 · im Blick: li-schnell 1.5m!, li-schwer 15.5m, li 22.1m, li-schwer 18.4m, li-schnell 1.5m!, li 18.7m, li 18.6m
+  56 s real · sim  141 s · fps  23 · Welle 4 welle   · lebend 13 · im Blick: li-schnell 1.5m!, li-schwer 17.9m, li-schwer 16.4m, li-schnell 1.5m!, li 16.9m, li 16.7m, li 17.2m
+  58 s real · sim  144 s · fps  35 · Welle 4 welle   · lebend 12 · im Blick: li-schwer 17.8m, li-schnell 1.5m!, li 10.9m, li 20m, li-schwer 20.1m, li-schwer 19.7m, li 15.4m
+  59 s real · sim  147 s · fps  43 · Welle 4 welle   · lebend 11 · im Blick: li-schwer 22.8m, li-schwer 22.1m, li 2.4m, li-schwer 17.5m, li-schwer 18.4m, li 21m
+  61 s real · sim  150 s · fps  48 · Welle 4 welle   · lebend 10 · im Blick: li-schwer 22.8m, li-schwer 13.9m, li-schwer 15m
+  62 s real · sim  154 s · fps  47 · Welle 4 welle   · lebend  9 · im Blick: li-schwer 8.2m
+  64 s real · sim  158 s · fps  49 · Welle 4 welle   · lebend  8 · im Blick: 
+  65 s real · sim  162 s · fps  53 · Welle 4 welle   · lebend  8 · im Blick: li-schwer 24m
+  67 s real · sim  166 s · fps  53 · Welle 4 welle   · lebend  8 · im Blick: li-schwer 19.1m
+  68 s real · sim  169 s · fps  52 · Welle 4 welle   · lebend  7 · im Blick: 
+  70 s real · sim  173 s · fps  49 · Welle 4 welle   · lebend  7 · im Blick: li-schwer 16.2m
+  71 s real · sim  177 s · fps  52 · Welle 4 welle   · lebend  7 · im Blick: li-schwer 21.3m
+  73 s real · sim  180 s · fps  41 · Welle 4 welle   · lebend  5 · im Blick: 
+  74 s real · sim  183 s · fps  40 · Welle 4 welle   · lebend  4 · im Blick: 
+  76 s real · sim  187 s · fps  44 · Welle 4 welle   · lebend  3 · im Blick: 
+  77 s real · sim  191 s · fps  55 · Welle 4 welle   · lebend  3 · im Blick: 
+  79 s real · sim  195 s · fps  49 · Welle 4 welle   · lebend  2 · im Blick: 
+  80 s real · sim  198 s · fps  46 · Welle 4 welle   · lebend  1 · im Blick: 
+  82 s real · sim  202 s · fps  56 · Welle 4 welle   · lebend  1 · im Blick: 
+  83 s real · sim  206 s · fps  54 · Welle 4 welle   · lebend  1 · im Blick: 
+  85 s real · sim  211 s · fps  55 · Welle 4 welle   · lebend  1 · im Blick: 
+  86 s real · sim  215 s · fps  55 · Welle 4 welle   · lebend  1 · im Blick: 
+  88 s real · sim  219 s · fps  54 · Welle 4 welle   · lebend  1 · im Blick: 
+  89 s real · sim  222 s · fps  45 · Welle 4 welle   · lebend  1 · im Blick: 
+  91 s real · sim  226 s · fps  52 · Welle 5 welle   · lebend  1 · im Blick: 
+  92 s real · sim  230 s · fps  51 · Welle 5 welle   · lebend  5 · im Blick: 
+  94 s real · sim  233 s · fps  46 · Welle 5 welle   · lebend  9 · im Blick: li 16.8m
+  95 s real · sim  237 s · fps  48 · Welle 5 welle   · lebend 12 · im Blick: li 17.1m, li 24.1m, li 24m
+  97 s real · sim  240 s · fps  47 · Welle 5 welle   · lebend 14 · im Blick: li-schwer 18.4m, li 17.1m, li 18.6m, li 18.7m, li 16.1m, li 17.9m, li 21.2m, li 23.2m, li 22.9m
+   shot 14-welle5-sim240s-li+schwer.png
+  98 s real · sim  244 s · fps  44 · Welle 5 welle   · lebend 13 · im Blick: li-schwer 16.1m, li 23.8m, li-schwer 18.6m, li 13m, li 22.1m, li 17.3m, li 18.7m, li 18.4m, li 17.6m, li 17.5m, li 24.6m, li 20.7m
+ 100 s real · sim  247 s · fps  45 · Welle 5 welle   · lebend 12 · im Blick: li-schwer 10.1m, li-schwer 16.2m, li 9.5m, li 11m, li 20.1m, li 15.2m, li 18.9m, li 20.5m
+ 101 s real · sim  251 s · fps  46 · Welle 5 welle   · lebend 11 · im Blick: li-schwer 4.2m, li-schwer 10.5m, li 1.6m!, li 20.2m, li 16m
+ 103 s real · sim  253 s · fps  32 · Welle 5 welle   · lebend 10 · im Blick: li-schwer 1.6m!, li-schwer 5.5m, li 10.7m
+ 105 s real · sim  256 s · fps  40 · Welle 5 welle   · lebend 10 · im Blick: li-schwer 1.3m!, li-schwer 1.6m!, li 3.3m
+ 106 s real · sim  259 s · fps  38 · Welle 5 welle   · lebend 10 · im Blick: li-schwer 1.2m!, li 1.6m!
+ 108 s real · sim  262 s · fps  35 · Welle 5 welle   · lebend 10 · im Blick: li-schwer 1.2m!, li 1.6m!
+ 109 s real · sim  265 s · fps  43 · Welle 5 welle   · lebend  9 · im Blick: li-schwer 1.4m!, li 1.6m!
+ 111 s real · sim  268 s · fps  47 · Welle 5 welle   · lebend  9 · im Blick: li-schwer 1.4m!, li 1.6m!
+ 112 s real · sim  271 s · fps  35 · Welle 5 welle   · lebend  9 · im Blick: li-schwer 1.4m!, li 1.6m!
+ 114 s real · sim  274 s · fps  42 · Welle 5 welle   · lebend  8 · im Blick: li 1.6m!
+ 115 s real · sim  277 s · fps  39 · Welle 5 welle   · lebend  8 · im Blick: li 1.6m!
+ 117 s real · sim  281 s · fps  44 · Welle 5 welle   · lebend  7 · im Blick: 
+ 118 s real · sim  284 s · fps  41 · Welle 5 welle   · lebend  6 · im Blick: 
+ 120 s real · sim  288 s · fps  48 · Welle 5 welle   · lebend  6 · im Blick: 
+ 121 s real · sim  292 s · fps  53 · Welle 5 welle   · lebend  5 · im Blick: 
+ 123 s real · sim  295 s · fps  50 · Welle 5 welle   · lebend  4 · im Blick: li 24m
+ 124 s real · sim  299 s · fps  47 · Welle 5 welle   · lebend  3 · im Blick: 
+ 126 s real · sim  303 s · fps  48 · Welle 5 welle   · lebend  2 · im Blick: 
+ 127 s real · sim  306 s · fps  51 · Welle 5 welle   · lebend  1 · im Blick: 
+ 129 s real · sim  311 s · fps  56 · Welle 5 welle   · lebend  1 · im Blick: 
+ 130 s real · sim  315 s · fps  56 · Welle 5 welle   · lebend  1 · im Blick: 
+ 132 s real · sim  319 s · fps  54 · Welle 5 welle   · lebend  1 · im Blick: 
+ 133 s real · sim  323 s · fps  54 · Welle 5 welle   · lebend  1 · im Blick: 
+ 135 s real · sim  327 s · fps  55 · Welle 5 welle   · lebend  1 · im Blick: 
+ 136 s real · sim  331 s · fps  54 · Welle 5 welle   · lebend  1 · im Blick: 
+ 138 s real · sim  335 s · fps  53 · Welle 5 welle   · lebend  1 · im Blick: 
+ 139 s real · sim  339 s · fps  55 · Welle 5 pause   · lebend  0 · im Blick: 
+ 141 s real · sim  343 s · fps  51 · Welle 6 welle   · lebend  3 · im Blick: 
+ 142 s real · sim  346 s · fps  47 · Welle 6 welle   · lebend  8 · im Blick: li-schwer 23.8m, li-schnell 23.2m
+   shot 15-welle6-sim346s-schnell+schwer.png
+ 144 s real · sim  350 s · fps  46 · Welle 6 welle   · lebend  8 · im Blick: li-schwer 20.2m, li-schwer 22.9m, li-schnell 21.6m, li-schnell 19.2m, li-schnell 17.4m, li-schnell 19.6m
+ 145 s real · sim  353 s · fps  41 · Welle 6 welle   · lebend  8 · im Blick: li-schwer 18.9m, li-schwer 18m, li-schnell 14.8m, li 17.5m, li-schnell 14.6m
+ 147 s real · sim  357 s · fps  48 · Welle 6 welle   · lebend  7 · im Blick: li-schwer 17.5m, li-schwer 17.2m, li 14.7m, li-schwer 22.8m, li-schnell 22.8m
+ 148 s real · sim  360 s · fps  47 · Welle 6 welle   · lebend  7 · im Blick: li-schwer 17.3m, li-schwer 21.1m, li 19.6m
+ 150 s real · sim  364 s · fps  47 · Welle 6 welle   · lebend  6 · im Blick: li-schwer 21.5m, li-schwer 22.8m
+ 151 s real · sim  368 s · fps  49 · Welle 6 welle   · lebend  6 · im Blick: li-schwer 15.2m
+ 153 s real · sim  371 s · fps  50 · Welle 6 welle   · lebend  5 · im Blick: 
+ 154 s real · sim  375 s · fps  46 · Welle 6 welle   · lebend  4 · im Blick: 
+ 156 s real · sim  379 s · fps  51 · Welle 6 welle   · lebend  3 · im Blick: 
+ 157 s real · sim  382 s · fps  47 · Welle 6 welle   · lebend  2 · im Blick: 
+ 159 s real · sim  386 s · fps  52 · Welle 6 welle   · lebend  2 · im Blick: 
+ 160 s real · sim  390 s · fps  50 · Welle 6 welle   · lebend  1 · im Blick: 
+ 162 s real · sim  394 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 163 s real · sim  398 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 165 s real · sim  402 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 166 s real · sim  406 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 168 s real · sim  410 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 169 s real · sim  414 s · fps  54 · Welle 6 welle   · lebend  1 · im Blick: 
+ 171 s real · sim  418 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 172 s real · sim  422 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 174 s real · sim  426 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 175 s real · sim  430 s · fps  50 · Welle 6 welle   · lebend  1 · im Blick: 
+ 177 s real · sim  434 s · fps  53 · Welle 6 welle   · lebend  1 · im Blick: 
+ 178 s real · sim  436 s · fps  50 · Welle 6 reserve · lebend  0 · im Blick: 
+ENDE: sim 436 s · Wellen [5,8,11,14,17,10] · maxLebend 14 · despawns 0 · vorbei/gewonnen · Fehler 0

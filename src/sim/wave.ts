@@ -5,6 +5,11 @@
 // Deterministisch: injizierte Zeit (`dt`) und `Rng`, kein Babylon/Math.random.
 import type { Vec3 } from "./math";
 import type { Rng } from "./rng";
+import {
+  linieninfanterie,
+  linieninfanterieSchnell,
+  linieninfanterieSchwer,
+} from "../data/gegner";
 
 export type WavePhase = "aufbau" | "welle" | "pause" | "reserve" | "vorbei";
 
@@ -51,7 +56,6 @@ export const SPAWN_INTERVALL_MIN = 0.6;
 /** Zufällige Streuung des Spawn-Abstands (±Anteil) — kein Metronom-Takt. */
 export const SPAWN_JITTER = 0.25;
 const HP_FAKTOR_PRO_WELLE = 0.12;
-const STANDARD_GEGNER = "linieninfanterie";
 // Finale-Reservewellen (AP4-04).
 const RESERVE_INTERVALL = 8; // s zwischen Reservewellen
 export const RESERVE_BASIS = 6; // Gegner je Reservewelle bei reserveStufe 0
@@ -68,6 +72,47 @@ export function spawnIntervall(welle: number): number {
     SPAWN_INTERVALL_MIN,
     SPAWN_INTERVALL_START - (Math.max(1, welle) - 1) * SPAWN_BESCHLEUNIGUNG,
   );
+}
+
+/** HP-Skalierung der Gegner einer Hauptwelle (Welle 1 = 1, je Welle +12 %). */
+export function wellenHpFaktor(welle: number): number {
+  return 1 + (Math.max(1, welle) - 1) * HP_FAKTOR_PRO_WELLE;
+}
+
+/** Eine Gegner-Klasse der Wellen-Mischung mit ihrem relativen Gewicht. */
+export interface GegnerAnteil {
+  defId: string;
+  gewicht: number;
+}
+
+/**
+ * Klassen-Mischung der Wellen (AP5-06): drei Statistik-Varianten der Linien-
+ * infanterie (`src/data/gegner.ts`), gleiches Verhalten. Gewichte sind relativ
+ * und PLATZHALTER — die Basis bleibt die Mehrheit, schnell und schwer sind die
+ * Würze. Hauptwellen und Reservewellen ziehen aus derselben Mischung.
+ */
+export const GEGNER_MISCHUNG: readonly GegnerAnteil[] = [
+  { defId: linieninfanterie.id, gewicht: 60 },
+  { defId: linieninfanterieSchnell.id, gewicht: 20 },
+  { defId: linieninfanterieSchwer.id, gewicht: 20 },
+];
+
+/**
+ * Zieht gewichtet eine Klasse aus `GEGNER_MISCHUNG` — genau ein Rng-Wert je
+ * Ziehung, aus dem Director-Rng des Aufrufers (goldene Regel: kein eigener
+ * Zufall).
+ */
+export function waehleGegner(rng: Rng): string {
+  const summe = GEGNER_MISCHUNG.reduce((s, a) => s + a.gewicht, 0);
+  let rest = rng.next() * summe;
+  for (const anteil of GEGNER_MISCHUNG) {
+    rest -= anteil.gewicht;
+    if (rest < 0) {
+      return anteil.defId;
+    }
+  }
+  // Nur bei Rundungsrest exakt am oberen Rand erreichbar.
+  return GEGNER_MISCHUNG.at(-1)?.defId ?? linieninfanterie.id;
 }
 
 export interface WaveContext {
@@ -99,15 +144,16 @@ export function createWaveState(): WaveState {
   };
 }
 
-function starteWelle(state: WaveState, welle: number): void {
+function starteWelle(state: WaveState, welle: number, rng: Rng): void {
   state.welle = welle;
   state.phase = "welle";
   const geplant = wellenGroesse(welle);
   // Nie mehr planen, als Angriffskraft übrig ist.
   const anzahl = Math.max(0, Math.min(geplant, state.angriffskraft));
-  const hpFaktor = 1 + (welle - 1) * HP_FAKTOR_PRO_WELLE;
+  const hpFaktor = wellenHpFaktor(welle);
+  // Klasse je Gegner beim Planen der Welle gezogen (AP5-06).
   state.spawnQueue = Array.from({ length: anzahl }, () => ({
-    defId: STANDARD_GEGNER,
+    defId: waehleGegner(rng),
     hpFaktor,
   }));
   state.spawnTimer = 0; // erster Spawn sofort
@@ -156,14 +202,14 @@ export function updateWave(
     case "aufbau":
       state.phaseTimer -= dt;
       if (state.phaseTimer <= 0) {
-        starteWelle(state, 1);
+        starteWelle(state, 1, ctx.rng);
       }
       return;
 
     case "pause":
       state.phaseTimer -= dt;
       if (state.phaseTimer <= 0) {
-        starteWelle(state, state.welle + 1);
+        starteWelle(state, state.welle + 1, ctx.rng);
       }
       return;
 
@@ -212,9 +258,10 @@ export function updateWave(
         if (state.phaseTimer <= 0) {
           const anzahl =
             RESERVE_BASIS + (ctx.reserveStufe ?? 0) * RESERVE_ZUWACHS;
-          const hpFaktor = 1 + state.welle * HP_FAKTOR_PRO_WELLE;
+          // Eine Stufe über der zuletzt erreichten Hauptwelle.
+          const hpFaktor = wellenHpFaktor(state.welle + 1);
           for (let i = 0; i < anzahl; i += 1) {
-            state.spawnQueue.push({ defId: STANDARD_GEGNER, hpFaktor });
+            state.spawnQueue.push({ defId: waehleGegner(ctx.rng), hpFaktor });
           }
           state.phaseTimer = RESERVE_INTERVALL;
         }
