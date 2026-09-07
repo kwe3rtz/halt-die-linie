@@ -31,10 +31,12 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     (`src/data/sektor.ts` komplett neu, 34-Knoten-Nav-Graph, Zonen als
     lückenlose Z-Bänder, genau ein `frontAbschnitt`/`homeAbschnitt` → N=1,
     `front.ts` unverändert). Nur die Bühne.
-  - **AP6-02** (nächstes, `ki-game-e6`): mechanische A/B/C-Bereinigung, kein
-    Verhaltenswechsel, Golden-Anker bleiben grün.
-  - **AP6-02b**: Druck-Radius-Halte-Semantik + Uhr an einer Linie (Golden-
-    Rebaseline nur hier).
+  - **AP6-02 erledigt** (`f427ef1`): mechanische A/B/C-Bereinigung, kein
+    Verhaltenswechsel — `FrontLinie` mit Rollen-Feldern statt String-Ableitung,
+    N=1-Lade-Assert, `abschnittRng` raus, tote Audio-Callouts weg. Golden-Anker
+    bit-identisch. 292 Tests.
+  - **AP6-02b** (nächstes, `ki-game-e6`): Bresche → Durchbruch → Linienfall
+    (Golden-Rebaseline nur hier).
   - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
     Perf-Broadphase.
 
@@ -66,9 +68,11 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **`ki-game-e6` baut AP6-02** (mechanische A/B/C-Bereinigung). Spec:
-   `tickets/AP6-02-eine-frontlinie-eine-homeline.md`. Golden-Anker müssen grün
-   bleiben — das ist die eigentliche Sorgfalt.
+1. **Anspielen fällig:** der Nacht-Sektor (`arbeitspaket-6`) ist seit AP6-01
+   ungespielt. AP6-02 war reiner Refactor (nichts zu sehen), aber vor AP6-02b
+   (Verhaltenswechsel) ist der Ist-Zustand der beste Checkpoint. Quer durch:
+   Front → Laufgraben → Hinterland-Seitenrouten → Home-Line → zurück.
+   Merkposten: klumpen sich die Wellengegner an den 2 Sap-Lücken?
 2. **AP6-02b** — Bresche → Durchbruch → Linienfall (Halte-Punkte je Bresche,
    lokaler Druck öffnet die Bresche physisch, Gegner hinter der Linie →
    „DURCHBRUCH" → Fall; abwendbar solange der Spieler den Einbruch räumt) +

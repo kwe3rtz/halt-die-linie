@@ -1,6 +1,6 @@
 # AP6-02 — Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung)
 
-**Status:** review (AP6-01 ist durch, `c4d21f5` + Review `05f6e65`)
+**Status:** erledigt (`f427ef1`)
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** `KONZEPT.md` §3 + §6 (neu gefasst 2026-09-07 — ganz lesen),
 `tickets/erledigt/AP6-01-neuer-sektor-grabennetz.md` (## Bericht + ## Review),
@@ -295,3 +295,51 @@ Begehbarkeits-Test + der volle Headless-Einsatz in `wave-eskalation.test.ts`
 „liefert fünf wachsende Hauptwellen … gewonnen", alle unverändert grün). Der
 volle Anspieltest steht laut STATUS.md ohnehin nach AP6-02 an (Merkposten
 Sap-Lücken-Klumpen aus dem AP6-01-Review).
+
+---
+
+## Review — ki-game-f1 (2026-09-07)
+
+**Grünes Licht.** `f427ef1` (+ `5f2f1a6` Bericht-Nachtrag) auf `arbeitspaket-6`,
+CI grün, lokal 292 Tests (26 Dateien, Coverage src/sim 98,49 % — −0,05 pp durch
+3 TS-Narrowing-Guards, `sektor.ts` + `front.ts` jetzt 100 %). Bundle Δ +0,47 kB.
+
+**Geprüft:**
+
+- **`front.ts` (Kern):** `AbschnittFront[]` → `LinienFront` (Einzelobjekt),
+  `updateFront` schreibt eine Linie fort (Sim ruft zweimal). Die
+  Übergangs-/Timer-Logik ist **byte-identisch** — dieselben Schwellen,
+  Bedingungen, `HOME_BRESCHE_FAKTOR`, die „gehalten solange Spieler in Bounds"-
+  Logik unverändert; nur aus dem `for`-Loop herausgezogen. Genau der
+  Nicht-Verhaltenswechsel, den das Ticket verlangt.
+- **`sektor.ts`:** `FrontLinie` mit Rollen-Feldern (`zielKnoten`,
+  `reinfKnoten`, `brescheZugang?`, `hintenKanten`) — Audit H2, keine
+  String-Ableitung mehr. `SektorMeta.frontLinie`/`.homeLinie` als Einzelobjekt
+  → N=1 ist Typ-Invariante. `pruefeSektorMeta` wirft bei fehlend/unvollständig/
+  geteilter Id (Audit N2), 5 Testfälle.
+- **`index.ts`:** `aktiveAchsen`/`waehleAbschnitt`/`abschnittRng` ersatzlos
+  raus. `abschnittRng` war ein eigener ungenutzter Strom (`seed^0x3c3c3c3c`) —
+  Wegfall verschiebt weder `waveRng` noch `gegnerRng`, belegt durch die
+  bit-identischen Golden-Anker. `HINTEN_KANTEN`-Record → `frontLinie.hintenKanten`.
+  `SimState.front`/`.home` bleiben Länge-1-Arrays (Nahtstellen-Churn null).
+- **Golden-Anker „Sektor-Nav-Graph" + „die Uhr":** Assertion-Werte
+  **unverändert** (pos 3,6891/12,1298 · AK 145 · 148/149 · nachschub 5 · 5
+  defIds/Ziele). Testcode nur: `aktiveAchsen: ["front"]` raus (war Default),
+  `_setAbschnittVerloren` → `_setLinieVerloren`. Inline-Anker unangetastet.
+- **`audio/index.ts`:** `FRONT_CALLOUT`/`ROUTE_CALLOUT` ersatzlos entfernt
+  (tote Platzhalter, an nichts verdrahtet). Sauber — Callout-Grammatik kommt
+  mit dem AP7-VO-Paket über die realen Linien-/Zonennamen.
+- **grep** nach `front-A|front-B|front-C|H-West|H-Ost|feld-links|aktiveAchsen|
+  abschnittRng` in `src/`: nur noch Doku-Erwähnungen in `ARCHITEKTUR.md` +
+  ein erklärender Kommentar in `sim.test.ts`. Nichts Funktionales.
+- **`sektor.test.ts` Watchdog-Test:** die versiegelte Kammer liegt jetzt auf
+  `reinforcement-front` (statt via `aktiveAchsen: []` den Abschnitt zu leeren),
+  damit auch die Stufe-2-Reloc im Käfig landet → Stufe-3-Despawn wie vorher.
+  Legitime Fixture-Anpassung an die datengetriebene Reloc.
+
+**TODO(Rückfrage):** keine.
+
+**Merkposten:** M7 (nur die Mittel-Bresche hat einen Nav-Zugang) bleibt bekannt
+→ AP7-Politur. Der volle Anspieltest des Nacht-Sektors steht weiter aus
+(Merkposten Sap-Lücken-Klumpen aus dem AP6-01-Review) — reiner Refactor, aber
+der Sektor selbst ist noch ungespielt.

@@ -83,8 +83,8 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 | Ticket | Status |
 |---|---|
 | AP6-01 Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung | ✅ `erledigt/` (`c4d21f5`) |
-| AP6-02 Eine Frontlinie/Home-Line: A/B/C-Verdrahtung raus (Bereinigung) | offen (nächstes) |
-| AP6-02b Bresche → Durchbruch → Linienfall + Uhr-Regel | offen |
+| AP6-02 Eine Frontlinie/Home-Line: A/B/C-Verdrahtung raus (Bereinigung) | ✅ `erledigt/` (`f427ef1`) |
+| AP6-02b Bresche → Durchbruch → Linienfall + Uhr-Regel | offen (nächstes) |
 | AP6-03 Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 „Instand setzen" — gefallene Linie zurückerobern | offen |
 | AP6-05 Roamende Nacht-Gegner + Perf-Broadphase | offen |

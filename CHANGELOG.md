@@ -12,6 +12,24 @@ begehbares WW1-Grabennetz, Feind-Spawn folgt der vordersten gehaltenen Linie,
 „Instand setzen" als Rückeroberung, Nacht zuerst mit roamenden Toten. Branch
 `arbeitspaket-6` von `main`.
 
+- **AP6-02** · `f427ef1` · **Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung
+  raus (Bereinigung).** Mechanischer Refactor, **kein Verhaltenswechsel** —
+  beide Golden-Anker bleiben mit unveränderten Assertion-Werten grün.
+  `src/sim/front.ts`: `AbschnittFront[]` → `LinienFront` (Einzelobjekt),
+  `updateFront` schreibt eine Linie fort; Übergangs-/Timer-Logik byte-identisch.
+  `src/sim/sektor.ts`: `FrontLinie` mit Rollen-Feldern (`zielKnoten`,
+  `reinfKnoten`, `brescheZugang`, `hintenKanten`) statt String-Ableitung
+  (`front-${id}`, `HINTEN_KANTE[A|B|C]`, `reinforcement-${id}`, Fallback
+  `front-B`) — Audit H2. `SektorMeta.frontLinie`/`.homeLinie` als Einzelobjekt
+  → N=1 Typ-Invariante; neuer `pruefeSektorMeta`-Lade-Assert (Audit N2, 5
+  Testfälle). `src/sim/index.ts`: `aktiveAchsen`/`waehleAbschnitt`/
+  `abschnittRng` ersatzlos raus (`abschnittRng` = eigener ungenutzter Strom,
+  Wegfall verschiebt keinen anderen Rng — durch die Golden-Anker belegt).
+  `_setAbschnittVerloren` → `_setLinieVerloren`. `src/audio/index.ts`:
+  tote `FRONT_CALLOUT`/`ROUTE_CALLOUT`-Platzhalter entfernt (Callout-Grammatik
+  neu mit AP7-VO). `SimState.front`/`.home` bleiben Länge-1-Arrays
+  (Nahtstellen-Churn null). 292 Tests (+6), Coverage src/sim 98,49 %.
+
 - **AP6-01** · `c4d21f5` · **Neuer Greybox-Nacht-Sektor.** `src/data/sektor.ts`
   komplett neu: Feindseite → Niemandsland → Frontlinie → Hinterland (zentraler
   gedeckter Laufgraben + 2 offene Seitenrouten) → Home-Line, x ±34 · z −46…72
