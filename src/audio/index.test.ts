@@ -3,10 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   beobachteEreignisse,
   createAudio,
-  FRONT_CALLOUT,
   panFuerPeilung,
   relPeilung,
-  ROUTE_CALLOUT,
   type Audio,
 } from "./index";
 import type { SimState } from "../sim";
@@ -52,35 +50,30 @@ describe("audio — reine Helfer", () => {
     expect(panFuerPeilung(-Math.PI / 2)).toBeCloseTo(-1, 5);
     expect(panFuerPeilung(Math.PI)).toBeGreaterThanOrEqual(-1);
   });
-
-  it("Callout-Grammatik ist fest definiert", () => {
-    expect(FRONT_CALLOUT.A).toBe("Front A");
-    expect(ROUTE_CALLOUT["feld-links"]).toBe("Route Feld links");
-  });
 });
 
 describe("audio — beobachteEreignisse", () => {
   it("erster Frame (prev undefined) meldet nichts", () => {
-    expect(beobachteEreignisse(undefined, st([["A", "stabil"]], []))).toEqual(
-      [],
-    );
+    expect(
+      beobachteEreignisse(undefined, st([["front", "stabil"]], [])),
+    ).toEqual([]);
   });
 
-  it("Frontabschnitt → verloren meldet ein Ereignis (einmalig)", () => {
-    const a = st([["A", "gebrochen"]], []);
-    const b = st([["A", "verloren"]], []);
+  it("Frontlinie → verloren meldet ein Ereignis (einmalig)", () => {
+    const a = st([["front", "gebrochen"]], []);
+    const b = st([["front", "verloren"]], []);
     expect(beobachteEreignisse(a, b)).toEqual([
-      { typ: "abschnitt-verloren", id: "A", heim: false },
+      { typ: "linie-verloren", id: "front", heim: false },
     ]);
     // schon verloren → kein erneutes Ereignis
     expect(beobachteEreignisse(b, b)).toEqual([]);
   });
 
-  it("Home-Abschnitt → verloren wird als heim=true gemeldet", () => {
-    const a = st([], [["H-West", "bedraengt"]]);
-    const b = st([], [["H-West", "verloren"]]);
+  it("Home-Line → verloren wird als heim=true gemeldet", () => {
+    const a = st([], [["home", "bedraengt"]]);
+    const b = st([], [["home", "verloren"]]);
     expect(beobachteEreignisse(a, b)).toEqual([
-      { typ: "abschnitt-verloren", id: "H-West", heim: true },
+      { typ: "linie-verloren", id: "home", heim: true },
     ]);
   });
 
@@ -147,8 +140,8 @@ describe("audio — createAudio (gemocktes WebAudio)", () => {
   const home = { x: 0, z: -20 }; // genau hinter dem Spieler (yaw 0)
 
   it("spielt bei Abschnittsverlust ein Signal, gepannt Richtung Home", () => {
-    const prev = st([["A", "gebrochen"]], []);
-    const next = st([["A", "verloren"]], []);
+    const prev = st([["front", "gebrochen"]], []);
+    const next = st([["front", "verloren"]], []);
     // yaw = π/2: Spieler blickt nach +X (Ost), Home liegt südlich → rechts → pan +.
     audio.beobachte(prev, next, spieler, Math.PI / 2, home);
     expect(panners.length).toBeGreaterThan(0);
@@ -175,8 +168,8 @@ describe("audio — createAudio (gemocktes WebAudio)", () => {
   it("stummgeschaltet erzeugt keinen AudioContext / kein Signal", () => {
     audio.setStumm(true);
     audio.beobachte(
-      st([["A", "gebrochen"]], []),
-      st([["A", "verloren"]], []),
+      st([["front", "gebrochen"]], []),
+      st([["front", "verloren"]], []),
       spieler,
       0,
       home,

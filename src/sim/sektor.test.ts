@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createSim, type InputCommand } from "./index";
 import { createCollisionWorld, moveCapsule } from "./collision";
 import {
-  abschnittAt,
+  frontLinieAt,
   inBoundsXZ,
   naechstesDepot,
+  pruefeSektorMeta,
   zoneAt,
   DEPOT_REICHWEITE,
+  type SektorMeta,
   type ZonenId,
 } from "./sektor";
 import { standardWaffe } from "../data/waffen";
@@ -85,15 +87,26 @@ describe("Nacht-Sektor — Wohlgeformtheit", () => {
     }
   });
 
-  it("hat GENAU eine Frontlinie und eine Home-Line, je mit Bresche, Depot, Bau-Slot", () => {
-    expect(meta.frontAbschnitte.map((a) => a.id)).toEqual(["front"]);
-    expect(meta.homeAbschnitte.map((a) => a.id)).toEqual(["home"]);
-    for (const a of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+  it("hat GENAU eine Frontlinie und eine Home-Line, je mit Bresche, Depot, Bau-Slot, Rollen-Feldern", () => {
+    expect(meta.frontLinie.id).toBe("front");
+    expect(meta.homeLinie.id).toBe("home");
+    for (const a of [meta.frontLinie, meta.homeLinie]) {
       expect(a.bounds.maxX).toBeGreaterThan(a.bounds.minX);
       expect(a.parapetBreschen.length).toBeGreaterThanOrEqual(1);
       expect(a.bauSlots.length).toBeGreaterThanOrEqual(1);
       expect(Number.isFinite(a.depot.x)).toBe(true);
+      // Ziel-Nav-Knoten existiert im Graphen (Rollen-Feld, Audit H2).
+      expect(meta.navGraph.knoten.some((k) => k.id === a.zielKnoten)).toBe(
+        true,
+      );
     }
+    // Die Frontlinie trägt Bresche-Zugang, Reinf-Knoten und drei Rückwege.
+    expect(meta.frontLinie.brescheZugang?.bresche).toBe("bresche-front");
+    expect(meta.frontLinie.reinfKnoten).toBe("reinforcement-front");
+    expect(meta.frontLinie.hintenKanten.length).toBe(3);
+    // Die Home-Line hat keinen Weg dahinter.
+    expect(meta.homeLinie.hintenKanten).toEqual([]);
+    expect(meta.homeLinie.reinfKnoten).toBe("");
   });
 
   it("hat Feind-Anmarsch, Home-Zugänge, Landmark, Instand-Punkte und Spieler-Spawns", () => {
@@ -155,7 +168,69 @@ describe("Nacht-Sektor — Wohlgeformtheit", () => {
   });
 });
 
-describe("Nacht-Sektor — zoneAt / abschnittAt", () => {
+describe("Nacht-Sektor — N=1-Lade-Assert (Audit N2)", () => {
+  const kaputt = (meta: Partial<SektorMeta>): SektorMeta =>
+    ({ ...sektorGreybox.meta, ...meta }) as SektorMeta;
+
+  it("pruefeSektorMeta akzeptiert den echten Sektor", () => {
+    expect(() => pruefeSektorMeta(sektorGreybox.meta)).not.toThrow();
+  });
+
+  it("wirft, wenn die Frontlinie fehlt", () => {
+    expect(() =>
+      pruefeSektorMeta(
+        kaputt({
+          frontLinie: undefined as unknown as SektorMeta["frontLinie"],
+        }),
+      ),
+    ).toThrow(/Frontlinie fehlt/);
+  });
+
+  it("wirft, wenn die Home-Line unvollständig ist (kein zielKnoten)", () => {
+    expect(() =>
+      pruefeSektorMeta(
+        kaputt({
+          homeLinie: { ...sektorGreybox.meta.homeLinie, zielKnoten: "" },
+        }),
+      ),
+    ).toThrow(/ohne zielKnoten/);
+  });
+
+  it("wirft, wenn eine Linie ohne parapetBreschen/bounds kommt", () => {
+    expect(() =>
+      pruefeSektorMeta(
+        kaputt({
+          frontLinie: {
+            ...sektorGreybox.meta.frontLinie,
+            parapetBreschen: undefined as unknown as [],
+          },
+        }),
+      ),
+    ).toThrow(/unvollständig/);
+  });
+
+  it("wirft, wenn Front- und Home-Linie sich die Id teilen", () => {
+    expect(() =>
+      pruefeSektorMeta(
+        kaputt({
+          homeLinie: { ...sektorGreybox.meta.homeLinie, id: "front" },
+        }),
+      ),
+    ).toThrow(/teilen sich die Id/);
+  });
+
+  it("createSim lehnt einen Sektor ohne genau eine Frontlinie ab", () => {
+    const level = {
+      ...sektorGreybox,
+      meta: kaputt({
+        frontLinie: undefined as unknown as SektorMeta["frontLinie"],
+      }),
+    };
+    expect(() => createSim(1, level)).toThrow();
+  });
+});
+
+describe("Nacht-Sektor — zoneAt / frontLinieAt", () => {
   const { meta } = sektorGreybox;
 
   it("zoneAt trifft Stichproben je Zone", () => {
@@ -174,11 +249,11 @@ describe("Nacht-Sektor — zoneAt / abschnittAt", () => {
     }
   });
 
-  it("abschnittAt trifft nur die Frontlinie", () => {
-    expect(abschnittAt(meta, p(-14, 14))).toBe("front");
-    expect(abschnittAt(meta, p(0, 15))).toBe("front");
-    expect(abschnittAt(meta, p(0, -5))).toBeNull();
-    expect(abschnittAt(meta, p(0, 40))).toBeNull();
+  it("frontLinieAt trifft nur die Frontlinie", () => {
+    expect(frontLinieAt(meta, p(-14, 14))).toBe("front");
+    expect(frontLinieAt(meta, p(0, 15))).toBe("front");
+    expect(frontLinieAt(meta, p(0, -5))).toBeNull();
+    expect(frontLinieAt(meta, p(0, 40))).toBeNull();
   });
 });
 
@@ -235,17 +310,14 @@ describe("Nacht-Sektor — in der Sim", () => {
     }
   });
 
-  it("_setAbschnittVerloren('front') lenkt alle Gegner auf die Home-Line und öffnet den Weg nach hinten", () => {
-    const sim = createSim(2, sektorGreybox, {
-      waves: true,
-      aktiveAchsen: ["front"],
-    });
+  it("_setLinieVerloren('front') lenkt alle Gegner auf die Home-Line und öffnet den Weg nach hinten", () => {
+    const sim = createSim(2, sektorGreybox, { waves: true });
     for (let i = 0; i < 320; i += 1) sim.tick(command(), DT);
     expect(
       sim.getState().enemies.every((e) => e.zielKnoten === "front-front"),
     ).toBe(true);
 
-    sim._setAbschnittVerloren("front", true);
+    sim._setLinieVerloren("front", true);
     for (let i = 0; i < 3000; i += 1) sim.tick(command(), DT);
     const es = sim.getState().enemies;
     expect(es.length).toBeGreaterThan(0);
@@ -254,11 +326,8 @@ describe("Nacht-Sektor — in der Sim", () => {
   });
 
   it("Infiltration: bei verlorener Linie spawnen Gegner am verdeckten Knoten, nie im Hinterland", () => {
-    const sim = createSim(5, sektorGreybox, {
-      waves: true,
-      aktiveAchsen: ["front"],
-    });
-    sim._setAbschnittVerloren("front", true);
+    const sim = createSim(5, sektorGreybox, { waves: true });
+    sim._setLinieVerloren("front", true);
     for (let i = 0; i < 400; i += 1) sim.tick(command(), DT);
     const rein = sektorGreybox.meta.navGraph.knoten.find(
       (k) => k.id === "reinforcement-front",
@@ -336,7 +405,6 @@ describe("Nacht-Sektor — Frontlinie & Home-Line (AP4-03/04)", () => {
     }
     const sim = createSim(7, sektorGreybox, {
       enemies: strom,
-      aktiveAchsen: ["front"],
     });
     // Der Spieler zieht sich durch den Laufgraben ins Hinterland zurück — die
     // Frontlinie ist ungehalten (die N=1-Maschine gilt als „gehalten“, solange
@@ -371,14 +439,13 @@ describe("Nacht-Sektor — Frontlinie & Home-Line (AP4-03/04)", () => {
           abschnitt: "front",
         },
       ],
-      aktiveAchsen: ["front"],
     });
-    besetzt._setAbschnittVerloren("front", true);
+    besetzt._setLinieVerloren("front", true);
     besetzt.rueckerobern("front");
     expect(besetzt.getState().front[0]!.zustand).toBe("verloren");
 
-    const leer = createSim(1, sektorGreybox, { aktiveAchsen: ["front"] });
-    leer._setAbschnittVerloren("front", true);
+    const leer = createSim(1, sektorGreybox, {});
+    leer._setLinieVerloren("front", true);
     expect(leer.getState().front[0]!.zustand).toBe("verloren");
     leer.rueckerobern("front");
     expect(leer.getState().front[0]!.zustand).toBe("gebrochen");
@@ -391,12 +458,12 @@ describe("Nacht-Sektor — Frontlinie & Home-Line (AP4-03/04)", () => {
     ).toBe(true);
   });
 
-  it("_setAbschnittVerloren(false) setzt die Linie vollständig zurück", () => {
-    const sim = createSim(1, sektorGreybox, { aktiveAchsen: ["front"] });
-    sim._setAbschnittVerloren("front", true);
+  it("_setLinieVerloren(false) setzt die Linie vollständig zurück", () => {
+    const sim = createSim(1, sektorGreybox, {});
+    sim._setLinieVerloren("front", true);
     expect(sim.getState().front[0]!.zustand).toBe("verloren");
     expect(sim.getState().front[0]!.breschenOffen).toBeGreaterThanOrEqual(1);
-    sim._setAbschnittVerloren("front", false);
+    sim._setLinieVerloren("front", false);
     const f = sim.getState().front[0]!;
     expect(f.zustand).toBe("stabil");
     expect(f.breschenOffen).toBe(0);
@@ -405,7 +472,7 @@ describe("Nacht-Sektor — Frontlinie & Home-Line (AP4-03/04)", () => {
   it("alle Home-Abschnitte verloren → Einsatz verloren; Trupp aus → Einsatz verloren", () => {
     const a = createSim(1, sektorGreybox, { waves: true });
     for (let i = 0; i < 240; i += 1) a.tick(command(), DT);
-    a._setAbschnittVerloren("home", true);
+    a._setLinieVerloren("home", true);
     a.tick(command(), DT);
     expect(a.getState().einsatz.phase).toBe("vorbei");
     expect(a.getState().einsatz.ergebnis).toBe("verloren");
@@ -446,7 +513,6 @@ describe("Nacht-Sektor — die Uhr (AP4-04)", () => {
           abschnitt: "front",
         },
       ],
-      aktiveAchsen: ["front"],
     });
   const feuere = (sim: ReturnType<typeof createSim>) => {
     for (let i = 0; i < 500; i += 1)
@@ -462,7 +528,7 @@ describe("Nacht-Sektor — die Uhr (AP4-04)", () => {
       steht.getState().wave.angriffskraftRest;
 
     const fiel = bau();
-    fiel._setAbschnittVerloren("front", true);
+    fiel._setLinieVerloren("front", true);
     feuere(fiel);
     expect(fiel.getState().nachschub).toBe(5);
     const abbauFiel =
@@ -479,8 +545,8 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
 
   it("H1: nach dem Fall strömen Gegner durch die offene Bresche hinter die Front (zielen auf home-ziel)", () => {
     // Seed 2 → Spawn Ostflanke, weit von der Mittel-Bresche.
-    const sim = createSim(2, sektorGreybox, { aktiveAchsen: ["front"] });
-    sim._setAbschnittVerloren("front", true);
+    const sim = createSim(2, sektorGreybox, {});
+    sim._setLinieVerloren("front", true);
     sim.spawnEnemy("linieninfanterie", { x: 0, y: 0.2, z: 24 }, "front");
     const bk = meta.navGraph.knoten.find((k) => k.id === "bresche-front")!;
     let minZ = Infinity;
@@ -502,7 +568,7 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
   });
 
   it("H1: eine geschlossene Bresche bleibt eine Wand (Gegenprobe)", () => {
-    const sim = createSim(2, sektorGreybox, { aktiveAchsen: ["front"] });
+    const sim = createSim(2, sektorGreybox, {});
     // Kante offen, aber Bresche zu (kein Kollider aus) → wie Audit H1 vor dem Fix.
     sim._setKanteOffen("bresche-front", "vorfront", true);
     sim.spawnEnemy("linieninfanterie", { x: 0, y: 0.2, z: 24 }, "front");
@@ -535,7 +601,13 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
 
 describe("Nacht-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
   it("eingemauerte Spawns werden despawnt (Angriffskraft zurück), der Director schaltet weiter", () => {
-    const kammer = { x: -20, z: 40 };
+    // Die Kammer liegt auf dem Verstärkungs-Knoten `reinforcement-front`
+    // (−7, 26): so führt auch die Watchdog-Relokation (Stufe 2) zurück in die
+    // versiegelte Kammer → der Gegner fährt sich final fest und wird despawnt.
+    const rein = sektorGreybox.meta.navGraph.knoten.find(
+      (k) => k.id === "reinforcement-front",
+    )!;
+    const kammer = { x: rein.pos.x, z: rein.pos.z };
     const wand = (cx: number, cz: number, sx: number, sz: number) => ({
       center: { x: cx, y: 1.2, z: cz },
       size: { x: sx, y: 2.4, z: sz },
@@ -554,7 +626,6 @@ describe("Nacht-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
     const sim = createSim(1, level, {
       waves: true,
       startAngriffskraft: 2,
-      aktiveAchsen: [],
     });
     let sahGegner = false;
     let sahPause = false;
@@ -576,8 +647,8 @@ describe("Nacht-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
 
 describe("Nacht-Sektor — Munitions-Nachschub (AP5-02)", () => {
   const { meta } = sektorGreybox;
-  const alle = [...meta.frontAbschnitte, ...meta.homeAbschnitte];
-  const depotFront = meta.frontAbschnitte[0]!.depot;
+  const alle = [meta.frontLinie, meta.homeLinie];
+  const depotFront = meta.frontLinie.depot;
   const RESERVE = standardWaffe.reserve;
 
   /** Seed, dessen Spawn der mittlere ist (0, −1,4, 15) — nahe dem Front-Depot. */
@@ -660,11 +731,9 @@ describe("Nacht-Sektor — Munitions-Nachschub (AP5-02)", () => {
   });
 
   it("eine gefallene Linie hat ihr Depot verloren; rueckerobern gibt es zurück", () => {
-    const sim = createSim(mittlererSeed(), sektorGreybox, {
-      aktiveAchsen: ["front"],
-    });
+    const sim = createSim(mittlererSeed(), sektorGreybox, {});
     laufeZu(sim, depotFront);
-    sim._setAbschnittVerloren("front", true);
+    sim._setLinieVerloren("front", true);
     sim._setReserve(0);
     sim.tick(command(), DT);
     expect(depotNah(sim)).toBeNull();

@@ -7,15 +7,8 @@ import {
 } from "./lagekarte";
 
 const base: LagekarteData = {
-  front: [
-    { id: "A", zustand: "stabil" },
-    { id: "B", zustand: "gebrochen" },
-    { id: "C", zustand: "verloren" },
-  ],
-  home: [
-    { id: "H-West", zustand: "stabil" },
-    { id: "H-Ost", zustand: "bedraengt" },
-  ],
+  front: [{ id: "front", zustand: "gebrochen" }],
+  home: [{ id: "home", zustand: "bedraengt" }],
   einsatz: { phase: "wellen", ergebnis: "offen" },
 };
 
@@ -43,14 +36,16 @@ describe("lagekarte", () => {
     expect(root()?.hidden).toBe(true);
   });
 
-  it("rendert Front- und Home-Abschnitte mit Zustand (Farbe + Text)", () => {
+  it("rendert Frontlinie und Home-Line mit Zustand (Farbe + Text)", () => {
     karte.setVisible(true);
     karte.update(base);
-    expect(cell("A")?.dataset.zustand).toBe("stabil");
-    expect(cell("B")?.dataset.zustand).toBe("gebrochen");
-    expect(cell("C")?.dataset.zustand).toBe("verloren");
-    expect(cell("H-Ost")?.dataset.zustand).toBe("bedraengt");
-    expect(cell("C")?.querySelector("span")?.textContent).toBe("verloren");
+    expect(cell("front")?.dataset.zustand).toBe("gebrochen");
+    expect(cell("home")?.dataset.zustand).toBe("bedraengt");
+    expect(cell("front")?.querySelector("span")?.textContent).toBe("gebrochen");
+    // verlorene Linie: eigener Zustand
+    karte.update({ ...base, front: [{ id: "front", zustand: "verloren" }] });
+    expect(cell("front")?.dataset.zustand).toBe("verloren");
+    expect(cell("front")?.querySelector("span")?.textContent).toBe("verloren");
   });
 
   it("zeigt die Einsatzphase im Fuß, inkl. Ergebnis bei 'vorbei'", () => {
@@ -70,7 +65,7 @@ describe("lagekarte", () => {
 
   it("aktualisiert nicht, solange ausgeblendet (No-op)", () => {
     karte.update(base); // versteckt
-    expect(cell("A")).toBeUndefined();
+    expect(cell("front")).toBeUndefined();
   });
 
   it("dispose entfernt den Knoten und den Key-Listener", () => {

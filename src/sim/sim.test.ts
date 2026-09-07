@@ -461,13 +461,13 @@ describe("golden replay — Sektor-Nav-Graph", () => {
   it("trifft den Nav-Golden-Anker", () => {
     const s = replay();
     // AP6-01 (Neubaseline, begründet): neuer Nacht-Sektor mit EINER Frontlinie
-    // (`front`) + EINER Home-Line (`home`) statt A/B/C, größeres Grabennetz,
-    // neue Nav-Knoten (`front-front`, drei Feind-Spawns). Der Zielknoten aller
-    // Wellengegner ist damit `front-front`, der Abschnitt `"front"`. Die Sim-
-    // Regeln (Wellenkurve 5·8·…, Uhr, Klassenmischung) sind unverändert; nur
-    // Sektor-Geometrie/Nav wurde ausgetauscht. Gegenprobe: der Determinismus-
-    // Test oben (zwei identische Läufe) und die ganze Wellen-Eskalation in
-    // wave-eskalation.test.ts laufen mit denselben Regeln grün.
+    // (`front`) + EINER Home-Line (`home`), größeres Grabennetz, neue Nav-Knoten
+    // (`front-front`, drei Feind-Spawns). Der Zielknoten aller Wellengegner ist
+    // damit `front-front`, die Linie `"front"`. AP6-02 (dieser Stand) hat die
+    // Werte NICHT bewegt — die A/B/C-Verdrahtung raus, `frontZiel` jetzt aus den
+    // Sektor-Metadaten, `abschnittRng` (eigener, sonst ungenutzter Strom)
+    // entfernt: kein Rng-Versatz, kein Verhaltenswechsel. Gegenprobe: der
+    // Determinismus-Test oben + die Wellen-Eskalation in wave-eskalation.test.ts.
     expect(s.tick).toBe(600);
     expect(s.player.pos.x).toBeCloseTo(3.6891, 3);
     expect(s.player.pos.z).toBeCloseTo(12.1298, 3);
@@ -516,10 +516,11 @@ describe("golden replay — Sektor-Nav-Graph", () => {
 // Golden-/Replay-Anker für „die Uhr" (AP4-04): ein Kill an der Frontlinie
 // zermürbt die Angriffskraft stärker als an einer gefallenen Front.
 describe("golden replay — die Uhr (AP4-04)", () => {
-  // AP6-01 (Neubaseline): EINE Frontlinie `front` statt Abschnitt `A`, neuer
-  // Spawn (Seed 1 → (−10, 15)); der Gegner steht direkt davor (+Z). Die Uhr
-  // selbst (−2 an der stehenden Frontlinie, −1 an der gefallenen) ist
-  // unverändert. Gegenprobe: der Determinismus-Test oben.
+  // AP6-01 (Neubaseline): EINE Frontlinie `front`, neuer Spawn (Seed 1 →
+  // (−10, 15)); der Gegner steht direkt davor (+Z). Die Uhr selbst (−2 an der
+  // stehenden Frontlinie, −1 an der gefallenen) ist unverändert — AP6-02 hat
+  // nur die A/B/C-Verdrahtung entfernt, kein Verhalten. Gegenprobe: der
+  // Determinismus-Test oben.
   const bau = () =>
     createSim(1, sektorGreybox, {
       enemies: [
@@ -529,7 +530,6 @@ describe("golden replay — die Uhr (AP4-04)", () => {
           abschnitt: "front",
         },
       ],
-      aktiveAchsen: ["front"],
     });
   const feuere = (sim: ReturnType<typeof createSim>) => {
     for (let i = 0; i < 500; i += 1)
@@ -551,7 +551,7 @@ describe("golden replay — die Uhr (AP4-04)", () => {
     expect(steht.getState().wave.angriffskraftRest).toBe(148); // 150 − 1*2
 
     const fiel = bau();
-    fiel._setAbschnittVerloren("front", true);
+    fiel._setLinieVerloren("front", true);
     feuere(fiel);
     expect(fiel.getState().nachschub).toBe(5);
     expect(fiel.getState().wave.angriffskraftRest).toBe(149); // 150 − 1*1

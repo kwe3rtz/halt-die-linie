@@ -3,8 +3,8 @@
 //
 // Die konkreten Sektor-Daten (der handgebaute Greybox) liegen in
 // `src/data/sektor.ts`. Dieses Modul definiert nur, was die Sim-/Gameplay-
-// Schichten davon brauchen: die Zonen-/Abschnitts-Typen und `zoneAt` /
-// `abschnittAt` für AP4-02/03/04.
+// Schichten davon brauchen: die Zonen-/Linien-Typen und `zoneAt` /
+// `frontLinieAt` für AP4-02/03/04.
 import type { Vec3 } from "./math";
 import type { Aabb, LevelData } from "./collision";
 
@@ -22,12 +22,15 @@ export interface ZonenEintrag {
 }
 
 /**
- * Eine haltbare Linie. Im Nacht-Sektor (AP6-01) genau zwei: die Frontlinie
+ * Eine haltbare Linie. Im Nacht-Sektor genau zwei: die Frontlinie
  * (`id: "front"`) und die Home-Line (`id: "home"`) — je **eine** Linie, die als
- * Ganzes hält oder fällt. Die `front.ts`-Zustandsmaschine nimmt N Einträge; die
- * bewusste Vereinfachung auf N = 1 (A/B/C-Reste raus) macht AP6-02.
+ * Ganzes hält oder fällt (`SektorMeta.frontLinie` / `.homeLinie`). Die
+ * Rollen-Felder (`zielKnoten`, `hintenKanten`, …) lösen die alte
+ * String-Ableitung (`front-${id}`, `HINTEN_KANTE[A|B|C]`, `reinforcement-${id}`)
+ * ab — Ziel-Nav-Knoten, Rückkanten und Spawn-Rollen kommen aus den Daten
+ * (AP6-02, Audit H2).
  */
-export interface FrontAbschnitt {
+export interface FrontLinie {
   id: string;
   bounds: Aabb;
   /** Stellen, an denen der Feind das Parapet aufreißen kann (AP4-03). */
@@ -36,6 +39,30 @@ export interface FrontAbschnitt {
   bauSlots: Vec3[];
   /** Kleines Nachschubdepot der Linie — Uhr-Effekt bei Verlust (AP4-04). */
   depot: Vec3;
+  /**
+   * Nav-Knoten, den anrückende Gegner ansteuern, solange die Linie hält
+   * (Frontlinie: der Frontgraben-Zielknoten; Home-Line: `home-ziel`).
+   */
+  zielKnoten: string;
+  /**
+   * Verdeckter Verstärkungs-/Watchdog-Reloc-Knoten für die Infiltration bei
+   * Linienfall (KONZEPT.md §3 „materialisieren nie im Sichtfeld"). `""` = keiner
+   * (die Home-Line hat keine Infiltration).
+   */
+  reinfKnoten: string;
+  /**
+   * Nav-Zugang der (Haupt-)Bresche: `bresche` = der Bresche-Knoten, `davor` =
+   * der Knoten davor, dessen Kante zum Bresche-Knoten aufgeht, sobald die
+   * Bresche offen ist (AP4-06). Weitere Breschen bleiben reines physisches Loch
+   * (Audit M7 — volle Modellierung erst im AP7-Politur-Ticket). `undefined` =
+   * kein Bresche-Nav-Zugang (Home-Line).
+   */
+  brescheZugang?: { bresche: string; davor: string };
+  /**
+   * Nav-Kanten (`[von, nach]`), die beim Fall der Linie aufgehen — die Rückwege
+   * nach hinten (AP4-03). Leer für die Home-Line (kein Weg dahinter).
+   */
+  hintenKanten: (readonly [string, string])[];
 }
 
 export interface HomeZugang {
@@ -59,7 +86,7 @@ export interface NavKnoten {
 
 /**
  * Eine Kante, ungerichtet genutzt. `offen: false` heißt „noch gesperrt" —
- * die Front→hinten-Kanten öffnet AP4-03, wenn ein Abschnitt fällt.
+ * die Front→hinten-Kanten öffnet AP4-03, wenn die Frontlinie fällt.
  */
 export interface NavKante {
   von: string;
@@ -95,12 +122,18 @@ export interface SpineRoute {
 /** Semantische Metadaten neben der reinen Geometrie eines `LevelData`. */
 export interface SektorMeta {
   zonen: ZonenEintrag[];
-  frontAbschnitte: FrontAbschnitt[];
   /**
-   * Home-Line-Abschnitte (AP4-04) — dieselbe `front.ts`-Maschine wie die Front,
-   * startet aber befestigt (mehr Bresche-HP). Alle `verloren` = Einsatz verloren.
+   * Die **eine** durchgehende Frontlinie (KONZEPT.md §3). Hält oder fällt als
+   * Ganzes. Genau ein Objekt — `createSim` weist ≠1 (fehlend/unvollständig) ab
+   * (Audit N2).
    */
-  homeAbschnitte: FrontAbschnitt[];
+  frontLinie: FrontLinie;
+  /**
+   * Die **eine** Home-Line (AP4-04) — dieselbe `front.ts`-Maschine wie die
+   * Front, startet aber befestigt (mehr Bresche-HP). `verloren` = Einsatz
+   * verloren.
+   */
+  homeLinie: FrontLinie;
   /** Feind-Spawn-/Anmarsch-Punkte auf der Feindseite (verdeckt, KONZEPT.md §3). */
   feindAnmarsch: Vec3[];
   /** Zugänge zur Home-Line (Kompass-Peilung / Audio-Panning). */
@@ -139,15 +172,15 @@ export interface SektorData extends LevelData {
 }
 
 /**
- * Etikett des Parapet-Segments an der `index`-ten Bresche eines Abschnitts
- * (AP4-06). Dieselbe Konvention nutzen Daten (`LevelBox.tag`), Sim
- * (`setKolliderAktiv`) und Renderer (Segment ausblenden).
+ * Etikett des Parapet-Segments an der `index`-ten Bresche einer Linie (AP4-06).
+ * Dieselbe Konvention nutzen Daten (`LevelBox.tag`), Sim (`setKolliderAktiv`)
+ * und Renderer (Segment ausblenden).
  */
-export function brescheTag(abschnittId: string, index: number): string {
-  return `bresche:${abschnittId}:${index}`;
+export function brescheTag(linieId: string, index: number): string {
+  return `bresche:${linieId}:${index}`;
 }
 
-/** Punkt-in-AABB, nur X/Z — Zonen und Abschnitte sind Säulen über die Höhe. */
+/** Punkt-in-AABB, nur X/Z — Zonen und Linien sind Säulen über die Höhe. */
 export function inBoundsXZ(b: Aabb, p: Vec3): boolean {
   return p.x >= b.minX && p.x <= b.maxX && p.z >= b.minZ && p.z <= b.maxZ;
 }
@@ -166,14 +199,36 @@ export function zoneAt(meta: SektorMeta, pos: Vec3): ZonenId | null {
   return null;
 }
 
-/** Welcher Frontabschnitt deckt `pos` ab (X/Z)? `null` außerhalb der Front. */
-export function abschnittAt(meta: SektorMeta, pos: Vec3): string | null {
-  for (const a of meta.frontAbschnitte) {
-    if (inBoundsXZ(a.bounds, pos)) {
-      return a.id;
+/** Deckt die Frontlinie `pos` ab (X/Z)? Ihre Id, sonst `null`. */
+export function frontLinieAt(meta: SektorMeta, pos: Vec3): string | null {
+  return inBoundsXZ(meta.frontLinie.bounds, pos) ? meta.frontLinie.id : null;
+}
+
+/**
+ * Prüft beim Laden, dass der Sektor **genau eine** wohlgeformte Front- und
+ * Home-Linie mitbringt (Audit N2 — kein stiller Fallback mehr bei fehlendem /
+ * unvollständigem Eintrag). Wirft mit einer sprechenden Meldung, sonst No-op.
+ * `createSim` ruft das auf, wenn ein `LevelData` eine `meta` trägt.
+ */
+export function pruefeSektorMeta(meta: SektorMeta): void {
+  const pruefeLinie = (linie: FrontLinie | undefined, rolle: string): void => {
+    if (!linie || typeof linie.id !== "string" || linie.id === "") {
+      throw new Error(`Sektor-Meta: ${rolle} fehlt (genau eine erwartet).`);
     }
+    if (!linie.bounds || !Array.isArray(linie.parapetBreschen)) {
+      throw new Error(`Sektor-Meta: ${rolle} „${linie.id}" ist unvollständig.`);
+    }
+    if (typeof linie.zielKnoten !== "string" || linie.zielKnoten === "") {
+      throw new Error(`Sektor-Meta: ${rolle} „${linie.id}" ohne zielKnoten.`);
+    }
+  };
+  pruefeLinie(meta.frontLinie, "Frontlinie");
+  pruefeLinie(meta.homeLinie, "Home-Line");
+  if (meta.frontLinie.id === meta.homeLinie.id) {
+    throw new Error(
+      `Sektor-Meta: Front- und Home-Linie teilen sich die Id „${meta.frontLinie.id}".`,
+    );
   }
-  return null;
 }
 
 /**
@@ -185,21 +240,21 @@ export function abschnittAt(meta: SektorMeta, pos: Vec3): string | null {
 export const DEPOT_REICHWEITE = 2.0;
 
 /**
- * Nächstes verfügbares Munitionsdepot in Reichweite (AP5-02): die Id des
- * Abschnitts, dessen `depot` höchstens `reichweite` (3D) entfernt liegt und
- * für den `verfuegbar(id)` gilt — ein gefallener Abschnitt hat sein Depot
- * verloren (`AbschnittFront.depotVerloren`, KONZEPT.md §3 „die Uhr").
+ * Nächstes verfügbares Munitionsdepot in Reichweite (AP5-02): die Id der
+ * Linie, deren `depot` höchstens `reichweite` (3D) entfernt liegt und für die
+ * `verfuegbar(id)` gilt — eine gefallene Linie hat ihr Depot verloren
+ * (`LinienFront.depotVerloren`, KONZEPT.md §3 „die Uhr").
  * `null`, wenn keins passt. Rein.
  */
 export function naechstesDepot(
-  abschnitte: readonly Pick<FrontAbschnitt, "id" | "depot">[],
+  linien: readonly Pick<FrontLinie, "id" | "depot">[],
   pos: Vec3,
   reichweite: number,
   verfuegbar: (id: string) => boolean = () => true,
 ): string | null {
   let best: string | null = null;
   let bestAbstand = reichweite;
-  for (const a of abschnitte) {
+  for (const a of linien) {
     const d = Math.hypot(
       a.depot.x - pos.x,
       a.depot.y - pos.y,

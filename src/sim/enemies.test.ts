@@ -24,6 +24,14 @@ function enemyAt(x: number, z: number, id = 1): EnemyEntity {
   return spawnEnemy(linieninfanterie, id, { x, y: 0, z });
 }
 
+// Ziel-Nav-Knoten, die die Sim sonst aus den Sektor-Metadaten reicht (AP6-02).
+// Die Mini-Graphen dieser Tests benennen ihren Front-Knoten `front-x`.
+const ZIELE = {
+  frontZiel: "front-x",
+  homeZiel: "home-ziel",
+  reinfKnoten: "reinforcement-x",
+} as const;
+
 const player = { x: 0, y: 0, z: 0 };
 
 describe("enemies — helpers", () => {
@@ -154,18 +162,18 @@ describe("enemies — updateEnemies", () => {
 });
 
 describe("enemies — Nav-Graph folgen (AP4-02)", () => {
-  // Kette n1 → n2 → front-A → home-ziel (letzte Kante anfangs zu).
+  // Kette n1 → n2 → front-x → home-ziel (letzte Kante anfangs zu).
   const graph: NavGraph = {
     knoten: [
       { id: "n1", pos: { x: 0, y: 0, z: 30 }, zone: "niemandsland" },
       { id: "n2", pos: { x: 0, y: 0, z: 18 }, zone: "niemandsland" },
-      { id: "front-A", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
+      { id: "front-x", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
       { id: "home-ziel", pos: { x: 0, y: 0, z: -20 }, zone: "homeline" },
     ],
     kanten: [
       { von: "n1", nach: "n2", offen: true },
-      { von: "n2", nach: "front-A", offen: true },
-      { von: "front-A", nach: "home-ziel", offen: false },
+      { von: "n2", nach: "front-x", offen: true },
+      { von: "front-x", nach: "home-ziel", offen: false },
     ],
   };
   const kopie = (): NavGraph => ({
@@ -189,11 +197,12 @@ describe("enemies — Nav-Graph folgen (AP4-02)", () => {
         {
           graph,
           verloren,
+          ...ZIELE,
         },
       );
       if (i % 50 === 0) zVerlauf.push(list[0]?.pos.z ?? 0);
     }
-    expect(list[0]?.ziel).toBe("front-A");
+    expect(list[0]?.ziel).toBe("front-x");
     // Monoton nach Süden entlang der Kette (nicht schnurstracks quer).
     for (let i = 1; i < zVerlauf.length; i += 1) {
       expect(zVerlauf[i] ?? 0).toBeLessThanOrEqual(
@@ -219,15 +228,16 @@ describe("enemies — Nav-Graph folgen (AP4-02)", () => {
         {
           graph: g,
           verloren,
+          ...ZIELE,
         },
       );
     }
     const zVorFall = list[0]?.pos.z ?? 0;
-    expect(list[0]?.ziel).toBe("front-A");
+    expect(list[0]?.ziel).toBe("front-x");
 
     verloren.add("A");
     for (const k of g.kanten) {
-      if (k.von === "front-A" && k.nach === "home-ziel") k.offen = true;
+      if (k.von === "front-x" && k.nach === "home-ziel") k.offen = true;
     }
     for (let i = 0; i < 700; i += 1) {
       list = updateEnemies(
@@ -240,6 +250,7 @@ describe("enemies — Nav-Graph folgen (AP4-02)", () => {
         {
           graph: g,
           verloren,
+          ...ZIELE,
         },
       );
     }
@@ -255,6 +266,7 @@ describe("enemies — Nav-Graph folgen (AP4-02)", () => {
       list = updateEnemies(list, world, { x: 0, y: 0, z: 1.5 }, true, hit, DT, {
         graph,
         verloren,
+        ...ZIELE,
       });
     }
     expect(list[0]?.zustand).toBe("angriff");
@@ -282,7 +294,7 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
     ],
     spawnPoints: [],
   });
-  // n1 liegt hinter der Wand, front-A davor; der direkte Weg n1 → front-A ist
+  // n1 liegt hinter der Wand, front-x davor; der direkte Weg n1 → front-x ist
   // im Graph „offen", geht aber durch die Wand (Datenfehler, wie Audit H1).
   // Über `seite` (rechts an der Wand vorbei, weit genug für den 3-m-Wegpunkt-
   // Radius) kommt man herum.
@@ -290,25 +302,25 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
     knoten: [
       { id: "n1", pos: { x: 0, y: 0, z: 20 }, zone: "niemandsland" },
       { id: "seite", pos: { x: 14, y: 0, z: 14 }, zone: "niemandsland" },
-      { id: "front-A", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
+      { id: "front-x", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
       {
-        id: "reinforcement-A",
+        id: "reinforcement-x",
         pos: { x: 9, y: 0, z: 20 },
         zone: "niemandsland",
       },
     ],
     kanten: [
-      { von: "n1", nach: "front-A", offen: true },
+      { von: "n1", nach: "front-x", offen: true },
       { von: "n1", nach: "seite", offen: true },
-      { von: "seite", nach: "front-A", offen: true },
-      { von: "reinforcement-A", nach: "seite", offen: true },
+      { von: "seite", nach: "front-x", offen: true },
+      { von: "reinforcement-x", nach: "seite", offen: true },
     ],
   };
   const spielerWeit = { x: 0, y: 0, z: -30 };
 
   it("1. Eingriff: nach FEST_ZEIT ohne Fortschritt wird der Pfad von einem erreichbaren Knoten neu geplant — der Gegner kommt herum", () => {
     let list = [spawnEnemy(linieninfanterie, 1, { x: 0, y: 0, z: 19 }, 1, "A")];
-    const nav = { graph, verloren: new Set<string>() };
+    const nav = { graph, verloren: new Set<string>(), ...ZIELE };
     let festNach = -1;
     for (let i = 0; i < 60 * 20; i += 1) {
       list = updateEnemies(
@@ -329,20 +341,21 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
     expect(e).toBeDefined();
     expect(festNach).toBeGreaterThan(FEST_ZEIT * 60 - 5);
     expect(e?.festVersuche).toBe(1);
-    expect(e?.pos.z ?? 99).toBeLessThan(6); // an front-A angekommen — um die Wand herum
+    expect(e?.pos.z ?? 99).toBeLessThan(6); // an front-x angekommen — um die Wand herum
   });
 
   it("ohne Ausweg: 2. Eingriff relokiert auf reinforcement-<abschnitt>, 3. despawnt mit Callback", () => {
     // Graph ohne Umweg und ohne Reinforcement → Relokation entfällt, Despawn folgt.
     const sackgasse: NavGraph = {
-      knoten: graph.knoten.filter((k) => k.id === "n1" || k.id === "front-A"),
-      kanten: [{ von: "n1", nach: "front-A", offen: true }],
+      knoten: graph.knoten.filter((k) => k.id === "n1" || k.id === "front-x"),
+      kanten: [{ von: "n1", nach: "front-x", offen: true }],
     };
     const despawned: number[] = [];
     let list = [spawnEnemy(linieninfanterie, 7, { x: 0, y: 0, z: 19 }, 1, "A")];
     const nav = {
       graph: sackgasse,
       verloren: new Set<string>(),
+      ...ZIELE,
       onDespawn: (e: EnemyEntity) => despawned.push(e.id),
     };
     for (let i = 0; i < 60 * 30 && list.length > 0; i += 1) {
@@ -361,12 +374,12 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
   });
 
   it("Relokation: mit reinforcement-Knoten landet der Gegner dort statt zu despawnen", () => {
-    // Umweg-Knoten `seite` ist unsichtbar gemacht: nur n1/front-A/reinforcement.
+    // Umweg-Knoten `seite` ist unsichtbar gemacht: nur n1/front-x/reinforcement.
     const g: NavGraph = {
       knoten: graph.knoten.filter((k) => k.id !== "seite"),
       kanten: [
-        { von: "n1", nach: "front-A", offen: true },
-        { von: "reinforcement-A", nach: "front-A", offen: true },
+        { von: "n1", nach: "front-x", offen: true },
+        { von: "reinforcement-x", nach: "front-x", offen: true },
       ],
     };
     const despawned: number[] = [];
@@ -374,6 +387,7 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
     const nav = {
       graph: g,
       verloren: new Set<string>(),
+      ...ZIELE,
       onDespawn: (e: EnemyEntity) => despawned.push(e.id),
     };
     let relokiert = false;
@@ -405,7 +419,7 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
 
   it("ein normal marschierender Gegner löst den Watchdog nie aus", () => {
     let list = [spawnEnemy(linieninfanterie, 1, { x: 8, y: 0, z: 30 }, 1, "A")];
-    const nav = { graph, verloren: new Set<string>() };
+    const nav = { graph, verloren: new Set<string>(), ...ZIELE };
     for (let i = 0; i < 60 * 15; i += 1) {
       list = updateEnemies(
         list,
@@ -484,9 +498,9 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     const graph: NavGraph = {
       knoten: [
         { id: "n1", pos: { x: 0, y: 0, z: 30 }, zone: "niemandsland" },
-        { id: "front-A", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
+        { id: "front-x", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
       ],
-      kanten: [{ von: "n1", nach: "front-A", offen: true }],
+      kanten: [{ von: "n1", nach: "front-x", offen: true }],
     };
     const spieler = { x: 0, y: 0, z: -40 }; // weit weg, außer Sicht
     const lauf = (spuren: number[]) => {
@@ -500,6 +514,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
         list = updateEnemies(list, world, spieler, true, () => undefined, DT, {
           graph,
           verloren: new Set(),
+          ...ZIELE,
         });
       }
       return list.map((e) => e.pos.x);
@@ -540,11 +555,11 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
           zone: "frontlinie",
           engstelle: true,
         },
-        { id: "front-A", pos: { x: 0, y: -1.6, z: 2 }, zone: "frontlinie" },
+        { id: "front-x", pos: { x: 0, y: -1.6, z: 2 }, zone: "frontlinie" },
       ],
       kanten: [
         { von: "n1", nach: "sap", offen: true },
-        { von: "sap", nach: "front-A", offen: true },
+        { von: "sap", nach: "front-x", offen: true },
       ],
     };
     // Spieler im Graben, 5,5 m entfernt: auf Augenhöhe sichtbar (über das
@@ -563,6 +578,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
       list = updateEnemies(list, grabenWorld, spieler, true, hit, DT, {
         graph,
         verloren: new Set(),
+        ...ZIELE,
       });
       const e = list[0];
       if (!e) break;
@@ -577,9 +593,9 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     expect(list[0]?.pos.y).toBeLessThan(-1.5); // steht im Graben, nicht davor
   });
 
-  it("Engstelle mit rechtwinklig abknickendem Pfad (bresche-B-Fall): gilt erst als passiert, wenn der Gegner in Anmarschrichtung hindurch ist", () => {
-    // Wie im Sektor: lab-vorfront → bresche-B ist ein 45°-Anmarsch (−3, −3),
-    // bresche-B → front-B knickt rechtwinklig ab (+3, −3). Wand um z = 5 mit
+  it("Engstelle mit rechtwinklig abknickendem Pfad (bresche-x-Fall): gilt erst als passiert, wenn der Gegner in Anmarschrichtung hindurch ist", () => {
+    // Wie im Sektor: lab-vorfront → bresche-x ist ein 45°-Anmarsch (−3, −3),
+    // bresche-x → front-x knickt rechtwinklig ab (+3, −3). Wand um z = 5 mit
     // 2,6-m-Lücke bei x = −3.
     const lueckeWorld = createCollisionWorld({
       boxes: [
@@ -593,16 +609,16 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
       knoten: [
         { id: "n1", pos: { x: 0, y: 0, z: 8 }, zone: "niemandsland" },
         {
-          id: "bresche-B",
+          id: "bresche-x",
           pos: { x: -3, y: 0, z: 5 },
           zone: "frontlinie",
           engstelle: true,
         },
-        { id: "front-B", pos: { x: 0, y: 0, z: 2 }, zone: "frontlinie" },
+        { id: "front-x", pos: { x: 0, y: 0, z: 2 }, zone: "frontlinie" },
       ],
       kanten: [
-        { von: "n1", nach: "bresche-B", offen: true },
-        { von: "bresche-B", nach: "front-B", offen: true },
+        { von: "n1", nach: "bresche-x", offen: true },
+        { von: "bresche-x", nach: "front-x", offen: true },
       ],
     };
     const spieler = { x: 0, y: 0, z: -40 };
@@ -627,7 +643,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
           true,
           () => undefined,
           DT,
-          { graph, verloren: new Set() },
+          { graph, verloren: new Set(), ...ZIELE },
         );
         const e = list[0];
         if (!e) break;
@@ -658,7 +674,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     const graph: NavGraph = {
       knoten: [
         { id: "n1", pos: { x: 0, y: 0, z: 10 }, zone: "niemandsland" },
-        { id: "front-A", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
+        { id: "front-x", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
         {
           id: "durchgang",
           pos: { x: 7, y: 0, z: -5 },
@@ -668,8 +684,8 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
         { id: "hinten", pos: { x: 0, y: 0, z: -12 }, zone: "hinterland" },
       ],
       kanten: [
-        { von: "n1", nach: "front-A", offen: true },
-        { von: "front-A", nach: "durchgang", offen: true },
+        { von: "n1", nach: "front-x", offen: true },
+        { von: "front-x", nach: "durchgang", offen: true },
         { von: "durchgang", nach: "hinten", offen: true },
       ],
     };
@@ -687,6 +703,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
       list = updateEnemies(list, wandWorld, spieler, true, hit, DT, {
         graph,
         verloren: new Set(),
+        ...ZIELE,
       });
       const e = list[0];
       if (!e) break;
@@ -711,12 +728,12 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     const graph: NavGraph = {
       knoten: [
         { id: "n1", pos: { x: 0, y: 0, z: 10 }, zone: "niemandsland" },
-        { id: "front-A", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
+        { id: "front-x", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
         { id: "hinten", pos: { x: 0, y: 0, z: -12 }, zone: "hinterland" },
       ],
       kanten: [
-        { von: "n1", nach: "front-A", offen: true },
-        { von: "front-A", nach: "hinten", offen: false }, // Front steht
+        { von: "n1", nach: "front-x", offen: true },
+        { von: "front-x", nach: "hinten", offen: false }, // Front steht
       ],
     };
     const spieler = { x: 0, y: 0, z: -12 };
@@ -732,6 +749,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
         {
           graph,
           verloren: new Set(),
+          ...ZIELE,
         },
       );
     }

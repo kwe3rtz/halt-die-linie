@@ -1,11 +1,11 @@
-// Lagekarte (AP4-05): statisches Sektor-Schema mit den Abschnitts-Zuständen —
-// Status, **keine** Echtzeit-Navigation. Umschalten mit `M`. Reines DOM + CSS.
-// Bekommt den State pro Frame; bei ausgeblendeter Karte ein No-op.
-import type { AbschnittZustand, EinsatzErgebnis, EinsatzPhase } from "../sim";
+// Lagekarte (AP4-05): statisches Sektor-Schema mit den Linien-Zuständen
+// (Frontlinie, Home-Line) — Status, **keine** Echtzeit-Navigation. Umschalten
+// mit `M`. Reines DOM + CSS. State pro Frame; ausgeblendet ein No-op.
+import type { LinienZustand, EinsatzErgebnis, EinsatzPhase } from "../sim";
 
 export interface LagekarteData {
-  front: readonly { id: string; zustand: AbschnittZustand }[];
-  home: readonly { id: string; zustand: AbschnittZustand }[];
+  front: readonly { id: string; zustand: LinienZustand }[];
+  home: readonly { id: string; zustand: LinienZustand }[];
   einsatz: { phase: EinsatzPhase; ergebnis: EinsatzErgebnis };
 }
 
@@ -62,7 +62,7 @@ const CSS = `
 .hdl-lagekarte__hint { margin-top: 4px; font-size: 10px; opacity: 0.5; text-align: center; }
 `;
 
-const ZUSTAND_LABEL: Record<AbschnittZustand, string> = {
+const ZUSTAND_LABEL: Record<LinienZustand, string> = {
   stabil: "stabil",
   bedraengt: "bedrängt",
   gebrochen: "gebrochen",
@@ -116,7 +116,7 @@ export function createLagekarte(
 
   const syncRow = (
     row: HTMLElement,
-    abschnitte: readonly { id: string; zustand: AbschnittZustand }[],
+    abschnitte: readonly { id: string; zustand: LinienZustand }[],
   ): void => {
     const lebende = new Set<string>();
     for (const ab of abschnitte) {

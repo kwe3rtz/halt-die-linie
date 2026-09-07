@@ -39,9 +39,7 @@ describe("kompass — DOM", () => {
     yaw: 0,
     homePos: { x: 0, z: -30 },
     abschnitte: [
-      { id: "A", pos: { x: -14, z: 13 }, zustand: "stabil" as const },
-      { id: "B", pos: { x: 0, z: 13 }, zustand: "bedraengt" as const },
-      { id: "C", pos: { x: 14, z: 13 }, zustand: "verloren" as const },
+      { id: "front", pos: { x: 0, z: 13 }, zustand: "bedraengt" as const },
     ],
     ...over,
   });
@@ -54,26 +52,30 @@ describe("kompass — DOM", () => {
     expect(cs.pointerEvents).toBe("none");
   });
 
-  it("zeigt den HOME-Marker und je Frontabschnitt einen — keine Gegner-Marker", () => {
+  it("zeigt den HOME-Marker und einen Frontlinien-Marker — keine Gegner-Marker", () => {
     kompass.update(data());
     expect(marker("HOME")).toBeTruthy();
-    expect(marker("A")).toBeTruthy();
-    expect(marker("B")).toBeTruthy();
-    expect(marker("C")).toBeTruthy();
-    // genau 4 Marker (HOME + A/B/C), nichts für Gegner.
-    expect(document.querySelectorAll(".hdl-kompass__marker").length).toBe(4);
+    expect(marker("front")).toBeTruthy();
+    // genau 2 Marker (HOME + Frontlinie), nichts für Gegner.
+    expect(document.querySelectorAll(".hdl-kompass__marker").length).toBe(2);
   });
+
+  const glyph = () =>
+    marker("front")?.querySelector(".hdl-kompass__glyph")?.textContent;
 
   it("codiert den Zustand redundant über Farbe UND Symbol", () => {
     kompass.update(data());
-    expect(marker("A")?.dataset.zustand).toBe("stabil");
-    expect(marker("C")?.dataset.zustand).toBe("verloren");
-    expect(marker("B")?.querySelector(".hdl-kompass__glyph")?.textContent).toBe(
-      "▲",
-    );
-    expect(marker("C")?.querySelector(".hdl-kompass__glyph")?.textContent).toBe(
-      "✕",
-    );
+    expect(marker("front")?.dataset.zustand).toBe("bedraengt");
+    expect(glyph()).toBe("▲");
+
+    kompass.update({
+      playerPos: { x: 0, z: 0 },
+      yaw: 0,
+      homePos: { x: 0, z: -30 },
+      abschnitte: [{ id: "front", pos: { x: 0, z: 13 }, zustand: "verloren" }],
+    });
+    expect(marker("front")?.dataset.zustand).toBe("verloren");
+    expect(glyph()).toBe("✕");
   });
 
   it("verschiebt einen Marker, wenn sich der yaw dreht", () => {

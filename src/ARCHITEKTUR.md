@@ -49,11 +49,11 @@ bleibt es sichtbar und lesbar — Pointer-Lock betrifft nur den Cursor und die
 Maus-Deltas, nicht das DOM; F3 (`keydown` auf `window`) wird weiter zugestellt.
 
 Dasselbe Muster: `src/ui/hud.ts` (HP / Munition / Welle / Nachschub / Finale-
-Text), `src/ui/kompass.ts` (AP4-05 — Peil-Band oben: HOME-Marker + je
-Frontabschnitt ein Zustands-Marker, **Farbe UND Glyph** redundant, **keine
-Gegner-Marker**; `relPeilung()` rein), `src/ui/lagekarte.ts` (AP4-05 — statisches
-Sektor-Schema mit Abschnitts-Zuständen, Umschalten **M**; kein Echtzeit-Nav).
-Alle bekommen den State pro Frame, pollen nichts.
+Text), `src/ui/kompass.ts` (AP4-05 — Peil-Band oben: HOME-Marker + je Linie ein
+Zustands-Marker, **Farbe UND Glyph** redundant, **keine Gegner-Marker**;
+`relPeilung()` rein), `src/ui/lagekarte.ts` (AP4-05 — statisches Sektor-Schema
+mit den Linien-Zuständen, Umschalten **M**; kein Echtzeit-Nav). Alle bekommen
+den State pro Frame, pollen nichts.
 
 ## Audio
 
@@ -61,10 +61,11 @@ Alle bekommen den State pro Frame, pollen nichts.
 darf `window` / `AudioContext`, importiert aus `src/sim` nur Typen und liest den
 State). `createAudio()` diffed den State frame-zu-frame (`beobachteEreignisse` —
 rein) und spielt Platzhalter-Töne (Oszillatoren) auf strategische Ereignisse:
-Abschnitt `verloren` → **Signalhorn aus Richtung Home-Line** (StereoPanner,
-`panFuerPeilung(relPeilung(...))`), Phase `finale` → Signalhorn + Truppen-Ruf.
-Default leise, stummschaltbar mit **T**. Feste Callout-Grammatik als
-String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/VO.
+`AudioEreignis` `linie-verloren` → **Signalhorn aus Richtung Home-Line**
+(StereoPanner, `panFuerPeilung(relPeilung(...))`), Phase `finale` → Signalhorn +
+Truppen-Ruf. Default leise, stummschaltbar mit **T**. Eine Callout-Grammatik
+über die realen Linien-/Zonennamen kommt mit dem VO-Paket (AP7) — die alten
+Platzhalter-Konstanten sind mit AP6-02 raus.
 
 ## First-Person-Controller, Kollision, Test-Level
 
@@ -87,8 +88,8 @@ String-Konstanten (`FRONT_CALLOUT`, `ROUTE_CALLOUT`) für späteren echten Funk/
   einmalig, `sync(state, alpha)` setzt eine `FreeCamera` auf die **interpolierte**
   Spielerposition (+ Augenhöhe) und Rotation aus `yaw`/`pitch` — kein
   `attachControl`, die Sim ist die Wahrheit. Mit `meta` (Sektor): Zonen-Material
-  je Box (`zoneAt`), Landmark-Pfosten, `syncFront` (Trümmer/Rauch je Abschnitt,
-  AP4-03), A/B/C-Schilder (`DynamicTexture`), Zonen-Tore an den zwei
+  je Box (`zoneAt`), Landmark-Pfosten, `syncFront` (Trümmer/Rauch je Linie,
+  AP4-03), FRONT/HOME-Schilder (`DynamicTexture`), Zonen-Tore an den zwei
   Rückzugs-Übergängen, geschärfte Zonen-Farbtöne. Die Leit-„Spines" aus
   AP4-05 (`meta.spineRouten`: Farb-Polylinie + Pfosten + geometrische Symbole
   je Route) werden seit AP5-05 nicht mehr gezeichnet — nur noch Datenmodell.
@@ -106,45 +107,49 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   `kartengrenze`. Vertikale Kennwerte (`GRABEN_SOHLE` −1,8 / `PARAPET_OBERKANTE`
   +0,55 / `FEUERTRITT_OBERKANTE` −0,95) als Greybox-Startwerte. **Derselbe
   Baukasten ist für den späteren Labyrinth-Generator gedacht.**
-- `src/data/sektor.ts` — `sektorGreybox: SektorData`, das „H" aus KONZEPT.md §3,
-  aus `modul(...)` + Roh-Quadern. EINE Quelle für Render + Sim. `main.ts` fährt
-  den Sektor; `testlevel.ts` bleibt für AP1–AP3-Tests.
+- `src/data/sektor.ts` — `sektorGreybox: SektorData`, der handgebaute Sektor aus
+  KONZEPT.md §3 (seit AP6-01 der Nacht-Sektor, s. u.), aus `modul(...)` +
+  Roh-Quadern. EINE Quelle für Render + Sim. `main.ts` fährt den Sektor;
+  `testlevel.ts` bleibt für AP1–AP3-Tests.
 - `src/sim/sektor.ts` — Typen (`ZonenId`, `SektorMeta`,
-  `SektorData extends LevelData`, `FrontAbschnitt`, `NavGraph`, `SpineRoute` …) +
-  reine Helfer `zoneAt` / `abschnittAt` / `inBoundsXZ`. Kein Babylon, keine
-  Logik — `SektorMeta.spineRouten` (AP4-05) ist ein reines Datenfeld, Werte in
-  `src/data/sektor.ts`, nur der Renderer liest es.
+  `SektorData extends LevelData`, `FrontLinie`, `NavGraph`, `SpineRoute` …) +
+  reine Helfer `zoneAt` / `frontLinieAt` / `inBoundsXZ` / `pruefeSektorMeta`.
+  Kein Babylon, keine Logik — `SektorMeta.spineRouten` (AP4-05) ist ein reines
+  Datenfeld, Werte in `src/data/sektor.ts`, nur der Renderer liest es.
 - `src/sim/navgraph.ts` (AP4-02) — `kuerzesterPfad` (BFS über offene Kanten,
   deterministisch), `naechsterKnoten`, `imSichtkegel`. Der `SektorMeta.navGraph`
   ist handgepflegt in `src/data/sektor.ts`. `updateEnemies` bekommt einen
-  optionalen `nav`-Kontext: damit folgen Gegner Wegpunkten (Anmarsch → Labyrinth
-  → Front, nach Durchbruch → Home), ohne = gerader Weg wie bisher. Neuberechnung
+  optionalen `nav`-Kontext: damit folgen Gegner Wegpunkten (Anmarsch →
+  Niemandsland → Front, nach Durchbruch → Home), ohne = gerader Weg wie bisher.
+  Neuberechnung
   nur bei Zielwechsel. `createSim` arbeitet auf einer Graph-Kopie (die
   exportierte `sektorGreybox` bleibt unmutiert).
-- `src/sim/front.ts` (AP4-03) — Zustandsmaschine je Abschnitt:
-  `stabil → bedraengt → gebrochen → verloren` aus Feinddruck (lebende Gegner im
-  `bounds`) und aufgerissenen Parapet-Breschen (ungehalten sinkt die Bresche-HP,
-  bei 0 offen). Erholung nur eine Stufe zurück Richtung `stabil`, nie aus
-  `verloren`. `updateFront(front, ctx, dt)` ist rein/in-place und läuft **zweimal
-  je Tick** — einmal für die Frontlinie A/B/C, einmal für die Home-Line
-  (`ctx.abschnitte` sagt welche; die Home-Line startet befestigt,
-  `createFrontState(..., faktor)`). Der `onVerloren(id)`-Callback verdrahtet in
-  `createSim` das AP4-02-Verhalten (Nav-Kanten nach hinten öffnen,
-  Infiltrations-Spawn, Depot verloren); eine offene Bresche öffnet zusätzlich
-  `bresche-<id> ↔ lab-vorfront`. `SimState.front` / `SimState.home` (Zustand +
-  offene Breschen) fürs HUD/Render. Sim-Eingänge: `rueckerobern(id)`
-  (`verloren → gebrochen`, nur bei leerem Abschnitt) und der Testeingang
-  `_setAbschnittVerloren` (dünn über der Maschine, erzwingt den Endzustand).
+- `src/sim/front.ts` (AP4-03, auf eine Linie reduziert AP6-02) —
+  Zustandsmaschine je Linie: `stabil → bedraengt → gebrochen → verloren` aus
+  Feinddruck (lebende Gegner im `bounds`) und aufgerissenen Parapet-Breschen
+  (ungehalten sinkt die Bresche-HP, bei 0 offen). Erholung nur eine Stufe
+  zurück Richtung `stabil`, nie aus `verloren`. `updateFront(f, ctx, dt)` ist
+  rein/in-place und schreibt **eine** Linie fort — `createSim` ruft es je Tick
+  **zweimal** (Frontlinie, dann Home-Line; `ctx.linie` sagt welche, die
+  Home-Line startet befestigt, `createFrontState(linie, faktor)`). Der
+  `onVerloren(id)`-Callback verdrahtet in `createSim` das AP4-02-Verhalten
+  (Nav-Kanten nach hinten aus `frontLinie.hintenKanten`, Infiltrations-Spawn am
+  `reinfKnoten`, Depot verloren); eine offene Bresche öffnet zusätzlich den
+  `frontLinie.brescheZugang` (`vorfront ↔ bresche-front`). `SimState.front` /
+  `SimState.home` sind Ein-Element-Listen (Zustand + offene Breschen) fürs
+  HUD/Render. Sim-Eingänge: `rueckerobern(id)` (`verloren → gebrochen`, nur bei
+  leerer Linie) und der Testeingang `_setLinieVerloren("front" | "home", bool)`
+  (dünn über der Maschine, erzwingt den Endzustand).
 - `src/sim/einsatz.ts` (AP4-04) — der Einsatzbogen über dem Wave-Director:
   `aufbau → wellen → finale → vorbei` mit `ergebnis: offen | gewonnen | verloren`.
   Ist die endliche `wave.angriffskraft` gebrochen und die Spawn-Queue leer, läuft
   im `finale` ein fester Countdown („Entsatz in N s"); abgelaufen → `gewonnen`,
   dann wartet die Maschine auf `entscheide("extrahieren" | "verlaengern")`
-  (verlängern = zweiter, kürzerer Countdown, `reserveStufe++`). Alle
-  Home-Abschnitte `verloren` **oder** `truppAus` → `verloren`, in jeder Phase.
-  **Die Uhr:** `zermuerbungProKill(zone, abschnittVerloren)` — jeder Kill zieht
+  (verlängern = zweiter, kürzerer Countdown, `reserveStufe++`). Home-Line
+  `verloren` **oder** `truppAus` → `verloren`, in jeder Phase.
+  **Die Uhr:** `zermuerbungProKill(zone, verloren)` — jeder Kill zieht
   zusätzlich Angriffskraft ab, je Todeszone (`frontlinie` am meisten, `homeline`
-  am wenigsten; ein schon verlorener Frontabschnitt zählt wie offenes Feld).
+  am wenigsten; eine schon verlorene Frontlinie zählt wie offenes Feld).
   `createSim` ruft das im tödlichen Treffer. `SimState.einsatz`
   (`phase / finaleRest / ergebnis`).
 - `src/sim/wave.ts` (AP4-04) — neue Phase `reserve`: statt `vorbei` schaltet der
@@ -157,12 +162,12 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   `setKolliderAktiv(world, tag, aktiv)` schaltet getaggte Boxen für Bewegung,
   Hitscan und Sichtlinie ab. Das Parapet-Modul baut je Bresche ein eigenes,
   getaggtes Segment (`ModulOpt.luecken`, `BRESCHE_BREITE` 2,6 m); Tag-Konvention
-  `brescheTag(abschnittId, index)` in `src/sim/sektor.ts` — Daten, Sim und
+  `brescheTag(linieId, index)` in `src/sim/sektor.ts` — Daten, Sim und
   Renderer nutzen dieselbe. `createSim.syncBreschen()` hält nach jedem
-  `updateFront` (und nach `rueckerobern` / Reset) Kollision **und** Nav-Kante
-  `bresche-<id> ↔ lab-vorfront` synchron; die Kante öffnet nur für die Bresche,
-  auf der der Knoten liegt. Renderer blendet das Segment über `brescheTag` aus,
-  Trümmer/Rauch jetzt auch für die Home-Line.
+  `updateFront` (und nach `rueckerobern` / Reset) Kollision **und** die Nav-Kante
+  `frontLinie.brescheZugang` (`vorfront ↔ bresche-front`) synchron; die Kante
+  öffnet nur für die Bresche, auf der der Knoten liegt. Renderer blendet das
+  Segment über `brescheTag` aus, Trümmer/Rauch jetzt auch für die Home-Line.
 - **Begehbarkeits-Test** `src/sim/navgraph-begehbarkeit.test.ts`: jede Kante des
   Sektor-Graphen wird in beide Richtungen mit einer Gegner-Kapsel begangen —
   Ist-Zustand (Breschen zu, Knoten in einem getaggten Segment gelten als
@@ -249,7 +254,7 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   bekommen das alte Verhalten. Drei Korrekturen am bestehenden Verhalten, die
   durch mehr Gegner und die gestreuten Spuren sichtbar wurden: (1) die
   Engstellen-Ebene liegt senkrecht zur **Anmarschrichtung** (vorher: Richtung
-  zum nächsten Wegpunkt — bei abknickendem Pfad wie `bresche-B → front-B`
+  zum nächsten Wegpunkt — bei abknickendem Pfad, Bresche-Knoten → Grabenknoten,
   galt ein Gegner schräg vor der Wand schon als „durch"); (2) die Nahkampf-
   Sicht prüft auf **Kniehöhe** wie die Erreichbarkeits-Sichtlinie des
   Watchdogs (auf Augenhöhe sah ein Gegner den Spieler über das Parapet und
@@ -297,12 +302,10 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
 - **`src/data/sektor.ts` komplett neu:** der Nacht-Sektor aus KONZEPT.md §3
   (neu gefasst 2026-09-07) statt des „H". Größer (x ±34 · z −46…72), verzweigt,
   von der Feindseite nach hinten: **Feindseite → Niemandsland → Frontlinie →
-  Hinterland → Home-Line**. Genau **EINE** Frontlinie (`frontAbschnitte`:
-  `{ id: "front" }`) + **EINE** Home-Line (`{ id: "home" }`) — die
-  `front.ts`-Maschine läuft damit mit N = 1 **ohne Code-Änderung**; die
-  bewusste Vereinfachung auf eine Linie (A/B/C-Reste in `index.ts`/`enemies.ts`)
-  macht AP6-02. Nur die Bühne — Zustandsmaschine/Uhr/Spawn-Verlagerung sind
-  AP6-02 ff.
+  Hinterland → Home-Line**. Genau **EINE** Frontlinie + **EINE** Home-Line
+  (AP6-01 lieferte sie noch als Ein-Element-Listen `frontAbschnitte`; AP6-02
+  hat daraus `SektorMeta.frontLinie` / `.homeLinie` gemacht). Nur die Bühne —
+  Zustandsmaschine/Uhr/Spawn-Verlagerung sind AP6-02 ff.
 - **Zonen** (`ZonenId` in `src/sim/sektor.ts`): `feindseite` · `niemandsland`
   · `frontlinie` · `hinterland` · `homeline` — lückenlose Z-Bänder über die
   volle Breite (die alten `feindzone`/`labyrinth`/`verbindungsgraben`/`feld`
@@ -314,10 +317,8 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   `front-{w,front,e}`, `parados-{w,m,e}`), Hinterland (zentraler Laufgraben
   `hl-mitte/-sued` + zwei Seitenrouten `hl-{w,e}1..3`), Home-Line
   (`home-{graben,w,e,ziel}`). Der Zielknoten aller Wellengegner ist
-  `front-front` (Abschnitt `"front"` → `front-${abschnitt}`). `index.ts`
-  angepasst: `HINTEN_KANTEN` öffnet drei Front→Hinterland-Kanten beim
-  Linienfall, `VORFRONT`-Konstante (früher `lab-vorfront`), Infiltrations-Guard
-  auf `zone === "hinterland"`.
+  `front-front` (AP6-02: aus `frontLinie.zielKnoten`, nicht mehr
+  `front-${abschnitt}`).
 - **Instand-Punkte** (`SektorMeta.instandPunkte`, je Linie ein Marker — AP6-04
   nutzt sie) und **Nacht-Lichter** (`SektorMeta.lichter`) sind neue Datenfelder;
   `spineRouten` liefert `[]` (KONZEPT.md §10).
@@ -339,6 +340,45 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   baseliniert (Begründung am Test); `collision-verbindungsgraben.test.ts` auf
   den zentralen Laufgraben umgezielt; `wave-eskalation.test.ts` /
   `gegner-klassen.test.ts` / `einsatz.test.ts` auf die neuen Zonen/Ids.
+
+### Eine Frontlinie, eine Home-Line (AP6-02) — A/B/C-Verdrahtung raus
+
+Mechanische Bereinigung, **kein Verhaltenswechsel** (die beiden Golden-Anker
+„Sektor-Nav-Graph" + „die Uhr" bleiben unverändert grün). Die Druck-Radius-
+Halte-Semantik ist bewusst abgetrennt → AP6-02b.
+
+- **`SektorMeta`:** `frontAbschnitte`/`homeAbschnitte` (Listen) →
+  `frontLinie` / `homeLinie` (je **ein** `FrontLinie`-Objekt). N = 1 ist damit
+  eine Typ-Invariante; `pruefeSektorMeta(meta)` wirft beim Laden bei
+  fehlendem/unvollständigem Eintrag (Audit N2). `FrontLinie` trägt jetzt die
+  Rollen-Felder (Audit H2), die früher in `index.ts` aus A/B/C-Strings
+  abgeleitet wurden: `zielKnoten` (Frontziel bzw. `home-ziel`), `reinfKnoten`
+  (verdeckter Infiltrations-/Watchdog-Reloc-Knoten, `""` = keiner),
+  `brescheZugang { bresche, davor }`, `hintenKanten` (Rückwege bei Linienfall).
+- **`front.ts`:** `AbschnittFront`→`LinienFront`, `AbschnittZustand`→
+  `LinienZustand`. `createFrontState(linie)` und `updateFront(f, ctx, dt)`
+  arbeiten je **eine** Linie (statt einer Liste); `ctx.linie` statt
+  `ctx.abschnitte`. Zustände/Schwellen/`HOME_BRESCHE_FAKTOR` unverändert.
+- **`enemies.ts`:** `zielKnoten(e, nav)` liefert `nav.homeZiel` (Linie verloren)
+  bzw. `nav.frontZiel` — beide aus `NavKontext` (Sektor-Metadaten) statt aus der
+  Linien-Id zusammengesetzt. Der Watchdog-Umzug (Stufe 2) nimmt
+  `nav.reinfKnoten` statt des zusammengesetzten Knotennamens.
+- **`index.ts`:** `aktiveAchsen` / `waehleAbschnitt` / `abschnittRng` **raus**
+  (eigener, sonst ungenutzter Rng-Strom → das Entfernen verschiebt weder
+  `waveRng` noch `gegnerRng`, Golden-Anker bit-identisch). Jeder Sektor-Gegner
+  gehört zur Frontlinie. Der `HINTEN_KANTEN`-Record → `frontLinie.hintenKanten`.
+  `frontState`/`homeState` (Listen) → `frontLinieState`/`homeLinieState`
+  (einzelne `LinienFront`). `SimState.front`/`.home` bleiben Ein-Element-Listen
+  (Golden-Anker + Kompass/Lagekarte/Audio/`main.ts` strukturell unverändert).
+  Testeingang `_setAbschnittVerloren` → `_setLinieVerloren("front"|"home", …)`.
+  Verlustbedingung „alle Home-Einträge verloren" → `homeLinieState.zustand ===
+"verloren"`. `abschnittAt` → `frontLinieAt`.
+- **`audio/index.ts`:** die toten Platzhalter-Konstanten (Callout-Strings, an
+  nichts verdrahtet) **entfernt** — die Callout-Grammatik über die realen
+  Linien-/Zonennamen kommt mit dem VO-Paket (AP7). `AudioEreignis`
+  `abschnitt-verloren` → `linie-verloren`.
+- **M7** (nur eine Bresche pro Linie am Nav-Zugang) bleibt bekannte
+  Einschränkung → AP7-Politur (die Flanken-Bresche ist reines physisches Loch).
 
 ## Bundle-Größe
 

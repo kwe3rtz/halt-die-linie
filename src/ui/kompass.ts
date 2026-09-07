@@ -1,8 +1,8 @@
 // Kompass-Band (AP4-05): oben am Bildschirm, zeigt den Peil-Winkel zur Home-Line
-// und je Frontabschnitt einen Zustands-Marker (Farbe **und** Symbol — redundant
-// codiert). **Keine Gegner-Marker** (KONZEPT.md §3 / Sparring R2: nur
-// strategische Zustände). Reines DOM + CSS, bekommt den State pro Frame.
-import type { AbschnittZustand } from "../sim";
+// und je Linie einen Zustands-Marker (Farbe **und** Symbol — redundant codiert;
+// im Nacht-Sektor genau die Frontlinie). **Keine Gegner-Marker** (KONZEPT.md §3
+// / Sparring R2: nur strategische Zustände). Reines DOM + CSS, State pro Frame.
+import type { LinienZustand } from "../sim";
 
 /** Sichtbarer Halbwinkel des Bands (Grad). Marker außerhalb werden an den Rand
  *  gepinnt mit Richtungspfeil. */
@@ -11,7 +11,7 @@ const HALB_WINKEL = (78 * Math.PI) / 180;
 export interface KompassAbschnitt {
   id: string;
   pos: { x: number; z: number };
-  zustand: AbschnittZustand;
+  zustand: LinienZustand;
 }
 
 export interface KompassData {
@@ -75,7 +75,7 @@ const CSS = `
 `;
 
 /** Zustands-Glyph — geometrisch, damit es ohne Farbe lesbar bleibt. */
-const GLYPH: Record<AbschnittZustand, string> = {
+const GLYPH: Record<LinienZustand, string> = {
   stabil: "▽",
   bedraengt: "▲",
   gebrochen: "◑",

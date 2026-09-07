@@ -1,29 +1,15 @@
 // Direktionales Audio (AP4-05, minimal) — reiner Client, **außerhalb der Sim**.
 // Darf `window` / `AudioContext` benutzen, importiert aus `src/sim` nur Typen und
 // liest den State. Reagiert auf strategische Sim-Ereignisse:
-//   - Abschnitt verloren  → Signalhorn aus Richtung Home-Line (Panning)
-//   - Phase `finale`       → Signalhorn + Truppen-Ruf
+//   - Linie verloren  → Signalhorn aus Richtung Home-Line (Panning)
+//   - Phase `finale`   → Signalhorn + Truppen-Ruf
 // Platzhalter-Töne (Oszillatoren), stummschaltbar (Taste `T`), Default leise.
-// Echte VO / Funk / Musik ist ein späteres Paket.
+// Echte VO / Funk / Musik (mit einer Callout-Grammatik über die realen Linien-
+// und Zonennamen) ist ein späteres Paket (AP7).
 import type { SimState } from "../sim";
 
-/** Feste Callout-Grammatik — später von echtem Funk/VO genutzt. */
-export const FRONT_CALLOUT: Record<string, string> = {
-  A: "Front A",
-  B: "Front B",
-  C: "Front C",
-  "H-West": "Home-Line West",
-  "H-Ost": "Home-Line Ost",
-};
-
-export const ROUTE_CALLOUT = {
-  verbindungsgraben: "Route Verbindungsgraben",
-  "feld-links": "Route Feld links",
-  "feld-rechts": "Route Feld rechts",
-} as const;
-
 export type AudioEreignis =
-  { typ: "abschnitt-verloren"; id: string; heim: boolean } | { typ: "finale" };
+  { typ: "linie-verloren"; id: string; heim: boolean } | { typ: "finale" };
 
 /**
  * Vergleicht zwei States und liefert die hörbaren Ereignisse. Rein — kein Audio,
@@ -45,7 +31,7 @@ export function beobachteEreignisse(
     for (const f of jetzt) {
       const alt = vor.find((x) => x.id === f.id);
       if (f.zustand === "verloren" && alt && alt.zustand !== "verloren") {
-        out.push({ typ: "abschnitt-verloren", id: f.id, heim });
+        out.push({ typ: "linie-verloren", id: f.id, heim });
       }
     }
   };
@@ -170,7 +156,7 @@ export function createAudio(parent: HTMLElement = document.body): Audio {
     beobachte: (prev, next, playerPos, yaw, homePos) => {
       for (const ev of beobachteEreignisse(prev, next)) {
         const pan = panFuerPeilung(relPeilung(playerPos, yaw, homePos));
-        if (ev.typ === "abschnitt-verloren") {
+        if (ev.typ === "linie-verloren") {
           signalhorn(pan);
         } else {
           signalhorn(pan);

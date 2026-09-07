@@ -36,20 +36,21 @@ import {
   type NavKontext,
 } from "./enemies";
 import { imSichtkegel } from "./navgraph";
-import type { FrontAbschnitt, NavGraph, SektorData } from "./sektor";
+import type { FrontLinie, NavGraph, SektorData } from "./sektor";
 import {
   inBoundsXZ,
   zoneAt,
-  abschnittAt,
+  frontLinieAt,
   brescheTag,
   naechstesDepot,
+  pruefeSektorMeta,
   DEPOT_REICHWEITE,
 } from "./sektor";
 import {
   createFrontState,
   updateFront,
-  type AbschnittFront,
-  type AbschnittZustand,
+  type LinienFront,
+  type LinienZustand,
 } from "./front";
 import {
   createEinsatzState,
@@ -76,7 +77,7 @@ export type { WavePhase } from "./wave";
 export type {
   ZonenId,
   ZonenEintrag,
-  FrontAbschnitt,
+  FrontLinie,
   HomeZugang,
   SektorMeta,
   SektorData,
@@ -84,13 +85,9 @@ export type {
   NavKante,
   NavGraph,
 } from "./sektor";
-export { zoneAt, abschnittAt, inBoundsXZ, brescheTag } from "./sektor";
+export { zoneAt, frontLinieAt, inBoundsXZ, brescheTag } from "./sektor";
 export { kuerzesterPfad, naechsterKnoten, imSichtkegel } from "./navgraph";
-export type {
-  AbschnittZustand,
-  AbschnittFront,
-  BreschenZustand,
-} from "./front";
+export type { LinienZustand, LinienFront, BreschenZustand } from "./front";
 export type { EinsatzPhase, EinsatzErgebnis, EinsatzWahl } from "./einsatz";
 
 export interface SimState {
@@ -110,9 +107,9 @@ export interface SimState {
     /** Sekunden bis zum Respawn (0, solange lebendig). */
     respawnRest: number;
     /**
-     * Abschnitts-Id, dessen Munitionsdepot gerade in Reichweite und verfügbar
-     * ist (AP5-02) — `E` füllt dort die Reserve auf. `null` sonst, auch im
-     * Tod und ohne Sektor-Meta.
+     * Linien-Id, deren Munitionsdepot gerade in Reichweite und verfügbar ist
+     * (AP5-02) — `E` füllt dort die Reserve auf. `null` sonst, auch im Tod und
+     * ohne Sektor-Meta.
      */
     depotInReichweite: string | null;
     /** Waffenzustand für HUD/Render. */
@@ -135,24 +132,24 @@ export interface SimState {
     angriffskraftMax: number;
   };
   /**
-   * Frontabschnitte: Besitz-/Bruchzustand je Abschnitt (AP4-03) für HUD/Render.
-   * Leer ohne Sektor-Meta.
+   * Die Frontlinie: Besitz-/Bruchzustand (AP4-03) für HUD/Render. Als
+   * Ein-Element-Liste (genau eine Linie) — leer ohne Sektor-Meta.
    */
   front: readonly {
     id: string;
-    zustand: AbschnittZustand;
-    /** Anzahl offener Breschen im Abschnitt. */
+    zustand: LinienZustand;
+    /** Anzahl offener Breschen der Linie. */
     breschenOffen: number;
-    /** Offen-Status je Bresche in Abschnitts-Reihenfolge (Render). */
+    /** Offen-Status je Bresche in Daten-Reihenfolge (Render). */
     breschen: readonly boolean[];
   }[];
   /**
-   * Home-Line-Abschnitte (AP4-04) — gleiche Form wie `front`. Leer ohne
-   * Sektor-Meta. Alle `verloren` = Einsatz verloren.
+   * Die Home-Line (AP4-04) — gleiche Form wie `front`, als Ein-Element-Liste.
+   * Leer ohne Sektor-Meta. `verloren` = Einsatz verloren.
    */
   home: readonly {
     id: string;
-    zustand: AbschnittZustand;
+    zustand: LinienZustand;
     breschenOffen: number;
     breschen: readonly boolean[];
   }[];
@@ -179,7 +176,7 @@ export interface EnemyView {
   defId: string;
   /** Tick des letzten HP-Rückgangs (Render-Trefferblitz). */
   letzterTreffer: number;
-  /** Zugewiesener Frontabschnitt ("A"/"B"/"C" oder "") — AP4-02. */
+  /** Zugewiesene Linie ("front", oder "" bei manuellem Spawn ohne Sektor) — AP4-02. */
   abschnitt: string;
   /** Aktueller Nav-Ziel-Knoten ("" ohne Sektor-Graph) — AP4-02. */
   zielKnoten: string;
@@ -234,23 +231,23 @@ export interface Sim {
   applyDamage: (menge: number, quelle?: string) => void;
   /**
    * Spawnt einen Gegner. Externer/Test-Eingang; der Wave-Director (AP2-04)
-   * nutzt ihn. `defId` unbekannt → No-op. `abschnitt` = Ziel-Frontabschnitt
-   * (Default: zufällig aus den aktiven Angriffsachsen).
+   * nutzt ihn. `defId` unbekannt → No-op. `linie` = zugewiesene Linie
+   * (Default: die Frontlinie; ohne Sektor-Meta `""`).
    */
-  spawnEnemy: (defId: string, pos: Vec3, abschnitt?: string) => void;
+  spawnEnemy: (defId: string, pos: Vec3, linie?: string) => void;
   /**
    * AP4-02-Testeingang: eine Nav-Kante direkt öffnen/schließen. Ungerichtet.
    * Kein Effekt ohne Sektor-Graph.
    */
   _setKanteOffen: (von: string, nach: string, offen: boolean) => void;
   /**
-   * AP4-03: einen verlorenen Frontabschnitt zurückerobern — nur wenn gerade
-   * **kein Gegner** im Abschnitt steht. Setzt `verloren → gebrochen`, schließt
-   * die Nav-Kante nach hinten wieder und macht das Depot wieder verfügbar.
+   * AP4-03: eine verlorene Linie zurückerobern — nur wenn gerade **kein
+   * Gegner** an der Linie steht. Setzt `verloren → gebrochen`, schließt die
+   * Nav-Kanten nach hinten wieder und macht das Depot wieder verfügbar.
    * Kosten / KI-Trupp kommen mit der Nachschub-Ökonomie (späteres Paket).
-   * Kein automatisches Zurückflippen.
+   * Kein automatisches Zurückflippen. `linieId` = `"front"` | `"home"`.
    */
-  rueckerobern: (abschnittId: string) => void;
+  rueckerobern: (linieId: string) => void;
   /**
    * AP4-04: Spieler-Entscheidung nach „Entsatz eingetroffen" (`einsatz.phase
    * === "finale"`, `ergebnis === "gewonnen"`). `extrahieren` beendet den Einsatz,
@@ -259,11 +256,11 @@ export interface Sim {
    */
   entscheide: (wahl: EinsatzWahl) => void;
   /**
-   * Testeingang (dünn über der AP4-03-Zustandsmaschine): erzwingt für einen
-   * Front- **oder** Home-Line-Abschnitt direkt den End-/Ausgangszustand.
-   * `true` = `verloren`, `false` = zurück auf `stabil`.
+   * Testeingang (dünn über der AP4-03-Zustandsmaschine): erzwingt für die
+   * Frontlinie (`"front"`) oder die Home-Line (`"home"`) direkt den
+   * End-/Ausgangszustand. `true` = `verloren`, `false` = zurück auf `stabil`.
    */
-  _setAbschnittVerloren: (abschnittId: string, verloren: boolean) => void;
+  _setLinieVerloren: (linie: "front" | "home", verloren: boolean) => void;
   /**
    * AP4-04-Testeingang: der Trupp ist ausgeschaltet (Koop-Verlustbedingung;
    * solo respawnt der Spieler ewig). Setzt den Einsatz auf `verloren`.
@@ -290,8 +287,8 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/** Eingefrorene HUD/Render-Sicht auf einen Front-/Home-Abschnitt (AP4-03/04). */
-function abschnittView(f: AbschnittFront) {
+/** Eingefrorene HUD/Render-Sicht auf eine Linie (Front oder Home, AP4-03/04). */
+function linieView(f: LinienFront) {
   return Object.freeze({
     id: f.id,
     zustand: f.zustand,
@@ -320,12 +317,6 @@ export interface SimOptions {
   enemies?: ReadonlyArray<{ defId: string; pos: Vec3; abschnitt?: string }>;
   /** Wave-Director aktivieren (im echten Spiel an; Tests opten ein). */
   waves?: boolean;
-  /**
-   * Aktive Angriffsachsen (Frontabschnitte), aus denen der Anmarsch beim Spawn
-   * zufällig zieht. Default: alle Abschnitte des Sektors (Greybox; die
-   * „~2 aktiv solo"-Auswahl je Spielerzahl macht der Wave-Director in AP4-04).
-   */
-  aktiveAchsen?: readonly string[];
   /**
    * Start-Angriffskraft (Uhr). Default `START_ANGRIFFSKRAFT`. Tests setzen sie
    * klein, um das Finale schnell zu erreichen.
@@ -361,8 +352,7 @@ export function createSim(
   const angriffskraftMax = wave.angriffskraft;
   const waveRng = createRng((seed ^ 0x5a5a5a5a) >>> 0);
   // Individuelle Tempo-/Spur-Streuung je Gegner (AP5-04) aus einem eigenen
-  // Strom, damit weder die Spawnpunkt-Wahl (`waveRng`) noch die Abschnitts-
-  // Zuweisung (`abschnittRng`) verschoben werden.
+  // Strom, damit die Spawnpunkt-Wahl (`waveRng`) nicht verschoben wird.
   const gegnerRng = createRng((seed ^ 0x2b2b2b2b) >>> 0);
   const enemySpawnPunkte = level.enemySpawnPoints ?? level.spawnPoints;
 
@@ -374,49 +364,60 @@ export function createSim(
     onGround: false,
   };
 
-  // --- Nav (AP4-02) ---------------------------------------------------------
+  // --- Nav + Linien (AP4-02/03, auf eine Frontlinie reduziert AP6-02) --------
   // Eigene Graph-Kopie: die Kanten-Offen-Flags sind pro Sim veränderlich, die
   // exportierte `sektorGreybox` darf nicht mutiert werden.
   const sektorMeta = (level as Partial<SektorData>).meta;
+  // Audit N2: genau eine wohlgeformte Front- + Home-Linie beim Laden erzwingen.
+  if (sektorMeta) {
+    pruefeSektorMeta(sektorMeta);
+  }
+  const frontMeta: FrontLinie | undefined = sektorMeta?.frontLinie;
+  const homeMeta: FrontLinie | undefined = sektorMeta?.homeLinie;
   const navGraph: NavGraph | undefined = sektorMeta
     ? {
         knoten: sektorMeta.navGraph.knoten,
         kanten: sektorMeta.navGraph.kanten.map((k) => ({ ...k })),
       }
     : undefined;
-  const verloreneAbschnitte = new Set<string>();
-  const abschnittRng = createRng((seed ^ 0x3c3c3c3c) >>> 0);
-  // Frontabschnitts-Zustandsmaschine (AP4-03). Leer ohne Sektor-Meta.
-  const frontState: AbschnittFront[] = sektorMeta
-    ? createFrontState(sektorMeta.frontAbschnitte)
-    : [];
+  const verloreneLinien = new Set<string>();
+  // Frontlinie-Zustandsmaschine (AP4-03). `undefined` ohne Sektor-Meta.
+  const frontLinieState: LinienFront | undefined = frontMeta
+    ? createFrontState(frontMeta)
+    : undefined;
   // Home-Line über dieselbe Maschine, aber befestigt (AP4-04).
   const HOME_BRESCHE_FAKTOR = 2.5;
-  const homeState: AbschnittFront[] = sektorMeta
-    ? createFrontState(sektorMeta.homeAbschnitte, HOME_BRESCHE_FAKTOR)
-    : [];
-  const alleAbschnitte: readonly FrontAbschnitt[] = sektorMeta
-    ? [...sektorMeta.frontAbschnitte, ...sektorMeta.homeAbschnitte]
-    : [];
+  const homeLinieState: LinienFront | undefined = homeMeta
+    ? createFrontState(homeMeta, HOME_BRESCHE_FAKTOR)
+    : undefined;
+  const linien: readonly FrontLinie[] =
+    frontMeta && homeMeta ? [frontMeta, homeMeta] : [];
+  const linieMeta = (id: string): FrontLinie | undefined =>
+    linien.find((l) => l.id === id);
   // Einsatzbogen (AP4-04). Ohne Sektor-Meta bleibt der Einsatz im `aufbau`.
   const einsatzState: EinsatzState = createEinsatzState();
   let truppAus = false;
-  const aktiveAchsen: readonly string[] =
-    options.aktiveAchsen ?? sektorMeta?.frontAbschnitte.map((a) => a.id) ?? [];
-  const navKontext: NavKontext | undefined = navGraph
-    ? {
-        graph: navGraph,
-        verloren: verloreneAbschnitte,
-        // Watchdog-Despawn (AP4-06): der Gegner war nie zu erreichen — seine
-        // Angriffskraft geht an den Director zurück, kein Nachschub, keine Uhr.
-        onDespawn: () => {
-          wave.angriffskraft = Math.min(
-            angriffskraftMax,
-            wave.angriffskraft + 1,
-          );
-        },
-      }
-    : undefined;
+  const navKontext: NavKontext | undefined =
+    navGraph && frontMeta && homeMeta
+      ? {
+          graph: navGraph,
+          verloren: verloreneLinien,
+          // Ziel-Nav-Knoten aus den Linien-Metadaten (Audit H2): solange die
+          // Frontlinie hält, laufen die Gegner auf `frontZiel`; fällt sie,
+          // fluten sie zu `homeZiel`. `reinfKnoten` = verdeckter Reloc-Knoten.
+          frontZiel: frontMeta.zielKnoten,
+          homeZiel: homeMeta.zielKnoten,
+          reinfKnoten: frontMeta.reinfKnoten,
+          // Watchdog-Despawn (AP4-06): der Gegner war nie zu erreichen — seine
+          // Angriffskraft geht an den Director zurück, kein Nachschub, keine Uhr.
+          onDespawn: () => {
+            wave.angriffskraft = Math.min(
+              angriffskraftMax,
+              wave.angriffskraft + 1,
+            );
+          },
+        }
+      : undefined;
 
   const setKanteOffen = (von: string, nach: string, offen: boolean): void => {
     if (!navGraph) {
@@ -431,117 +432,122 @@ export function createSim(
       }
     }
   };
-  // Nav-Knoten unmittelbar vor der Frontlinie — die Bresche-Kante ins
-  // Niemandsland hängt hier (AP6-01: hieß im alten „H" `lab-vorfront`).
-  const VORFRONT = "vorfront";
-  // Kanten Frontlinie → Hinterland, die beim Linienfall aufgehen (AP4-03).
-  // Der Nacht-Sektor hat EINE Frontlinie ("front") mit mehreren Rückwegen;
-  // die A/B/C-Reste baut AP6-02 zurück.
-  const HINTEN_KANTEN: Record<string, readonly (readonly [string, string])[]> =
-    {
-      front: [
-        ["front-w", "parados-w"],
-        ["front-front", "parados-m"],
-        ["front-e", "parados-e"],
-      ],
-    };
-  const setAbschnittVerloren = (id: string, verloren: boolean): void => {
+
+  const setLinieVerloren = (id: string, verloren: boolean): void => {
     if (verloren) {
-      verloreneAbschnitte.add(id);
+      verloreneLinien.add(id);
     } else {
-      verloreneAbschnitte.delete(id);
+      verloreneLinien.delete(id);
     }
-    for (const [von, nach] of HINTEN_KANTEN[id] ?? []) {
+    const meta = linieMeta(id);
+    // Rückwege nach hinten öffnen/schließen (AP4-03) — aus `hintenKanten`.
+    for (const [von, nach] of meta?.hintenKanten ?? []) {
       setKanteOffen(von, nach, verloren);
     }
     // Zurückgesetzt: auch den Bresche-Zugang aus dem Niemandsland wieder sperren.
-    if (!verloren) {
-      setKanteOffen(`bresche-${id}`, VORFRONT, false);
+    if (!verloren && meta?.brescheZugang) {
+      setKanteOffen(
+        meta.brescheZugang.davor,
+        meta.brescheZugang.bresche,
+        false,
+      );
     }
   };
 
-  // AP4-03: Übergang nach `verloren` verdrahtet das AP4-02-Verhalten (für
-  // Front-Ids; Home-Ids haben keine Nav-Kante nach hinten → No-op-Zweig).
-  const onAbschnittVerloren = (id: string): void => {
-    setAbschnittVerloren(id, true);
+  // AP4-03: Übergang nach `verloren` verdrahtet das AP4-02-Verhalten (die
+  // Home-Line hat keine `hintenKanten` → der Kanten-Loop läuft leer).
+  const onLinieVerloren = (id: string): void => {
+    setLinieVerloren(id, true);
   };
 
-  const abschnittState = (id: string): AbschnittFront | undefined =>
-    frontState.find((a) => a.id === id) ?? homeState.find((a) => a.id === id);
+  const linieState = (id: string): LinienFront | undefined => {
+    if (frontLinieState?.id === id) {
+      return frontLinieState;
+    }
+    if (homeLinieState?.id === id) {
+      return homeLinieState;
+    }
+    return undefined;
+  };
 
-  // Welche Bresche (Index) liegt unter dem Nav-Knoten `bresche-<id>`? Die
-  // Nav-Kante ins Labyrinth öffnet nur für genau diese Bresche (AP4-06).
-  const brescheUnterKnoten = new Map<string, number>();
-  if (sektorMeta && navGraph) {
-    for (const ab of sektorMeta.frontAbschnitte) {
-      const knoten = navGraph.knoten.find((k) => k.id === `bresche-${ab.id}`);
-      if (!knoten || ab.parapetBreschen.length === 0) {
+  // Welche Bresche (Index) hängt am Nav-Zugang der Linie? Die Kante ins
+  // Niemandsland öffnet nur für genau diese Bresche (AP4-06, Audit M7) — die
+  // Position des `brescheZugang.bresche`-Knotens entscheidet.
+  const brescheAmZugang = new Map<string, number>();
+  if (navGraph) {
+    for (const l of linien) {
+      if (!l.brescheZugang || l.parapetBreschen.length === 0) {
+        continue;
+      }
+      const knoten = navGraph.knoten.find(
+        (k) => k.id === l.brescheZugang?.bresche,
+      );
+      if (!knoten) {
         continue;
       }
       let best = 0;
       let bestD = Infinity;
-      ab.parapetBreschen.forEach((b, i) => {
+      l.parapetBreschen.forEach((b, i) => {
         const d = Math.hypot(b.x - knoten.pos.x, b.z - knoten.pos.z);
         if (d < bestD) {
           bestD = d;
           best = i;
         }
       });
-      brescheUnterKnoten.set(ab.id, best);
+      brescheAmZugang.set(l.id, best);
     }
   }
 
   // AP4-06: eine offene Bresche ist ein echtes Loch — das getaggte Parapet-
   // Segment (`brescheTag`) verschwindet aus der Kollisionswelt, eine wieder
   // geschlossene (Reset-Testeingang) kommt zurück. Gleichzeitig öffnet die
-  // Bresche unter dem Knoten `bresche-<id>` den Zugang aus dem Niemandsland im
-  // Nav-Graph (KONZEPT.md §3: „durch eine Bresche strömt der Feind") — genau
-  // diese Bresche, sonst führt die Kante in eine stehende Wand (Audit H1). Nur
-  // öffnen; Schließen macht `setAbschnittVerloren(id, false)`. Idempotent,
-  // läuft nach jedem `updateFront` und nach den direkten Zustandsänderungen,
-  // damit Kollision und Nav nie auseinanderlaufen.
+  // Bresche am `brescheZugang` den Zugang aus dem Niemandsland im Nav-Graph
+  // (KONZEPT.md §3: „durch eine Bresche strömt der Feind") — genau diese
+  // Bresche, sonst führt die Kante in eine stehende Wand (Audit H1). Nur
+  // öffnen; Schließen macht `setLinieVerloren(id, false)`. Idempotent, läuft
+  // nach jedem `updateFront` und nach den direkten Zustandsänderungen, damit
+  // Kollision und Nav nie auseinanderlaufen.
   const syncBreschen = (): void => {
-    for (const f of frontState) {
-      f.breschen.forEach((b, i) =>
-        setKolliderAktiv(world, brescheTag(f.id, i), !b.offen),
-      );
-      const i = brescheUnterKnoten.get(f.id);
-      if (i !== undefined && f.breschen[i]?.offen) {
-        setKanteOffen(`bresche-${f.id}`, VORFRONT, true);
+    for (const f of [frontLinieState, homeLinieState]) {
+      if (!f) {
+        continue;
       }
-    }
-    for (const f of homeState) {
       f.breschen.forEach((b, i) =>
         setKolliderAktiv(world, brescheTag(f.id, i), !b.offen),
       );
+      const zugang = linieMeta(f.id)?.brescheZugang;
+      const i = brescheAmZugang.get(f.id);
+      if (zugang && i !== undefined && f.breschen[i]?.offen) {
+        setKanteOffen(zugang.davor, zugang.bresche, true);
+      }
     }
   };
 
-  const abschnittBesetzt = (id: string): boolean => {
-    const ab = alleAbschnitte.find((a) => a.id === id);
-    if (!ab) {
+  const linieBesetzt = (id: string): boolean => {
+    const meta = linieMeta(id);
+    if (!meta) {
       return false;
     }
     return enemies.some(
-      (e) => e.zustand !== "tot" && inBoundsXZ(ab.bounds, e.pos),
+      (e) => e.zustand !== "tot" && inBoundsXZ(meta.bounds, e.pos),
     );
   };
 
-  const rueckerobern = (abschnittId: string): void => {
-    const f = abschnittState(abschnittId);
-    if (!f || f.zustand !== "verloren" || abschnittBesetzt(abschnittId)) {
+  const rueckerobern = (linieId: string): void => {
+    const f = linieState(linieId);
+    if (!f || f.zustand !== "verloren" || linieBesetzt(linieId)) {
       return;
     }
     f.zustand = "gebrochen";
     f.verlorenTimer = 0;
     f.ruheTimer = 0;
     f.depotVerloren = false;
-    setAbschnittVerloren(abschnittId, false);
+    setLinieVerloren(linieId, false);
     syncBreschen();
   };
 
-  const forceAbschnittVerloren = (id: string, verloren: boolean): void => {
-    const f = abschnittState(id);
+  const forceLinieVerloren = (id: string, verloren: boolean): void => {
+    const f = linieState(id);
     if (f && verloren) {
       f.zustand = "verloren";
       f.depotVerloren = true;
@@ -560,34 +566,29 @@ export function createSim(
         b.hp = b.maxHp;
       }
     }
-    setAbschnittVerloren(id, verloren);
+    setLinieVerloren(id, verloren);
     syncBreschen();
-  };
-
-  const waehleAbschnitt = (): string => {
-    if (aktiveAchsen.length === 0) {
-      return "";
-    }
-    const i = abschnittRng.int(0, aktiveAchsen.length - 1);
-    return aktiveAchsen[i] ?? aktiveAchsen[0] ?? "";
   };
 
   const spawnEnemyById = (
     defId: string,
     pos: Vec3,
     hpFaktor = 1,
-    abschnitt?: string,
+    linie?: string,
   ): void => {
     const def = gegnerDefs[defId];
     if (!def) {
       return;
     }
-    const a = abschnitt ?? waehleAbschnitt();
+    // Jeder Sektor-Gegner gehört zu „der Frontlinie" (kein Abschnitts-Würfeln
+    // mehr, AP6-02); ohne Sektor-Meta bleibt die Zuweisung leer.
+    const a = linie ?? frontMeta?.id ?? "";
     let p = pos;
     // Infiltration: verlorene Linie → verdeckter Verstärkungs-Knoten, aber nie
     // im Hinterland im Sichtkegel des Spielers.
-    if (a !== "" && verloreneAbschnitte.has(a) && navGraph) {
-      const rk = navGraph.knoten.find((k) => k.id === `reinforcement-${a}`);
+    const reinf = linieMeta(a)?.reinfKnoten;
+    if (a !== "" && verloreneLinien.has(a) && navGraph && reinf) {
+      const rk = navGraph.knoten.find((k) => k.id === reinf);
       if (
         rk &&
         !(
@@ -731,16 +732,16 @@ export function createSim(
             toedlich = true;
             nachschub += NACHSCHUB_PRO_KILL;
             // Die Uhr (AP4-04): der Tod zermürbt die Angriffskraft, je weiter
-            // vorn desto mehr. Ein schon verlorener Frontabschnitt zählt wie
+            // vorn desto mehr. Eine schon verlorene Frontlinie zählt wie
             // offenes Feld.
             if (sektorMeta) {
               const zone = zoneAt(sektorMeta, getroffen.pos);
               const aId =
                 zone === "frontlinie"
-                  ? abschnittAt(sektorMeta, getroffen.pos)
+                  ? frontLinieAt(sektorMeta, getroffen.pos)
                   : null;
               const verloren =
-                aId !== null && abschnittState(aId)?.zustand === "verloren";
+                aId !== null && linieState(aId)?.zustand === "verloren";
               wave.angriffskraft = Math.max(
                 0,
                 wave.angriffskraft - zermuerbungProKill(zone, verloren),
@@ -773,30 +774,30 @@ export function createSim(
       navKontext,
     );
 
-    // Frontabschnitte + Home-Line (AP4-03/04): Druck, Breschen, stabil→…→verloren.
-    if (sektorMeta) {
+    // Frontlinie + Home-Line (AP4-03/04): Druck, Breschen, stabil→…→verloren.
+    if (frontMeta && homeMeta && frontLinieState && homeLinieState) {
       const spielerPositionen: Vec3[] = combat.tot ? [] : [player.pos];
       updateFront(
-        frontState,
+        frontLinieState,
         {
           enemies,
-          abschnitte: sektorMeta.frontAbschnitte,
+          linie: frontMeta,
           spielerPositionen,
-          onVerloren: onAbschnittVerloren,
+          onVerloren: onLinieVerloren,
         },
         dt,
       );
       updateFront(
-        homeState,
+        homeLinieState,
         {
           enemies,
-          abschnitte: sektorMeta.homeAbschnitte,
+          linie: homeMeta,
           spielerPositionen,
-          onVerloren: onAbschnittVerloren,
+          onVerloren: onLinieVerloren,
         },
         dt,
       );
-      // Aufgerissene Breschen: Parapet-Segment raus, Labyrinth-Zugang auf (AP4-06).
+      // Aufgerissene Breschen: Parapet-Segment raus, Niemandsland-Zugang auf (AP4-06).
       syncBreschen();
     }
 
@@ -819,15 +820,15 @@ export function createSim(
 
     // Munitionsdepot in Reichweite (AP5-02)? Nur lebendig — nach den Gegner-
     // Treffern dieses Ticks geprüft, damit HUD-Hinweis und Tod nie zusammen
-    // stehen. Ein gefallener Abschnitt hat sein Depot verloren (`depotVerloren`,
+    // stehen. Eine gefallene Linie hat ihr Depot verloren (`depotVerloren`,
     // KONZEPT.md §3 „die Uhr"); `rueckerobern` gibt es zurück.
     depotInReichweite = combat.tot
       ? null
       : naechstesDepot(
-          alleAbschnitte,
+          linien,
           player.pos,
           DEPOT_REICHWEITE,
-          (id) => abschnittState(id)?.depotVerloren === false,
+          (id) => linieState(id)?.depotVerloren === false,
         );
 
     // Finale-Entscheidung als Eingabe-Kommando (AP4-06, Audit H4): nach
@@ -865,9 +866,7 @@ export function createSim(
           wavePhase: wave.phase,
           angriffskraftGebrochen: wave.angriffskraft <= 0,
           spawnQueueLeer: wave.spawnQueue.length === 0,
-          homeVerloren:
-            homeState.length > 0 &&
-            homeState.every((f) => f.zustand === "verloren"),
+          homeVerloren: homeLinieState?.zustand === "verloren",
           truppAus,
         },
         dt,
@@ -923,8 +922,9 @@ export function createSim(
         angriffskraftRest: wave.angriffskraft,
         angriffskraftMax,
       }),
-      front: Object.freeze(frontState.map(abschnittView)),
-      home: Object.freeze(homeState.map(abschnittView)),
+      // Als Ein-Element-Liste (genau eine Linie) — leer ohne Sektor-Meta.
+      front: Object.freeze(frontLinieState ? [linieView(frontLinieState)] : []),
+      home: Object.freeze(homeLinieState ? [linieView(homeLinieState)] : []),
       einsatz: Object.freeze({
         phase: einsatzState.phase,
         finaleRest: einsatzState.finaleRest,
@@ -937,12 +937,11 @@ export function createSim(
     tick: step,
     getState: snapshot,
     applyDamage: (menge, quelle) => applyDamage(combat, menge, quelle),
-    spawnEnemy: (defId, pos, abschnitt) =>
-      spawnEnemyById(defId, pos, 1, abschnitt),
+    spawnEnemy: (defId, pos, linie) => spawnEnemyById(defId, pos, 1, linie),
     _setKanteOffen: setKanteOffen,
     rueckerobern,
     entscheide: (wahl) => entscheide(einsatzState, wahl),
-    _setAbschnittVerloren: forceAbschnittVerloren,
+    _setLinieVerloren: forceLinieVerloren,
     _setTruppAus: (aus) => {
       truppAus = aus;
     },

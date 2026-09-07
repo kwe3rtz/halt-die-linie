@@ -60,6 +60,9 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
     const nav = {
       graph,
       verloren: new Set<string>(),
+      frontZiel: sektorGreybox.meta.frontLinie.zielKnoten,
+      homeZiel: sektorGreybox.meta.homeLinie.zielKnoten,
+      reinfKnoten: sektorGreybox.meta.frontLinie.reinfKnoten,
       onDespawn: (e: EnemyEntity) => despawned.push(e.id),
     };
     const despawned: number[] = [];

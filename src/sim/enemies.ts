@@ -1,8 +1,11 @@
 // Gegner-Simulation: Liste von Entitäten, Anmarsch, Nahkampf.
 // AP2: gerader Weg auf den Spieler. AP4-02: Wegpunkt-Folgen entlang des
-// semantischen Nav-Graphen (src/sim/navgraph.ts) — durchs Labyrinth an die
+// semantischen Nav-Graphen (src/sim/navgraph.ts) — durchs Niemandsland an die
 // Front, nach einem Durchbruch Richtung Home. In Nahkampf-Reichweite + Sicht
 // (oder am Zielknoten) greift wieder das direkte Anmarsch-/Nahkampf-Verhalten.
+// Die Ziel-Nav-Knoten (`frontZiel`/`homeZiel`) und der verdeckte Reloc-Knoten
+// (`reinfKnoten`) kommen aus den Sektor-Metadaten (AP6-02, Audit H2) — keine
+// String-Ableitung aus einer Abschnitts-Id mehr.
 // Deterministisch, kein Babylon/Math.random.
 import type { Vec3 } from "./math";
 import { moveCapsule, sichtlinie, type CollisionWorld } from "./collision";
@@ -27,7 +30,7 @@ export interface EnemyEntity {
   totRest: number;
   /** Tick des letzten HP-Rückgangs (für den Render-Trefferblitz). */
   letzterTreffer: number;
-  /** Zugewiesener Frontabschnitt ("A"/"B"/"C"); "" = keiner (manueller Spawn). */
+  /** Zugewiesene Linie ("front"); "" = keine (manueller Spawn ohne Sektor). */
   abschnitt: string;
   /** Aktuelle Ziel-Knoten-Id im Nav-Graphen ("" = noch keins). */
   ziel: string;
@@ -112,8 +115,20 @@ const KNIE = 0.3;
 /** Nav-Kontext, den `updateEnemies` je Tick bekommt (fehlt → gerader Weg). */
 export interface NavKontext {
   graph: NavGraph;
-  /** Abschnitts-Ids, die als „verloren" gelten → Gegner fluten zur Home-Line. */
+  /** Linien-Ids, die als „verloren" gelten → Gegner fluten zur Home-Line. */
   verloren: ReadonlySet<string>;
+  /**
+   * Nav-Knoten, den ein Gegner ansteuert, solange „seine" Linie hält
+   * (`SektorMeta.frontLinie.zielKnoten` — Audit H2, keine String-Ableitung).
+   */
+  frontZiel: string;
+  /** Nav-Knoten bei verlorener Linie (`SektorMeta.homeLinie.zielKnoten`). */
+  homeZiel: string;
+  /**
+   * Verdeckter Verstärkungs-/Watchdog-Reloc-Knoten (`frontLinie.reinfKnoten`).
+   * `""` = keiner → Watchdog-Relokation entfällt, Despawn folgt.
+   */
+  reinfKnoten: string;
   /**
    * Watchdog-Ausgang (AP4-06): der Gegner ist endgültig festgefahren und wird
    * aus der Liste entfernt — der Aufrufer schreibt die Angriffskraft zurück.
@@ -193,28 +208,13 @@ export function damageEnemy(
   return false;
 }
 
-/** Ziel-Knoten-Id eines Gegners: `front-<abschnitt>`, solange die Front steht,
- *  sonst `home-ziel` (Abschnitt verloren). Ohne zugewiesenen Abschnitt der
- *  nächstgelegene Front-Knoten. */
+/**
+ * Ziel-Knoten-Id eines Gegners: `nav.frontZiel`, solange „seine" Linie steht,
+ * sonst `nav.homeZiel` (Linie verloren). Beide kommen aus den Sektor-Metadaten
+ * (AP6-02, Audit H2) — kein `front-<abschnitt>` mehr.
+ */
 function zielKnoten(e: EnemyEntity, nav: NavKontext): string {
-  if (e.abschnitt !== "") {
-    return nav.verloren.has(e.abschnitt) ? "home-ziel" : `front-${e.abschnitt}`;
-  }
-  let best = "front-front";
-  let bestD = Infinity;
-  for (const k of nav.graph.knoten) {
-    if (!k.id.startsWith("front-")) {
-      continue;
-    }
-    const dx = k.pos.x - e.pos.x;
-    const dz = k.pos.z - e.pos.z;
-    const d = dx * dx + dz * dz;
-    if (d < bestD) {
-      bestD = d;
-      best = k.id;
-    }
-  }
-  return best;
+  return nav.verloren.has(e.abschnitt) ? nav.homeZiel : nav.frontZiel;
 }
 
 /**
@@ -248,8 +248,8 @@ function erreichbarerKnoten(
  * Watchdog-Eingriff, gestaffelt nach `festVersuche` (AP4-06):
  *  1. Pfad neu — von einem tatsächlich erreichbaren Knoten zum Ziel (bzw. zum
  *     Knoten beim Spieler, wenn der Gegner schon am Zielknoten war).
- *  2. Relokation auf den verdeckten `reinforcement-<abschnitt>`-Knoten (wie die
- *     Infiltration; alle liegen im Labyrinth, nie im Feld).
+ *  2. Relokation auf den verdeckten `nav.reinfKnoten` (wie die Infiltration;
+ *     liegt im Niemandsland, nie im Sichtfeld). `""` → übersprungen.
  *  3. Despawn (Aufrufer bekommt `onDespawn`, schreibt die Angriffskraft zurück).
  * Liefert `false`, wenn der Gegner entfernt wurde.
  */
@@ -293,10 +293,8 @@ function loeseFest(
     return true;
   }
 
-  if (e.festVersuche === 2 && e.abschnitt !== "") {
-    const rk = nav.graph.knoten.find(
-      (k) => k.id === `reinforcement-${e.abschnitt}`,
-    );
+  if (e.festVersuche === 2 && nav.reinfKnoten !== "") {
+    const rk = nav.graph.knoten.find((k) => k.id === nav.reinfKnoten);
     if (rk) {
       e.pos = { x: rk.pos.x, y: rk.pos.y, z: rk.pos.z };
       e.vel = { x: 0, y: 0, z: 0 };
@@ -331,11 +329,11 @@ function wegpunkt(e: EnemyEntity, graph: NavGraph): Vec3 | undefined {
     if (knoten.engstelle === true) {
       // Ebene der Engstelle = senkrecht zur Anmarschrichtung (vorheriger
       // Wegpunkt → Engstelle). AP4-06 nahm die Richtung zum *nächsten*
-      // Wegpunkt; knickt der Pfad an der Engstelle ab (bresche-B → front-B
-      // liegt 45° schräg), galt ein Gegner schon 1,4 m schräg *vor* der Wand
-      // als „durch" und steuerte den nächsten Punkt quer durchs Parapet an
-      // (AP5-04, sichtbar geworden durch die gestreuten Marschspuren). Ohne
-      // Vorgänger (Pfadstart) bleibt die Richtung zum nächsten Wegpunkt.
+      // Wegpunkt; knickt der Pfad an der Engstelle schräg ab (Bresche-Knoten →
+      // Grabenknoten), galt ein Gegner schon 1,4 m schräg *vor* der Wand als
+      // „durch" und steuerte den nächsten Punkt quer durchs Parapet an (AP5-04,
+      // sichtbar geworden durch die gestreuten Marschspuren). Ohne Vorgänger
+      // (Pfadstart) bleibt die Richtung zum nächsten Wegpunkt.
       const vorherId = e.pfad[e.pfadIndex - 1];
       const naechsteId = e.pfad[e.pfadIndex + 1];
       const vorher = vorherId

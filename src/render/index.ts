@@ -415,7 +415,7 @@ export function createRenderer(
     landmarkMesh.renderingGroupId = GROUP_WORLD;
   }
 
-  // Munitionsdepots (AP5-02): eine Kiste je Abschnitts-Depot — Front an der
+  // Munitionsdepots (AP5-02): eine Kiste je Linien-Depot — Front an der
   // Parados, Home im Unterstand. Reine Markierung ohne Kollision; ob der
   // Spieler nah genug steht, entscheidet die Sim (`DEPOT_REICHWEITE`).
   const depotMeshes: Mesh[] = [];
@@ -430,7 +430,7 @@ export function createRenderer(
     depotDeckelMat = new StandardMaterial("depotDeckel", scene);
     depotDeckelMat.disableLighting = true;
     depotDeckelMat.emissiveColor = new Color3(0.9, 0.72, 0.25);
-    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+    for (const ab of [meta.frontLinie, meta.homeLinie]) {
       // Depot-Marker liegt 0,2 m über der Sohle — Kiste (0,5 hoch) steht auf.
       const kiste = MeshBuilder.CreateBox(
         `depot_${ab.id}`,
@@ -454,8 +454,8 @@ export function createRenderer(
     }
   }
 
-  // Front- und Home-Abschnitte (AP4-03/06): Trümmer je aufgerissener Bresche,
-  // Rauch über gebrochenen/verlorenen Abschnitten. Grob — Feinschliff in AP4-05.
+  // Frontlinie + Home-Line (AP4-03/06): Trümmer je aufgerissener Bresche,
+  // Rauch über einer gebrochenen/verlorenen Linie. Grob — Feinschliff in AP4-05.
   interface FrontVisual {
     truemmer: Mesh[];
     rauch: Mesh;
@@ -465,7 +465,7 @@ export function createRenderer(
   let truemmerMat: StandardMaterial | null = null;
   if (meta) {
     truemmerMat = flachMat("truemmer", 0.2, 0.18, 0.16);
-    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+    for (const ab of [meta.frontLinie, meta.homeLinie]) {
       const truemmer = ab.parapetBreschen.map((pos, i) => {
         const m = MeshBuilder.CreateBox(
           `bresche_${ab.id}_${i}`,
@@ -543,12 +543,8 @@ export function createRenderer(
 
     // Linien-Schilder (FRONT / HOME) an der jeweiligen Grabenlinie, Y-Billboard.
     for (const [ab, text, z] of [
-      ...meta.frontAbschnitte.map(
-        (a) => [a, "FRONT", a.bounds.maxZ - 8] as const,
-      ),
-      ...meta.homeAbschnitte.map(
-        (a) => [a, "HOME", a.bounds.maxZ + 1] as const,
-      ),
+      [meta.frontLinie, "FRONT", meta.frontLinie.bounds.maxZ - 8] as const,
+      [meta.homeLinie, "HOME", meta.homeLinie.bounds.maxZ + 1] as const,
     ]) {
       const tex = new DynamicTexture(
         `schild_${ab.id}`,
@@ -584,7 +580,7 @@ export function createRenderer(
     // Hinterland → Home-Line), aus den Linien-Bounds abgeleitet.
     const torMat = emissivMat("zonentor", [0.55, 0.53, 0.42]);
     const tore: [number, number][] = [];
-    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+    for (const ab of [meta.frontLinie, meta.homeLinie]) {
       const rand = Math.min(ab.bounds.maxX - 3, 30);
       const z = ab.bounds.minZ + 1;
       tore.push([-rand, z], [rand, z]);

@@ -97,6 +97,9 @@ describe("Gegner-Klassen — gemischte Welle auf dem echten Sektor (AP5-06)", ()
     const nav = {
       graph,
       verloren: new Set<string>(),
+      frontZiel: sektorGreybox.meta.frontLinie.zielKnoten,
+      homeZiel: sektorGreybox.meta.homeLinie.zielKnoten,
+      reinfKnoten: sektorGreybox.meta.frontLinie.reinfKnoten,
       onDespawn: (e: EnemyEntity) => despawned.push(e.id),
     };
     const spawnZeit = new Map<number, number>();

@@ -34,13 +34,14 @@ const meta = sektorGreybox.meta;
 const homePos = (
   meta.homeZugaenge.find((z) => z.id === "mitte") ?? meta.homeZugaenge[0]
 )?.pos ?? { x: 0, y: 0, z: -35 };
-const abschnittMitte = meta.frontAbschnitte.map((a) => ({
-  id: a.id,
+// Kompass-Marker für die eine Frontlinie — Mittelpunkt ihrer Bounds.
+const frontLinieMitte = {
+  id: meta.frontLinie.id,
   pos: {
-    x: (a.bounds.minX + a.bounds.maxX) / 2,
-    z: (a.bounds.minZ + a.bounds.maxZ) / 2,
+    x: (meta.frontLinie.bounds.minX + meta.frontLinie.bounds.maxX) / 2,
+    z: (meta.frontLinie.bounds.minZ + meta.frontLinie.bounds.maxZ) / 2,
   },
-}));
+};
 
 let prevState: SimState | undefined;
 
@@ -73,10 +74,14 @@ const loop = createLoop({
       playerPos: { x: state.player.pos.x, z: state.player.pos.z },
       yaw: state.player.yaw,
       homePos: { x: homePos.x, z: homePos.z },
-      abschnitte: abschnittMitte.map((a, i) => ({
-        ...a,
-        zustand: state.front[i]?.zustand ?? "stabil",
-      })),
+      abschnitte: [
+        {
+          ...frontLinieMitte,
+          zustand:
+            state.front.find((f) => f.id === frontLinieMitte.id)?.zustand ??
+            "stabil",
+        },
+      ],
     });
     lagekarte.update({
       front: state.front,

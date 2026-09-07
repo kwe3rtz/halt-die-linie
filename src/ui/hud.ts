@@ -15,7 +15,7 @@ export interface HudData {
   einsatz?: SimState["einsatz"];
   /** Letzter Schuss (Signal für die Trefferbestätigung). */
   lastShot: SimState["lastShot"];
-  /** Munitionsdepot in Reichweite (AP5-02): Abschnitts-Id oder null. Optional. */
+  /** Munitionsdepot in Reichweite (AP5-02): Linien-Id oder null. Optional. */
   depotInReichweite?: string | null;
 }
 

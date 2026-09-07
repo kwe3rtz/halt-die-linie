@@ -121,11 +121,11 @@ describe("hud", () => {
     hud.update(base); // kein Feld übergeben
     expect(line()?.hidden).toBe(true);
 
-    hud.update({ ...base, depotInReichweite: "B" });
+    hud.update({ ...base, depotInReichweite: "front" });
     expect(line()?.hidden).toBe(false);
     expect(line()?.textContent).toContain("E");
     expect(line()?.textContent).toContain("Munition");
-    expect(line()?.textContent).toContain("B");
+    expect(line()?.textContent).toContain("front");
 
     hud.update({ ...base, depotInReichweite: null });
     expect(line()?.hidden).toBe(true);

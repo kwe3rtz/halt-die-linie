@@ -7,11 +7,10 @@
 // Von der Feindseite nach hinten (KONZEPT.md §3):
 //   Feindseite → Niemandsland → Frontlinie → Hinterland → Home-Line.
 // Alle Maße sind Greybox-Startwerte (Ticket AP6-01), im Spieltest justiert.
-// Dieses Ticket baut nur die Bühne — der Kern-Bogen auf EINE Linie umzustellen
-// (Zustandsmaschine, Uhr, Spawn-Verlagerung) ist AP6-02 ff. Damit die
-// bestehende `front.ts`-Maschine (N Abschnitte) ohne Code-Änderung weiterläuft,
-// liefert der Sektor genau EINEN `frontAbschnitt` (id "front") + EINEN
-// `homeAbschnitt` (id "home").
+// Der Sektor liefert genau EINE `frontLinie` (id "front") + EINE `homeLinie`
+// (id "home"). Die Rollen-Felder (`zielKnoten`, `reinfKnoten`, `brescheZugang`,
+// `hintenKanten`) tragen das Nav-Wissen, das früher in `index.ts` aus A/B/C-
+// Strings abgeleitet wurde (AP6-02, Audit H2).
 import type { Vec3 } from "../sim/math";
 import type { Aabb, LevelBox } from "../sim/collision";
 import type {
@@ -37,9 +36,10 @@ function raw(center: Vec3, size: Vec3): LevelBox {
 // --- Breschen (AP4-03/06): EINE Quelle für Geometrie (getaggte Parapet-
 //     Segmente) und Meta (`parapetBreschen`). Die Sim schaltet das Segment ab,
 //     sobald die Bresche offen ist — dann ist die Bresche ein echtes Loch.
-//     Reihenfolge = Tag-Index: [0] = Mitte (hat einen Nav-Knoten `bresche-front`
-//     / `bresche-home`), [1] = Flanke (nur physisches Loch, kein Nav-Knoten —
-//     siehe TODO(Rückfrage) am Nav-Graphen). ---
+//     Reihenfolge = Tag-Index: [0] = Mitte (die Frontlinie hängt hier ihren
+//     `brescheZugang` ein — Nav-Knoten `bresche-front`), [1] = Flanke (nur
+//     physisches Loch, kein Nav-Knoten — Audit M7 → AP7). Die Home-Line hat
+//     gar keinen Bresche-Nav-Zugang. ---
 const BRESCHEN_FRONT: Vec3[] = [
   { x: 0, y: -0.4, z: 17.5 },
   { x: -20, y: -0.4, z: 17.5 },
@@ -271,7 +271,7 @@ const navKnoten: NavKnoten[] = [
   // Verdeckter Verstärkungs-/Watchdog-Reloc-Knoten (KONZEPT.md §3: „materiali-
   // sieren nie im Sichtfeld") — hinter der Deckungsruine bei (−7, 29).
   nk("reinforcement-front", -7, 26, "niemandsland"),
-  // Direkt vor der Frontlinie (index.ts kennt den Knoten `vorfront` fest).
+  // Direkt vor der Frontlinie (`vorfront` = `frontLinie.brescheZugang.davor`).
   nk("vorfront-w", -16, 22, "niemandsland"),
   nk("vorfront", 0, 22, "niemandsland"),
   nk("vorfront-e", 16, 22, "niemandsland"),
@@ -282,10 +282,10 @@ const navKnoten: NavKnoten[] = [
   nk("front-w", -16, 14.5, "frontlinie", IN_GRABEN),
   nk("front-front", 0, 14.5, "frontlinie", IN_GRABEN),
   nk("front-e", 16, 14.5, "frontlinie", IN_GRABEN),
-  // Bresche-Kontaktknoten auf der Mittel-Bresche (x = 0). Die West-Bresche
-  // (x = −20) hat keinen eigenen Knoten — ein Knoten je Bresche braucht eine
-  // allgemeinere Id-Konvention (Politur-Ticket „Sektor-Wissen aus der Sim").
-  // TODO(Rückfrage): reicht ein Bresche-Nav-Knoten pro Linie für AP6?
+  // Bresche-Kontaktknoten auf der Mittel-Bresche (x = 0) =
+  // `frontLinie.brescheZugang.bresche`. Die West-Bresche (x = −20) hat keinen
+  // eigenen Knoten — sie bleibt reines physisches Loch (Audit M7, volle
+  // Nav-Modellierung erst im AP7-Politur-Ticket „Sektor-Wissen aus der Sim").
   eng(nk("bresche-front", 0, 17.5, "frontlinie")),
   eng(nk("parados-w", -16, 10.5, "frontlinie")),
   eng(nk("parados-e", 16, 10.5, "frontlinie")),
@@ -359,7 +359,7 @@ const navKanten: NavKante[] = [
   auf("front-front", "bresche-front"),
   zu("bresche-front", "vorfront"),
   // Frontlinie → Hinterland: starten zu; AP4-03 öffnet sie beim Linienfall
-  // (index.ts `HINTEN_KANTEN`). Drei parallele Rückwege.
+  // (`frontLinie.hintenKanten`). Drei parallele Rückwege.
   zu("front-w", "parados-w"),
   zu("front-front", "parados-m"),
   zu("front-e", "parados-e"),
@@ -400,35 +400,49 @@ const meta: SektorMeta = {
     { id: "hinterland", bounds: aabb(-GRENZE_X, -30, GRENZE_X, FRONT_MIN_Z) },
     { id: "homeline", bounds: aabb(-GRENZE_X, GRENZE_SUED, GRENZE_X, -30) },
   ],
-  // Genau EINE Frontlinie (`front`) + EINE Home-Line (`home`). Die
-  // `front.ts`-Maschine läuft damit mit N = 1 ohne Code-Änderung (AP6-02 baut
-  // die A/B/C-Reste in `index.ts`/`enemies.ts` zurück).
-  frontAbschnitte: [
-    {
-      id: "front",
-      bounds: aabb(-GRENZE_X, FRONT_MIN_Z, GRENZE_X, FRONT_MAX_Z),
-      parapetBreschen: BRESCHEN_FRONT,
-      bauSlots: [
-        { x: -18, y: IN_GRABEN, z: 14 },
-        { x: 0, y: IN_GRABEN, z: 14 },
-        { x: 18, y: IN_GRABEN, z: 14 },
-      ],
-      // Depot hinter dem Feuertritt an der Parados-Rückwand (aus der Schusslinie).
-      depot: { x: -4, y: IN_GRABEN, z: 12.5 },
-    },
-  ],
-  homeAbschnitte: [
-    {
-      id: "home",
-      bounds: aabb(-GRENZE_X, HOME_MIN_Z, GRENZE_X, HOME_MAX_Z),
-      parapetBreschen: BRESCHEN_HOME,
-      bauSlots: [
-        { x: -12, y: IN_GRABEN, z: -33 },
-        { x: 12, y: IN_GRABEN, z: -33 },
-      ],
-      depot: { x: -6, y: IN_GRABEN, z: -38 },
-    },
-  ],
+  // Genau EINE Frontlinie (`front`) + EINE Home-Line (`home`) — je ein Objekt,
+  // die `front.ts`-Maschine läuft je Linie. Die Rollen-Felder ersetzen die alte
+  // A/B/C-String-Ableitung in `index.ts`/`enemies.ts` (AP6-02, Audit H2).
+  frontLinie: {
+    id: "front",
+    bounds: aabb(-GRENZE_X, FRONT_MIN_Z, GRENZE_X, FRONT_MAX_Z),
+    parapetBreschen: BRESCHEN_FRONT,
+    bauSlots: [
+      { x: -18, y: IN_GRABEN, z: 14 },
+      { x: 0, y: IN_GRABEN, z: 14 },
+      { x: 18, y: IN_GRABEN, z: 14 },
+    ],
+    // Depot hinter dem Feuertritt an der Parados-Rückwand (aus der Schusslinie).
+    depot: { x: -4, y: IN_GRABEN, z: 12.5 },
+    // Anrückende Wellengegner steuern den Frontgraben-Mittelknoten an.
+    zielKnoten: "front-front",
+    // Verdeckte Verstärkung/Watchdog-Reloc bei Linienfall (im Niemandsland).
+    reinfKnoten: "reinforcement-front",
+    // Mittel-Bresche (x = 0) hat den Nav-Zugang; die West-Bresche bleibt reines
+    // Loch (Audit M7 → AP7-Politur).
+    brescheZugang: { bresche: "bresche-front", davor: "vorfront" },
+    // Rückwege Frontlinie → Hinterland, die beim Fall aufgehen (drei parallel).
+    hintenKanten: [
+      ["front-w", "parados-w"],
+      ["front-front", "parados-m"],
+      ["front-e", "parados-e"],
+    ],
+  },
+  homeLinie: {
+    id: "home",
+    bounds: aabb(-GRENZE_X, HOME_MIN_Z, GRENZE_X, HOME_MAX_Z),
+    parapetBreschen: BRESCHEN_HOME,
+    bauSlots: [
+      { x: -12, y: IN_GRABEN, z: -33 },
+      { x: 12, y: IN_GRABEN, z: -33 },
+    ],
+    depot: { x: -6, y: IN_GRABEN, z: -38 },
+    // Fällt die Front, fluten die Gegner zu diesem Knoten (letzte Linie).
+    zielKnoten: "home-ziel",
+    // Keine Infiltration / kein Weg hinter die Home-Line.
+    reinfKnoten: "",
+    hintenKanten: [],
+  },
   feindAnmarsch: [
     { x: -22, y: AUF_FELD, z: 49 },
     { x: 0, y: AUF_FELD, z: 50 },

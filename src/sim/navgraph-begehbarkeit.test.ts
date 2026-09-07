@@ -147,7 +147,7 @@ describe("Nav-Graph — Begehbarkeit gegen die Kollisionswelt (AP4-06)", () => {
 
   it("alles offen (jede Bresche aufgerissen, jeder Abschnitt gefallen): jede Kante ist begehbar", () => {
     const world = createCollisionWorld(sektorGreybox);
-    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+    for (const ab of [meta.frontLinie, meta.homeLinie]) {
       ab.parapetBreschen.forEach((_, i) => {
         // Eine Bresche schaltet Wand + Feuertritt-Stufe + Bank zusammen ab
         // (AP6-01: das Loch geht durch die ganze Brustwehr).
@@ -167,7 +167,7 @@ describe("Nav-Graph — Begehbarkeit gegen die Kollisionswelt (AP4-06)", () => {
     // Segment → im Ist-Zustand ein Kontaktpunkt; hier verlangen wir
     // ausdrücklich, dass der Weg vom Niemandsland (`vorfront`) zu ihm ohne
     // Abschalten des Segments NICHT begehbar ist.
-    for (const ab of meta.frontAbschnitte) {
+    for (const ab of [meta.frontLinie]) {
       const tag = brescheTag(ab.id, 0);
       const p = meta.navGraph.knoten.find((k) => k.id === `bresche-${ab.id}`);
       const lv = meta.navGraph.knoten.find((k) => k.id === "vorfront");
@@ -180,7 +180,7 @@ describe("Nav-Graph — Begehbarkeit gegen die Kollisionswelt (AP4-06)", () => {
   });
 
   it("jede Bresche hat ein getaggtes Parapet-Segment, das sie umschließt", () => {
-    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+    for (const ab of [meta.frontLinie, meta.homeLinie]) {
       ab.parapetBreschen.forEach((b, i) => {
         const tag = brescheTag(ab.id, i);
         const segment = sektorGreybox.boxes.find((box) => box.tag === tag);
