@@ -69,9 +69,12 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 1. **`ki-game-e6` baut AP6-02** (mechanische A/B/C-Bereinigung). Spec:
    `tickets/AP6-02-eine-frontlinie-eine-homeline.md`. Golden-Anker müssen grün
    bleiben — das ist die eigentliche Sorgfalt.
-2. **AP6-02b** — Druck-Radius-Halte-Semantik (Halte-Punkte je Bresche, lokaler
-   Druck, Aggregation → Linie fällt als Ganzes) + „Anzahl bedrohter Zugänge"
-   für die Wave-Skalierung. Golden-Anker hier bewusst neu + Stub-Gegenprobe.
+2. **AP6-02b** — Bresche → Durchbruch → Linienfall (Halte-Punkte je Bresche,
+   lokaler Druck öffnet die Bresche physisch, Gegner hinter der Linie →
+   „DURCHBRUCH" → Fall; abwendbar solange der Spieler den Einbruch räumt) +
+   Uhr-Regel (Frontfall = gefährlicher, nicht schneller). „Anzahl bedrohter
+   Zugänge" für die Wave-Skalierung. Golden-Anker hier bewusst neu +
+   Stub-Gegenprobe.
 3. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen") → AP6-05
    (Roam + Perf-Broadphase, Audit H1/M5/M6).
 4. Nach AP6-02 kurz anspielen (`arbeitspaket-6`): quer durch den Nacht-Sektor.
@@ -103,6 +106,19 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
 
+- **2026-09-08** — **Design-Runde nach Sparring Runde 3 (AP6-Kern).** Drei
+  externe KIs deckungsgleich: der binäre „ganze Linie fällt bei Drucksumme X"
+  ist der Hauptfehler (unfair/unlesbar für Solo). **Beschlüsse:** (1) Frontfall
+  als sichtbare Kette **Bresche → Durchbruch → Fall** (lokaler Druck öffnet
+  eine Bresche = Krise; Gegner müssen physisch durch und einen Fleck hinter
+  der Linie halten → „DURCHBRUCH" mit letzter Reaktionschance → dann Fall).
+  AP6-02b darauf umgeschrieben (`tickets/AP6-02b-bresche-durchbruch-*.md`).
+  (2) **Frontfall = gefährlicher, nicht schneller** — ChatGPT + Gemini
+  flaggten unabhängig einen Speedrun-Exploit in „Uhr läuft schneller".
+  KONZEPT §3/§6 entsprechend geschärft (v0.3, Stand 8. Sept). (3) „Instand
+  setzen" (§9.5) + Roam-Details später — eigene Design-Runde direkt vor
+  AP6-04, mit dem Sparring-Input (`SPARRING-ANTWORTEN.md` Runde 3 +
+  Konvergenz-Analyse).
 - **2026-09-07** — **Audit vor AP6-02 + AP6-02 geteilt.** GitHub Copilot
   (rein lesend) hat (a) den AP5-Stand auf `main` auditiert
   (`AUDIT-2026-09-07-ap5.md` — AP5-Kern lokal gut getestet, Risiken an den

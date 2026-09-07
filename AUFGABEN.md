@@ -723,7 +723,7 @@ in `tickets/`.
 |---|---|---|
 | AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
 | AP6-02 | Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung, kein Verhaltenswechsel) | offen (nächstes) |
-| AP6-02b | Druck-Radius-Halte-Semantik + die Uhr an einer Linie (Golden-Rebaseline hier) | offen |
+| AP6-02b | Bresche → Durchbruch → Linienfall (physisch, telegraphiert) + Uhr-Regel (Golden-Rebaseline hier) | offen |
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 | „Instand setzen" — gefallene Linie zurückerobern | offen |
 | AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) + Perf-Broadphase | offen |

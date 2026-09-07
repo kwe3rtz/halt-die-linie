@@ -1,9 +1,11 @@
 # Halt die Linie — Konzeptdokument
 
-**Entwurf v0.3 · Stand 7. September 2026** (§1/§3/§5/§6/§9/§10 in der
+**Entwurf v0.3 · Stand 8. September 2026** (§1/§3/§5/§6/§9/§10 in der
 Design-Runde 2026-09-07 neu gefasst: eine Frontlinie statt A/B/C-Abschnitte,
 größeres begehbares Grabennetz, „Instand setzen" als Rückeroberung, Nacht
-zuerst)
+zuerst. §3/§6 am 2026-09-08 nach Sparring-Runde 3 geschärft: Frontfall als
+sichtbare Kette Bresche → Durchbruch → Fall, Frontfall = gefährlicher statt
+schneller)
 
 Koop-Wave-Survival-Shooter im Grabenkrieg des Ersten Weltkriegs, First-Person.
 Dieses Dokument hält den im Gespräch beschlossenen Konzeptkern fest — als
@@ -81,8 +83,8 @@ bewegt. Von der Feindseite nach hinten:
    mit Deckung und Sichthindernissen. Nachts der Roam-Raum der Toten.
 3. **Frontlinie** — *eine durchgehende* Grabenlinie über die Sektorbreite:
    Feuertritt, Parapet, Unterstände, ein bis zwei Bresche-Punkte, Bau-Slots,
-   ein Nachschubdepot. Sie hält oder fällt **als Ganzes**
-   (`stabil → bedrängt → gebrochen → verloren`) — **keine A/B/C-Abschnitte**.
+   ein Nachschubdepot. Sie hält oder fällt **als Ganzes** — **keine
+   A/B/C-Abschnitte**. Wie sie fällt: siehe „Wie die Frontlinie fällt" unten.
 4. **Hinterland** — größerer, frei begehbarer Bereich zwischen Frontlinie und
    Home-Line: Reserve- und Laufgräben, Geschützstellungen, Trichter,
    Baracken-Ruinen. **Mehrere Wege** nach vorn und hinten, alle irgendwie
@@ -90,6 +92,31 @@ bewegt. Von der Feindseite nach hinten:
 5. **Home-Line** — durchgehende rückwärtige Linie, befestigt, begehbare
    Unterstände (Munitionslager, Verbandsplatz, Feldkommandeur). Hält oder
    fällt als Ganzes. **Die echte Verlustgrenze.**
+
+### Wie die Frontlinie fällt — Bresche → Durchbruch → Fall — `BESCHLOSSEN` (Design-Runde 2026-09-08)
+
+Der Fall der Linie ist ein **sichtbares Ereignis im Raum**, keine unsichtbare
+Drucksumme (dafür ist die Linie zu lang — der Spieler würde seinen Nahkampf
+gewinnen und trotzdem am anderen Ende verlieren). Die Kette:
+
+```
+stabil → bedrängt → BRESCHE OFFEN → DURCHBRUCH → verloren
+                         ↑______________↓  (Spieler räumt den Einbruch)
+```
+
+- **bedrängt** — Gegner stehen an einem Bresche-Punkt, der lokale Druck steigt.
+  Warnstufe 1 (Audio aus der Richtung). Ein Spieler in der Nähe entlastet.
+- **Bresche offen** — der Druck an einem Punkt reißt das Parapet physisch auf.
+  Krise, **keine Niederlage** — Gegner strömen jetzt durch. Warnstufe 2
+  (HUD-Kompass: „BRESCHE — <Ort>"). Eine geöffnete Bresche bleibt offen
+  (Narben-Effekt), bis sie „instand gesetzt" wird.
+- **Durchbruch** — Gegner sind physisch hinter die Linie gekommen und halten
+  dort einen Fleck. Warnstufe 3 (Banner „DURCHBRUCH — N SEK"). Räumt der
+  Spieler den Einbruch rechtzeitig, hält die Linie. Sonst → **verloren**.
+
+4–5 mögliche Bresche-Punkte, nach Landmarks benannt (Panzerwrack, Pumpenstand
+…), nicht A/B/C — natürliche Koop-Callouts. Solo hat der Director dafür zu
+sorgen, dass **höchstens eine echte Krise gleichzeitig** läuft.
 
 ### Die Linie fällt — der Feind rückt vor — `BESCHLOSSEN`
 
@@ -99,7 +126,9 @@ Der Feind-Spawn folgt der vordersten gehaltenen Linie:
   Niemandsland heran (lange Vorwarnzeit).
 - **Frontlinie gefallen** → Spawn rückt nach vorn, an/hinter die gefallene
   Front; der Feind drückt durchs Hinterland Richtung Home-Line. Kürzerer Weg,
-  die Uhr läuft schneller, das Front-Depot ist weg.
+  mehr Druck, das Front-Depot ist weg. **Aber:** ein Frontfall macht den
+  Skirmish *gefährlicher*, nicht *schneller* — er verkürzt den Weg zum Sieg
+  nicht (siehe „Die Uhr").
 - **Home-Line gefallen** → Spawn unmittelbar davor; jetzt nur noch Überleben
   bis zum Finale — oder bis eine Linie zurückerobert ist.
 
@@ -123,9 +152,13 @@ kostet echt. *(Werkzeug, Dauer, Kosten, Fiktion — offen, §9.)*
 Die endliche Angriffskraft des Feindes (§6) wird dort am stärksten zermürbt,
 wo der Trupp **an der Frontlinie** hält (weit vorne = teurer Anmarsch für den
 Feind). Kills im Hinterland zermürben weniger, an der Home-Line am wenigsten.
-Fällt die Frontlinie, läuft die Uhr schneller (kürzerer Feindweg). Die Front
-halten heißt: mehr Feindverluste pro Zeit → schnelleres Ende. Rückzug ist eine
-Abwägung, kein reiner Verlust — aber Zurückerobern lohnt.
+Die Front halten heißt also: mehr Angriffskraft-Verlust pro Zeit → früheres
+Finale. Fällt die Frontlinie, zermürben die Kills nur noch wie im Hinterland
+— der Weg zum Finale wird **länger**, der Skirmish **gefährlicher** (Spawn
+vorn, Depot weg). Ein *freiwilliger* Frontverlust darf nie mehr Fortschritt
+pro Minute bringen als Halten — sonst wird „Front fallen lassen und bequem
+hinten kämpfen" die optimale Strategie. Rückzug ist eine Abwägung, kein
+reiner Verlust — aber Zurückerobern lohnt.
 
 ### Maßstab — größer, aber lesbar — `RICHTUNG`
 
@@ -372,12 +405,14 @@ extrahieren mit gesicherter Beute, oder freiwillig in eskalierende
 Reserve-Wellen für mehr Beute weiterspielen.
 
 **Eine Frontlinie, eine Home-Line** (Design-Runde 2026-09-07): keine Abschnitte
-mehr. Die Frontlinie hält oder fällt als Ganzes; fällt sie, rückt der Feind vor
-(§3) und die Uhr läuft schneller. Zurückerobern per **„Instand setzen"** (§3) —
-eine exponierte Pionier-Interaktion an einem festen Punkt, jederzeit möglich,
-aber teuer. Der Bogen ist damit nicht mehr streng einbahnig: Front fällt →
-Hinterland-Kampf → entweder Front zurückerobern oder weiter auf die Home-Line
-zurückfallen.
+mehr. Die Frontlinie hält oder fällt als Ganzes — über die Kette Bresche →
+Durchbruch → Fall (§3). Fällt sie, rückt der Feind vor (§3); der Weg zum Finale
+wird dadurch **länger**, nicht kürzer (§3 „Die Uhr" — Frontfall = gefährlicher,
+kein Zeitgewinn). Zurückerobern per **„Instand setzen"** (§3) — eine exponierte
+Pionier-Interaktion an einem festen Punkt, jederzeit möglich, aber teuer, und
+ohne die zerstörte Infrastruktur zurückzubringen (Narben-Effekt). Der Bogen ist
+damit nicht mehr streng einbahnig: Front fällt → Hinterland-Kampf → entweder
+Front zurückerobern oder weiter auf die Home-Line zurückfallen.
 
 ### Verlustbedingung — `BESCHLOSSEN`
 Der Einsatz ist verloren, wenn die **Home-Line als Linie verloren** ist — oder
