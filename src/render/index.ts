@@ -90,16 +90,18 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + delta * t;
 }
 
-// Zonen-Farbtöne — Nacht-Palette (AP6-01): durchweg dunkel und entsättigt, aber
-// je Zone noch unterscheidbar (KONZEPT.md §3 Lesbarkeit). Feindseite kalt-rötlich,
-// Niemandsland erdig, Frontlinie am hellsten (Bezugsanker), Hinterland oliv,
-// Home-Line kühl-blau (befestigt).
+// Zonen-Farbtöne — Nacht-Palette (AP6-01, AP6-06 angehoben): entsättigt und
+// klar „Nacht", aber je Zone noch unterscheidbar (KONZEPT.md §3 Lesbarkeit) und
+// nirgends nahe Schwarz. Feindseite kalt-rötlich, Niemandsland erdig, Frontlinie
+// am hellsten (Bezugsanker), Hinterland oliv, Home-Line kühl-blau (befestigt).
+// AP6-06: jeder Kanal ~+0,06 — die Greybox fiel im Spieltest an lichtfernen
+// Stellen ins Schwarze; die Relativabstände (Zonen-Lesbarkeit) bleiben.
 const ZONEN_TON: Record<ZonenId, [number, number, number]> = {
-  feindseite: [0.12, 0.09, 0.1],
-  niemandsland: [0.13, 0.12, 0.1],
-  frontlinie: [0.2, 0.19, 0.16],
-  hinterland: [0.13, 0.15, 0.12],
-  homeline: [0.12, 0.14, 0.19],
+  feindseite: [0.18, 0.15, 0.16],
+  niemandsland: [0.19, 0.18, 0.16],
+  frontlinie: [0.26, 0.25, 0.22],
+  hinterland: [0.19, 0.21, 0.18],
+  homeline: [0.18, 0.2, 0.25],
 };
 
 export function createRenderer(
@@ -111,24 +113,29 @@ export function createRenderer(
   const scene = new Scene(engine);
   // Nacht (AP6-01): dunkelblauer Nachthimmel. Kein „Tag mit Fog", aber hell
   // genug, dass die Grabenstruktur lesbar bleibt.
-  scene.clearColor = new Color4(0.05, 0.06, 0.09, 1);
-  // Sichtweite: dunkler Dunst — die Nacht schluckt alles jenseits von ~65 m,
-  // Front und Home-Line bleiben lesbar. Die Umland-Außenkante (AP5-03)
-  // verschwindet vollständig, ohne harte Silhouette.
+  scene.clearColor = new Color4(0.07, 0.08, 0.12, 1);
+  // Sichtweite: dunkler Dunst — die Nacht schluckt die Außenkante, aber Front
+  // und Home-Line bleiben klar lesbar. AP6-06: Ende von 68 → 88 m, damit die
+  // Grabenstruktur über ~25–30 m trägt statt schon bei ~15 m ins Schwarze zu
+  // fallen. Fog-Farbe = Nachthimmel, nie reines Schwarz.
   scene.fogMode = Scene.FOGMODE_LINEAR;
-  scene.fogColor = new Color3(0.05, 0.06, 0.09);
-  scene.fogStart = 22;
-  scene.fogEnd = 68;
+  scene.fogColor = new Color3(0.07, 0.08, 0.12);
+  scene.fogStart = 28;
+  scene.fogEnd = 88;
 
-  // Mondlicht: gedämpftes kühles Ambient + ein Hauch Richtungslicht von oben.
-  // Die warmen Akzente kommen von den statischen Lichtern (`meta.lichter`).
+  // Mondlicht (AP6-06 neu abgestimmt): der Hemispheric ist der globale Boden —
+  // kräftig genug, dass KEINE Fläche als reines Schwarz rendert, auch ohne
+  // Feuerschein in der Nähe. `groundColor` hebt zusätzlich die abgewandten /
+  // nach unten zeigenden Flächen. Ein Hauch Richtungslicht gibt den Boxen
+  // Kanten. Die warmen Akzente kommen von den statischen Lichtern
+  // (`meta.lichter`) — die sind jetzt Akzent, nicht Scheinwerfer.
   const sky = new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
-  sky.intensity = 0.34;
-  sky.diffuse = new Color3(0.52, 0.58, 0.75);
-  sky.groundColor = new Color3(0.06, 0.07, 0.1);
+  sky.intensity = 0.9;
+  sky.diffuse = new Color3(0.55, 0.6, 0.75);
+  sky.groundColor = new Color3(0.26, 0.28, 0.34);
   const sun = new DirectionalLight("mond", new Vector3(-0.3, -1, 0.4), scene);
-  sun.intensity = 0.22;
-  sun.diffuse = new Color3(0.58, 0.63, 0.8);
+  sun.intensity = 0.4;
+  sun.diffuse = new Color3(0.6, 0.65, 0.82);
 
   const camera = new FreeCamera("player", new Vector3(0, EYE_HEIGHT, 0), scene);
   camera.minZ = 0.1;
@@ -629,9 +636,14 @@ export function createRenderer(
         new Vector3(pos.x, pos.y + 0.6, pos.z),
         scene,
       );
-      licht.diffuse = new Color3(1, 0.68, 0.36);
-      licht.intensity = 14;
-      licht.range = 26;
+      licht.diffuse = new Color3(1, 0.7, 0.4);
+      // AP6-06: Intensität 14 → 2,4 und Reichweite 26 → 15. Vorher brannte
+      // jede Fläche im Nahbereich eines Feuers aus (Washout), während alles
+      // ohne Feuer in Reichweite auf Schwarz fiel. Jetzt ein warmer Akzent-
+      // Schein über den globalen Ambient-Boden, kein Scheinwerfer.
+      licht.intensity = 2.4;
+      licht.range = 15;
+      licht.falloffType = PointLight.FALLOFF_GLTF;
       nachtLichter.push(licht);
     });
   }

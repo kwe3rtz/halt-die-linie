@@ -83,16 +83,19 @@ describe("module — Rasterbaukasten", () => {
     );
   });
 
-  it("rampe: jede Stufe bleibt unter STEP_HEIGHT", () => {
-    const tops = modul("rampe", ORIGIN, 0, { laenge: 4, breite: 4 })
-      .map(oberkante)
-      .sort((a, b) => b - a);
+  it("rampe: 10 flache Stufen, jeder Anstieg klar unter STEP_HEIGHT (AP6-06)", () => {
+    const boxes = modul("rampe", ORIGIN, 0, { laenge: 4, breite: 4 });
+    expect(boxes.length).toBe(10); // AP6-06: von 4 auf 10 (glatter)
+    const tops = boxes.map(oberkante).sort((a, b) => b - a);
     const stufen = [0, ...tops.map((t) => -t)]; // Abfall ab OBERFLAECHE (0)
     for (let i = 1; i < stufen.length; i += 1) {
-      expect((stufen[i] ?? 0) - (stufen[i - 1] ?? 0)).toBeLessThanOrEqual(
-        STEP_HEIGHT + 1e-9,
-      );
+      const anstieg = (stufen[i] ?? 0) - (stufen[i - 1] ?? 0);
+      expect(anstieg).toBeLessThanOrEqual(STEP_HEIGHT + 1e-9);
+      // AP6-06: deutlich flacher als früher (0,45) → ~0,18 m.
+      expect(anstieg).toBeLessThanOrEqual(0.25 + 1e-9);
     }
+    // Unterste Stufe endet exakt auf der Grabensohle.
+    expect(Math.min(...tops)).toBeCloseTo(GRABEN_SOHLE, 5);
   });
 });
 

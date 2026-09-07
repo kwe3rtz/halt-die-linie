@@ -8,6 +8,7 @@ import {
   type FireButtons,
 } from "./weapon";
 import type { WeaponDef } from "../data/schema";
+import { sturmMp18 } from "../data/waffen";
 
 const DT = 1 / 60;
 
@@ -80,6 +81,27 @@ describe("weapon — feuern & cooldown", () => {
     advanceWeapon(state, def, 0.1);
     expect(shoot(state, def, HOLD).schuss).toBe(true);
     expect(state.imLauf).toBe(3);
+  });
+
+  it("Sturm-MP 18 (AP6-06, echte Def): Vollauto hält Feuer, Kadenz-Cooldown greift", () => {
+    // Die Testwaffe aus dem Spielpfad — hier durch dieselbe Feuerlogik wie der
+    // Default. Vollauto: feuert bei gedrückter Taste, danach sperrt der aus der
+    // Kadenz (450/min) abgeleitete Cooldown (60/450 ≈ 0,133 s).
+    const state = createWeaponState(sturmMp18);
+    expect(state.imLauf).toBe(20);
+    expect(shoot(state, sturmMp18, HOLD).schuss).toBe(true);
+    expect(state.cooldown).toBeCloseTo(60 / 450, 5);
+    // Taste bleibt gedrückt, aber der Cooldown läuft noch.
+    expect(shoot(state, sturmMp18, HOLD).schuss).toBe(false);
+    advanceWeapon(state, sturmMp18, 60 / 450);
+    expect(shoot(state, sturmMp18, HOLD).schuss).toBe(true);
+    expect(state.imLauf).toBe(18);
+    // Magazin-Nachladen: Restmunition verfällt, ein Block bis voll.
+    reload(state, sturmMp18);
+    expect(state.imLauf).toBe(0);
+    advanceWeapon(state, sturmMp18, 2.2);
+    expect(state.imLauf).toBe(20);
+    expect(state.reserve).toBe(100);
   });
 
   it("leergeschossen: kein Schuss mehr ohne Nachladen", () => {

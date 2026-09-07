@@ -189,13 +189,21 @@ function parapet(
   return out;
 }
 
+/**
+ * Anzahl Stufen einer `rampe()`. AP6-06: von 4 auf 10 — die 4-Stufen-Treppe
+ * (Δy 0,45 m, knapp unter `STEP_HEIGHT`) ließ Gegner-Kapseln an den Kanten
+ * hängen, besonders unter Nachrück-Druck. 10 Stufen → Δy 0,18 m, spürbar
+ * glatter. Bleibt im Box-Kollisionsmodell (kein Slope-Primitiv). Die
+ * Platzierungen erben das im Map-Neubau (AP6-01b).
+ */
+const RAMPE_STUFEN = 10;
+
 /** Stufenrampe: Oberfläche bei lokal z = 0 → Grabensohle bei lokal z = laenge. */
 function rampe(laenge: number, breite: number): LevelBox[] {
-  const stufen = 4;
-  const dz = laenge / stufen;
-  const dy = (OBERFLAECHE - GRABEN_SOHLE) / stufen; // 0,45 ≤ STEP_HEIGHT (0,5)
+  const dz = laenge / RAMPE_STUFEN;
+  const dy = (OBERFLAECHE - GRABEN_SOHLE) / RAMPE_STUFEN; // 0,18 ≪ STEP_HEIGHT (0,5)
   const boxes: LevelBox[] = [];
-  for (let i = 0; i < stufen; i += 1) {
+  for (let i = 0; i < RAMPE_STUFEN; i += 1) {
     const top = OBERFLAECHE - dy * (i + 1);
     boxes.push(box(0, top - 0.5, dz * (i + 0.5), breite, 1, dz));
   }

@@ -25,5 +25,40 @@ export const langgewehrM98: WeaponDef = {
   feelTags: ["hoher-schaden", "langsam", "praezise", "lange-reichweite"],
 };
 
+/**
+ * Sturm-MP 18 — Vollauto-Maschinenpistole (WAFFEN.md „Sturm-MP 18", dort eine
+ * Wandwaffe). Im Zielbild NICHT die Startwaffe; AP6-06 reicht sie nur im
+ * Spielpfad (`src/main.ts`) als Testwaffe an `createSim`, damit sich der
+ * Nacht-Sektor mit etwas Automatischem anspielen lässt. Sim-Default und alle
+ * Tests hängen weiter an `standardWaffe` (dem Langgewehr) → Golden-Anker
+ * unberührt. Zahlen sind Platzhalter fürs Feel, kein Balancing.
+ */
+export const sturmMp18: WeaponDef = {
+  id: "sturm-mp-18",
+  name: "Sturm-MP 18",
+  category: "maschinenpistole",
+  feuerModus: "vollauto",
+  basisSchaden: 28,
+  kadenz: 450,
+  magazin: 20,
+  reserve: 120,
+  nachladeArt: "magazin",
+  handling: {
+    reichweiteOptimal: 22,
+    reichweiteMax: 55,
+    streuung: 0.06,
+    rueckstoss: 0.9,
+  },
+  nation: "kaiserreich",
+  wandwaffe: true,
+  feelTags: [
+    "schnelles-feuer",
+    "dauerfeuer",
+    "niedriger-schaden",
+    "kurze-reichweite",
+    "hoher-rueckstoss",
+  ],
+};
+
 /** Standard-Startwaffe des Spielers in AP2. */
 export const standardWaffe: WeaponDef = langgewehrM98;

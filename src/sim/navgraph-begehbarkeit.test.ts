@@ -196,3 +196,42 @@ describe("Nav-Graph — Begehbarkeit gegen die Kollisionswelt (AP4-06)", () => {
     }
   });
 });
+
+// AP6-06: die Home-Flankenrampen (x ±31) liefen 5 m breit über die nur x ±32
+// breite Grabensohle hinaus — eine Kapsel in der äußeren Rampenspur fiel
+// südlich der untersten Stufe durch die Welt. Gegenprobe: über die ganze
+// Rampenbreite muss die Kapsel auf der Sohle ankommen, nicht durchsacken.
+describe("Home-Flankenrampen — keine Kapsel fällt an der Kante durch (AP6-06)", () => {
+  const runter = (x: number): Vec3 => {
+    const world = createCollisionWorld(sektorGreybox);
+    let pos: Vec3 = { x, y: 0.2, z: -27 }; // oben, Hinterland-Kante
+    let vel: Vec3 = { x: 0, y: 0, z: 0 };
+    let tiefstesY = pos.y;
+    for (let t = 0; t < 8 / DT; t += 1) {
+      const zZiel = -36; // unten im Home-Graben
+      const dz = zZiel - pos.z;
+      if (Math.abs(dz) < 0.3) break;
+      vel = { x: 0, y: vel.y, z: (dz / Math.abs(dz)) * TEMPO };
+      const r = moveCapsule(world, pos, vel, ENEMY_RADIUS, ENEMY_HEIGHT, DT);
+      pos = r.pos;
+      vel = r.vel;
+      tiefstesY = Math.min(tiefstesY, pos.y);
+    }
+    return { x: pos.x, y: tiefstesY, z: pos.z };
+  };
+
+  for (const seite of [-1, 1] as const) {
+    const name = seite < 0 ? "West" : "Ost";
+    // Rampe: Anker x = ±31, breite 5 → Spur x ∈ [±28.5, ±33.5].
+    for (const dx of [-2, -1, 0, 1, 2]) {
+      const x = seite * 31 + dx;
+      it(`${name}-Rampe x=${x}: Kapsel bleibt auf der Sohle (kein Durchfallen)`, () => {
+        const ziel = runter(x);
+        // Nie tiefer als knapp unter die Sohle (−1,8) gesackt.
+        expect(ziel.y).toBeGreaterThan(-2.4);
+        // Und unten wirklich angekommen (nicht auf halber Rampe hängen).
+        expect(ziel.z).toBeLessThan(-33);
+      });
+    }
+  }
+});

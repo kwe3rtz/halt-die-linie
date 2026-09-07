@@ -201,7 +201,12 @@ const boxes: LevelBox[] = [
   raw({ x: 12, y: 0.9, z: 6 }, { x: 5, y: 1.8, z: 4 }),
 
   // === Home-Line — durchgehende befestigte rückwärtige Linie ================
-  raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: -35 }, { x: 64, y: 1, z: 11 }), // Grabensohle z −40,5..−29,5
+  // Grabensohle über die volle Sektorbreite (x ±34, bis an die unsichtbare
+  // Kartengrenze). AP6-06: vorher x ±32 — die Ost-/West-Flankenrampen (x ±31,
+  // 5 m breit → bis x ±33,5) ragten über die Sohlenkante hinaus, eine Kapsel in
+  // der äußeren Rampenspur (x > 32) lief südlich der untersten Stufe ins Leere
+  // und fiel durch die Welt. Jetzt trägt die Sohle die ganze Rampe.
+  raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: -35 }, { x: 68, y: 1, z: 11 }), // Grabensohle z −40,5..−29,5
   // Nach Norden gerichtetes Parapet, zwei Segmente + Laufgraben-Lücke (x −4..4).
   ...modul("parapet", { x: 28, y: 0, z: -31 }, 90, {
     laenge: 24,

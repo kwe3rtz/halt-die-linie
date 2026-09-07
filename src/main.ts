@@ -2,6 +2,7 @@
 // + Kompass / Lagekarte / Audio (AP4-05).
 // Die Sektor-Daten sind die eine Quelle für Sim-Collider und Render-Meshes.
 import { sektorGreybox } from "./data/sektor";
+import { sturmMp18 } from "./data/waffen";
 import { createInput } from "./input";
 import { createLoop } from "./loop";
 import { createRenderer } from "./render";
@@ -21,7 +22,10 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 const SEED = 1;
 
 // Der Wave-Director spawnt die Gegner (Spawnpunkte aus dem Sektor).
-const sim = createSim(SEED, sektorGreybox, { waves: true });
+// AP6-06: nur der Spielpfad startet mit der automatischen Sturm-MP 18 (damit
+// sich der Nacht-Sektor flüssig anspielen lässt). `standardWaffe` (Langgewehr)
+// bleibt Sim-Default → Tests und Golden-Anker unberührt.
+const sim = createSim(SEED, sektorGreybox, { waves: true, weapon: sturmMp18 });
 const renderer = createRenderer(canvas, sektorGreybox, sektorGreybox.meta);
 const input = createInput(canvas);
 const overlay = createDebugOverlay();
