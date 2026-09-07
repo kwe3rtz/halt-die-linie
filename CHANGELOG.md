@@ -4,6 +4,36 @@ Kuratierte, lesbare Fassung — ein Eintrag pro Ticket, neueste oben, gruppiert
 nach Arbeitspaket. Ground Truth ist die git-History; die vollen Ticket-Berichte
 liegen in `tickets/erledigt/`.
 
+## Arbeitspaket 6 — Neuer Sektor + neuer Kern-Bogen (Nacht, handgebaut)
+
+Konzept-Design-Runde 2026-09-07 (`KONZEPT.md` §3/§5/§6 neu, Entwurf v0.3):
+eine durchgehende Frontlinie + eine Home-Line statt A/B/C, größeres frei
+begehbares WW1-Grabennetz, Feind-Spawn folgt der vordersten gehaltenen Linie,
+„Instand setzen" als Rückeroberung, Nacht zuerst mit roamenden Toten. Branch
+`arbeitspaket-6` von `main`.
+
+- **AP6-01** · `c4d21f5` · **Neuer Greybox-Nacht-Sektor.** `src/data/sektor.ts`
+  komplett neu: Feindseite → Niemandsland → Frontlinie → Hinterland (zentraler
+  gedeckter Laufgraben + 2 offene Seitenrouten) → Home-Line, x ±34 · z −46…72
+  (vorher ±25 · −36…53), ~105 Quader, 34-Knoten-Nav-Graph mit 3 Bahnen und
+  3 parallelen Rückwegen vorn↔hinten. Zonen als lückenlose Z-Bänder
+  (`ZonenId` neu: `feindseite`/`niemandsland`/`frontlinie`/`hinterland`/
+  `homeline`; `zermuerbungProKill` gemappt). **Genau ein `frontAbschnitt`
+  ("front") + ein `homeAbschnitt` ("home")** → `front.ts` läuft mit N=1 ohne
+  Code-Änderung; der bewusste Umbau auf eine Linie ist AP6-02. `index.ts` nur
+  minimales Plumbing (3 Front→Hinterland-Kanten beim Fall, `VORFRONT`-Konstante,
+  Infiltrations-Guard-Zone). `module.ts`: `parapet()` schaltet je Bresche
+  Wand + Feuertritt-Stufe + Bank zusammen ab (echtes Loch durch die ganze
+  Brustwehr), `unterstand()` bekommt einen Boden. Renderer: Nacht
+  (dunkelblauer Himmel, Fog 22–68, Mond-Ambient, je `meta.lichter` ein
+  statischer PointLight + Feuertonne), FRONT/HOME-Schilder, Instand-Marker.
+  Begehbarkeits-Test auf den neuen Graphen umgestellt (Ist + alles-offen +
+  H1-Gegenprobe, grün). `sektor.test.ts` neu (35 Tests, u. a. lückenlose
+  Zonen-Bänder + „genau eine Front/Home-Linie"). Golden-Anker „Sektor-Nav-
+  Graph" + „die Uhr" bewusst neu baseliniert (Sim-Regeln unverändert,
+  Gegenprobe: Determinismus-Test + voller Einsatz Seed 1 → 0 Despawns,
+  gewonnen). 286 Tests, Coverage src/sim 98,54 %, Bundle +33 kB.
+
 ## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren) · komplett
 
 - **AP5-06** · `e878a64` · **Gegner-Klassen.** Nutzer-Wunsch nach mehr

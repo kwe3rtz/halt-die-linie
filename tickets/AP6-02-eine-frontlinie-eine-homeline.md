@@ -1,6 +1,6 @@
 # AP6-02 — Kern-Bogen auf eine Frontlinie + eine Home-Line umstellen
 
-**Status:** offen (wird nach AP6-01 verfeinert)
+**Status:** offen · nächstes Ticket (AP6-01 ist durch, `c4d21f5`)
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** `KONZEPT.md` §3 + §6 (neu gefasst 2026-09-07 — ganz lesen),
 `src/sim/front.ts` (`AbschnittFront`, `createFrontState`, Zustände
@@ -51,6 +51,21 @@ gefallen"-Logik, kein abschnittsweises Skalieren. Der Kern-Bogen aus
   reduzieren.
 - **Tote Pfade löschen** statt auskommentieren: `_setAbschnittVerloren`-
   Testhook, A/B/C-spezifische Konstanten, Abschnitts-Iteration im HUD/Kompass.
+- **Halte-Bedingung: Druck-Radius statt Linien-Bounds** (aus AP6-01 TODO 2).
+  Heute gilt die Frontlinie als „gehalten", solange **irgendein** Spieler
+  irgendwo in den Linien-Bounds lebt — bei einer Linie über die ganze
+  Sektorbreite heißt das: sie kann nur fallen, wenn der Spieler sich
+  zurückzieht/stirbt. Stattdessen: die Linie gerät nur dort unter Druck
+  (`bedraengt`/`gebrochen`), wo gerade Gegner am Parapet stehen und **kein**
+  Spieler in Reichweite (Radius) ist. Ein Spieler „hält" nur seinen Abschnitt
+  der Linie, nicht die ganze Breite. Konkrete Radius-/Schwellenwerte =
+  Greybox-Startwerte, im Spieltest justiert.
+- **Stale Callout-Konstanten in `src/audio/index.ts`** (aus AP6-01 TODO 3):
+  `FRONT_CALLOUT` (A/B/C, H-West/H-Ost) und `ROUTE_CALLOUT` (feld-links …)
+  sind Platzhalter-Strings, nicht an den Sektor verdrahtet. Auf die neue
+  Welt umstellen (FRONT / HOME / Zonen-Namen) oder — wenn ohne echten
+  Funk/VO ohnehin ungenutzt — ersatzlos entfernen und mit AP7 neu aufsetzen.
+  Im Bericht begründen, welcher Weg.
 
 ## Tests
 

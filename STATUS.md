@@ -45,8 +45,15 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   aber weiter „sehr statisch und unlebendig" — und die Sektor-Struktur mit
   A/B/C ist nicht das gewünschte Spiel. → **Konzept-Design-Runde** (oben) →
   **Arbeitspaket 6** spezifiziert (5 Tickets, `tickets/AP6-*`).
-- **Als Nächstes:** PR #9 mergen → `ki-game-e6` startet **AP6-01** (neuer
-  Nacht-Sektor, verzweigtes Grabennetz).
+- **AP6-01 erledigt** (`c4d21f5`, reviewed, 286 Tests, Coverage src/sim
+  98,54 %): neuer handgebauter **Nacht-Sektor** auf `arbeitspaket-6` —
+  Feindseite → Niemandsland → Frontlinie → Hinterland → Home-Line, größeres
+  verzweigtes Grabennetz (34-Knoten-Nav-Graph, 3 Wege vorn↔hinten), genau
+  eine Front-/Home-„Linie" (N=1, `front.ts` unverändert). Nur die Bühne —
+  der Kern-Bogen-Umbau ist AP6-02.
+- **Als Nächstes:** `ki-game-e6` baut **AP6-02** (Kern-Bogen auf eine
+  Frontlinie + eine Home-Line: A/B/C-Mechanik raus, Halte-Bedingung als
+  Druck-Radius, Uhr an eine Linie, stale Audio-Callouts).
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -73,21 +80,21 @@ angesagt.
 
 ## Als Nächstes
 
-1. **PR #9 mergen** (`arbeitspaket-5` → `main`, MERGEABLE) — enthält AP5-05/06.
-   Muss zuerst passieren: AP6 zweigt von `main` und baut auf dem
-   AP5-05/06-Code auf.
-2. **`ki-game-e6` startet Arbeitspaket 6** mit **AP6-01** (neuer Nacht-Sektor:
-   verzweigtes Grabennetz + Nacht-Beleuchtung, nur die Bühne — Daten +
-   Renderer + Nav-Graph + Begehbarkeits-Test). Branch `arbeitspaket-6` von
-   `main`. Spec: `tickets/AP6-01-neuer-sektor-grabennetz.md`.
-3. Danach AP6-02…05 der Reihe nach (`tickets/AP6-02…05-*.md`) — jeweils nach
-   AP6-01 verfeinern:
-   - AP6-02 Kern-Bogen auf **eine** Frontlinie + **eine** Home-Line.
+1. **`ki-game-e6` baut AP6-02** — Kern-Bogen auf **eine** Frontlinie + **eine**
+   Home-Line: A/B/C-Mechanik aus `src/sim/**` + HUD raus, Halte-Bedingung als
+   Druck-Radius statt Linien-Bounds (AP6-01 TODO 2), die Uhr an eine Linie,
+   stale Audio-Callouts (AP6-01 TODO 3). Spec: `tickets/AP6-02-*.md`.
+2. Danach AP6-03…05:
    - AP6-03 Spawn-Verlagerung (Linie fällt → Spawn rückt vor).
    - AP6-04 „Instand setzen" (gefallene Linie zurückerobern).
    - AP6-05 roamende Nacht-Gegner.
-4. Nach jedem AP6-Ticket kurz anspielen; voller Spieltest, wenn AP6 steht —
-   trägt „eine Frontlinie + Nacht + Roam" das Gefühl?
+3. Nach AP6-02 kurz anspielen (`arbeitspaket-6` auschecken): quer durch den
+   neuen Nacht-Sektor — Front → Laufgraben → Hinterland-Seitenrouten →
+   Home-Line → zurück. Merkposten aus AP6-01-Review: klumpen sich die
+   Wellengegner an den 2 Sap-Lücken sichtbar? (dann Wellenziele streuen oder
+   Saps verbreitern). Voller Spieltest, wenn AP6 steht — trägt „eine
+   Frontlinie + Nacht + Roam" das Gefühl?
+4. Am Ende von AP6: PR `arbeitspaket-6` → `main`.
 
 **AP5-Merkposten** (fließen in AP6 ein bzw. AP7-Politur-Ticket): Solo-Balance
 ab Welle 4 / Respawn-Punkt an der Home-Line statt am Front-Spawn,
@@ -181,6 +188,25 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-07** — **AP6-01 „Neuer Greybox-Nacht-Sektor" erledigt** (`c4d21f5`,
+  reviewed, 286 Tests, Coverage src/sim 98,54 %). `src/data/sektor.ts` komplett
+  neu nach `KONZEPT.md` §3: größeres verzweigtes Grabennetz (Feindseite →
+  Niemandsland → Frontlinie → Hinterland m. zentralem Laufgraben + 2
+  Seitenrouten → Home-Line), 34-Knoten-Nav-Graph, Zonen als lückenlose
+  Z-Bänder (`ZonenId` neu). Genau ein `frontAbschnitt` + ein `homeAbschnitt`
+  → `front.ts` mit N=1 unverändert. `module.ts` `parapet()`: eine Bresche
+  schaltet Wand+Feuertritt+Bank zusammen ab (echtes Loch), `unterstand()`
+  bekommt Boden — echte Bühne-Fixes, keine neuen Modultypen. Renderer Nacht
+  (dunkler Himmel, Fog 22–68, statische PointLights aus `meta.lichter`,
+  FRONT/HOME-Schilder). Begehbarkeits-Test umgestellt (grün), zwei Golden-
+  Anker bewusst neu baseliniert (Sim-Regeln unverändert, Gegenprobe
+  Determinismus + voller Einsatz). 4 TODO(Rückfrage): (1) ein Bresche-Nav-
+  Knoten/Linie → AP7-Politur; (2) Halte-Semantik + (3) stale Audio-Callouts
+  → in AP6-02 aufgenommen; (4) Watchdog repathed (kein Despawn), weil alle
+  Wellengegner auf `front-front` durch 2 Sap-Lücken zulaufen → Merkposten
+  Spieltest/AP6-02.
+- **2026-09-07** — **PR #9 gemergt** (`arbeitspaket-5` → `main`, AP5-05/06).
+  `main` bei `c2d4b44`. Danach `arbeitspaket-6` von `main` gezweigt.
 - **2026-09-07** — **Konzept-Design-Runde: neuer Sektor + neuer Kern-Bogen
   (Arbeitspaket 6).** Der dritte Spieltest (nur erste Wellen) war „an sich in
   Ordnung", fühlte sich aber weiter „sehr statisch und unlebendig" an — und

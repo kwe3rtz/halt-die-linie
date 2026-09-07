@@ -1,6 +1,6 @@
 # AP6-01 — Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung
 
-**Status:** review
+**Status:** erledigt (`c4d21f5`)
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6` (von `main`)
 **Referenz:** `KONZEPT.md` §3 (neu gefasst 2026-09-07 — bitte ganz lesen),
 `src/data/sektor.ts` (alter H-Sektor als Daten), `src/data/module.ts`
@@ -305,3 +305,78 @@ Screenshots in `tickets/erledigt/AP6-01-screenshots/` (8 Stück):
   Grenze) deckt die Testsuite ab — **bitte beim Anspielen einmal quer
   durchlaufen** (Front → Laufgraben → Hinterland-Seitenrouten → Home-Line →
   zurück).
+
+---
+
+## Review — ki-game-f1 (2026-09-07)
+
+**Grünes Licht.** `c4d21f5` auf `arbeitspaket-6`, CI grün, lokal alle Checks
+grün nachgestellt: 286 Tests (26 Dateien), Coverage src/sim 98,54 %, Build ok
+(Bundle +33 kB durch PointLight-Import + Nacht-Renderer + größere Sektordaten).
+
+**Geprüft:**
+
+- **`src/data/sektor.ts` (Neubau):** Zonen sind lückenlose Z-Bänder über die
+  volle Breite (`sektor.test.ts` erzwingt das jetzt explizit — der alte
+  Zonen-Überlappungs-Befund aus dem AP4-Audit fällt damit weg). Nav-Graph
+  34 Knoten / ~48 Kanten: 3 Bahnen durchs Niemandsland, `vorfront`-Trio,
+  2 Sap-Lücken, Bresche-Kontakt, 3 parallele Rückwege Front→Hinterland
+  (starten `zu`, öffnen bei Linienfall), zentraler Laufgraben + 2 offene
+  Seitenrouten, Home-Line über Flankenrampen. Engstellen-Flags an Saps,
+  Bresche, Parados, Home-Flanken. **Genau ein `frontAbschnitt` ("front") +
+  ein `homeAbschnitt` ("home")** — `front.ts` unverändert.
+- **`src/data/module.ts` (Abweichung, gerechtfertigt):** `parapet()` schaltet
+  je Bresche jetzt Wand + Feuertritt-Stufe + Bank zusammen ab (verallgemeinerte
+  Streifen-Logik, kein neuer Modultyp) — echtes Loch durch die ganze
+  Brustwehr, sonst blockt die Bank den Feind durch die offene Bresche. AP4-06-
+  Invariante „geschlossene Bresche = Wand" bleibt (alle 3 Segmente aktiv).
+  `unterstand()` bekommt einen Boden. Beide sind Loch-in-der-Bühne-Fixes.
+- **`src/sim/index.ts` (minimales Plumbing, kein A/B/C-Rückbau):** `HINTEN_KANTEN`
+  öffnet 3 Front→Hinterland-Kanten statt einer, `VORFRONT`-Konstante,
+  Infiltrations-Guard auf Zone `hinterland`. `enemies.ts` effektiv unverändert
+  (ein stale Fallback-String `front-B` → `front-front`). Der eigentliche
+  Umbau auf eine Linie ist AP6-02 — hier korrekt nicht vorgegriffen.
+- **`einsatz.ts`:** `zermuerbungProKill` auf die neuen Zonen gemappt
+  (frontlinie 2 · niemandsland/feindseite 1,5 · hinterland/außerhalb 1 ·
+  homeline 0,5) — Uhr-Verhältnis unverändert.
+- **Renderer:** Nacht (dunkelblauer Himmel, Fog 22–68, Mond-Ambient,
+  je `meta.lichter` ein statischer PointLight + Feuertonne-Mesh), FRONT/HOME-
+  Schilder, Instand-Marker + Zonen-Tore aus Meta-Bounds. Keine dynamischen
+  Lichter. `lagekarte.ts`-Band-Label auf „Hinterland" (Paralleraudit-Hinweis).
+- **Golden-Anker:** „Sektor-Nav-Graph" + „die Uhr" bewusst neu baseliniert,
+  Begründung direkt am Test. Gegenprobe adäquat für einen reinen Daten-Tausch:
+  die Sim-**Regeln** (Wellenkurve, Uhr −2/−1, Klassenmischung) sind
+  unverändert, belegt durch den Determinismus-Test + `wave-eskalation.test.ts`
+  (voller Einsatz Seed 1 → 5 Wellen, 0 Despawns, gewonnen). Inline-Testlevel-
+  Anker unverändert.
+- **Begehbarkeits-Test** auf den neuen 34-Knoten-Graphen umgestellt: jede
+  Kante beidseitig per `moveCapsule`, Ist + „alles offen" + H1-Gegenprobe
+  (`vorfront → bresche-front` bei stehendem Parapet nicht begehbar). Grün.
+  `.toBe(1)` → `≥ 1` ist die korrekte Folge davon, dass eine Bresche jetzt
+  3 Boxen schaltet — keine Aufweichung (die Sicherheits-Eigenschaft steht).
+
+**TODO(Rückfrage) — Disposition:**
+
+1. **Ein Bresche-Nav-Knoten pro Linie** (Flanken-Bresche = reines Loch): für
+   AP6 tragbar. Die allgemeine Id-Konvention (`bresche-<linie>-<i>`) gehört
+   ins spätere Politur-Ticket „Sektor-Wissen aus der Sim" (AP7).
+2. **N=1-„gehalten"-Semantik** (Front kann nicht fallen, solange der Spieler
+   irgendwo im Frontgraben steht): korrekt nach AP6-02 verschoben — dort wird
+   die Halte-Bedingung auf einen Druck-Radius statt Linien-Bounds umgestellt.
+   In die AP6-02-Spec aufgenommen.
+3. **Stale Callout-Konstanten in `src/audio/index.ts`** (A/B/C, feld-links):
+   nicht an den Sektor verdrahtet, reine Platzhalter. Mit AP6-02 mitziehen —
+   in die AP6-02-Spec aufgenommen.
+4. **Watchdog-Repath bei einer Frontlinie:** alle Wellengegner zielen auf
+   `front-front` und stauen sich an den 2 Sap-Lücken → Watchdog Stufe 1
+   (Pfad neu) greift gelegentlich, **kein Despawn**, voller Einsatz gewinnt.
+   Akzeptiert für AP6-01. **Merkposten für den Spieltest + AP6-02/03:** wenn
+   sich die Gegner sichtbar klumpen, entweder die Wellenziele über
+   `front-w`/`front-front`/`front-e` streuen oder die Sap-Lücken verbreitern
+   (Sektor-Daten, billig).
+
+**Manuell:** Worker hat headless (Playwright) verifiziert — lädt fehlerfrei,
+klar Nacht, Grabenstruktur ~15–25 m lesbar, Spawn steht auf der Sohle,
+Wave-Director spawnt. Ein geführter Rundgang ging headless nicht sauber
+(bekannt seit AP4-01, kein echter Pointer-Lock). **Beim Anspielen bitte
+einmal quer: Front → Laufgraben → Hinterland-Seitenrouten → Home-Line → zurück.**

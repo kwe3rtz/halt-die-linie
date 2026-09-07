@@ -721,8 +721,8 @@ in `tickets/`.
 
 | Nr | Ticket | Status |
 |---|---|---|
-| AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | offen |
-| AP6-02 | Kern-Bogen auf eine Frontlinie + eine Home-Line umstellen (Zustandsmaschine, Nav, Uhr) | offen |
+| AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
+| AP6-02 | Kern-Bogen auf eine Frontlinie + eine Home-Line umstellen (Zustandsmaschine, Nav, Uhr) | offen (nächstes) |
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 | „Instand setzen" — gefallene Linie zurückerobern | offen |
 | AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) | offen |
