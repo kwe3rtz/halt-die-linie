@@ -45,8 +45,9 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
   - **AP6-01b** (danach, ENTWURF): Sektor als **echtes Grabensystem** neu.
     Layout beschlossen: gezähnter Feuergraben + Home-Line (Nischen +
     Traversen), Hinterland lockerer · echte Unterstände (Raum unter Flur) ·
-    ~30 % größer (~x±44, z−60…92, Nav ~80–100 Knoten). Offen nur noch: was
-    war der „Jank" (Nutzer-Screenshot). Dann Planer-Kickoff, Worker `/clear`.
+    ~30 % größer (~x±44, z−60…92, Nav ~80–100 Knoten). Jank-Beobachtungen aus
+    dem Spieltest im Ticket (schwebende Geometrie, man steht auf der Brustwehr,
+    Rampe ins Leere). Planer-Kickoff sobald AP6-06 durch, Worker `/clear`.
   - **AP6-02b** (wartet auf AP6-01b — Halte-Punkte/Breschen/Nav hängen am
     Layout): Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
   - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
@@ -85,11 +86,10 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
    unberührt) + `rampe()` glatt (mehr/flachere Stufen, breiter) + Nacht heller
    (Renderer-Dreh). Spec: `tickets/AP6-06-spieltest-reibung.md`. Klein, kein
    `/clear` nötig.
-2. **AP6-01b (Map-Neubau)** — Layout beschlossen
-   (`tickets/AP6-01b-sektor-neubau-grabensystem.md`). Offen nur noch: der
-   „Jank"-Punkt (Nutzer-Screenshot / Stelle). Dann schreibt der Planer den
-   Kickoff, Worker `/clear` vorher (großer Brocken). Sektor als echtes
-   Grabensystem, noch Greybox.
+2. **AP6-01b (Map-Neubau)** — Layout + konkrete Jank-Beobachtungen stehen im
+   Ticket (`tickets/AP6-01b-sektor-neubau-grabensystem.md`). Planer schreibt
+   den Kickoff, sobald AP6-06 durch ist; Worker `/clear` vorher (großer
+   Brocken). Sektor als echtes Grabensystem, noch Greybox.
 3. **AP6-02b** — erst wenn der neue Sektor steht. Bresche → Durchbruch →
    Linienfall (Halte-Punkte je Bresche, lokaler Druck öffnet die Bresche
    physisch, Gegner hinter der Linie → „DURCHBRUCH" → Fall) + Uhr-Regel

@@ -1,8 +1,9 @@
 # AP6-01b — Sektor-Neubau: echtes Grabensystem (kein Box-Labyrinth)
 
-**Status:** ENTWURF — Design-Runde weitgehend durch (Layout-Beschlüsse unten),
-offen nur noch der „Jank"-Punkt. Danach schreibt der Planer den Kickoff. Wird
-nach AP6-06 gebaut, **vor** AP6-02b. Worker `/clear` davor (großer Brocken).
+**Status:** ENTWURF — Design-Runde durch (Layout-Beschlüsse + konkrete
+Jank-Beobachtungen unten). Planer schreibt den Kickoff, sobald AP6-06 durch
+ist. Wird nach AP6-06 gebaut, **vor** AP6-02b. Worker `/clear` davor (großer
+Brocken).
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** 4. Spieltest 2026-09-08 — Nutzer: die Map ist „zu abstrakt" (gerade
 Box-Korridore als Gräben, dünne Wände, leere Flächen — liest sich als
@@ -88,15 +89,38 @@ Bresche-Nischen. Nav-Wissen bleibt in den Rollen-Feldern von `SektorMeta`
 
 ## Jank-Pass (der „kaputt"-Teil)
 
-- **Durchgehender Boden** — keine Lücken/Kanten zwischen Bodenplatten (der
-  Spieler meldete Löcher/Hängenbleiben). Ein Sim-Test: Kapsel an jeder
-  Zonengrenze über den Übergang laufen, kein Absacken, kein Stopp.
+**Konkrete Spieltest-Beobachtungen (2026-09-08, 2 Screenshots, Einsatz nach
+Home-Line-Fall verloren, Spieler fliegt danach frei umher):**
+
+- **Schwebende / zusammenhanglose Geometrie.** Boxen und Balken hängen in der
+  Luft, nichts darunter (Screenshot 1: Box oben links; Screenshot 2: Balken
+  oben rechts frei in der Luft). Vermutlich Umland-Füllquader / Feindseiten-
+  Silhouette / Ruinen aus schrägem Blickwinkel gegen den schwarzen Hintergrund
+  — liest sich als kaputt. Im Neubau: keine freistehenden Quader ohne sichtbare
+  Verankerung im begehbaren Bereich; Kulissen-Geometrie klar als Masse lesbar.
+- **Man steht auf der Brustwehr.** Screenshot 1: Spieler bei x −7 / **y 0,55**
+  / z −31 — das ist die Parapet-Oberkante (`PARAPET_OBERKANTE`). Die Brustwehr
+  ist oben begehbar, man landet auf Wänden. Im Neubau: Parapet-Oberkanten nicht
+  als Lauffläche (schmaler / abgeschrägt / höher), oder Kapsel-Steighöhe prüfen.
+- **Trümmer-Box wirkt verglitcht.** Die Bresche-Trümmer (`render` Box
+  2,6×1,3×1,7 an `parapetBreschen`) liest sich in der Greybox wie eine
+  umgefallene / verdrehte Box. Dezenter / klarer als „Schutt".
+- **Stufen-Rampe endet im Leeren.** Screenshot 2: Ost-Flankenrampe (x ≈ 31,
+  z ≈ −28) — die 4 Stufen führen abwärts in einen schwarzen Bereich ohne
+  erkennbaren Boden. Prüfen ob dort wirklich Boden fehlt (Home-Graben-Kante
+  jenseits der Parapet-Enden) oder nur unbeleuchtet.
+- **Licht-Extreme** (ausgebrannt neben pechschwarz) → **AP6-06** (Renderer),
+  nicht hier. Aber im Neubau darauf achten, dass jede Zone eine Lichtquelle in
+  Reichweite hat.
+
+**Sicherheitsnetz-Checks:**
+
+- **Durchgehender Boden** — keine Lücken/Kanten zwischen Bodenplatten. Sim-Test:
+  Kapsel an jeder Zonengrenze über den Übergang laufen, kein Absacken, kein Stopp.
 - **Grabenecken** (`grabenknick`) — die Kapsel darf an keiner Innen-/Außenecke
   klemmen; unter Gegnerdruck gegenchecken.
 - **`navgraph-begehbarkeit.test.ts`** auf den neuen Graphen: jede Kante
   beidseitig per echter `moveCapsule`, Ist-Zustand **und** „alles offen".
-- Konkrete Spieltest-Beobachtungen des Nutzers hier eintragen, sobald da
-  (Screenshot / Stelle).
 
 ## Golden-Anker
 
@@ -135,10 +159,8 @@ baselinieren** mit Begründung direkt am Test + Gegenprobe wie AP6-01
    Sicherheitsnetz). Runback trotz Zickzack + Größe für Solo machbar halten
    (Zielwert ~20–25 s ohne Feinddruck).
 
-### Noch offen
-
-4. **Der Jank** — was genau sah kaputt aus? Nutzer-Screenshot / Stelle, sobald
-   da → hier eintragen, damit der Worker gezielt draufschaut.
+4. **Der Jank** — Nutzer-Screenshots ausgewertet, konkrete Punkte im Abschnitt
+   „Jank-Pass" unten.
 
 ## Ausdrücklich NICHT
 
