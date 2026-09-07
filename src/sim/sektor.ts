@@ -8,21 +8,25 @@
 import type { Vec3 } from "./math";
 import type { Aabb, LevelData } from "./collision";
 
-/** Die sechs Zonen des „H" von der Feindseite nach hinten (KONZEPT.md §3). */
+/**
+ * Die fünf Zonen des Nacht-Sektors von der Feindseite nach hinten
+ * (KONZEPT.md §3, neu gefasst 2026-09-07). Ersetzt die alten Zonen
+ * `feindzone`/`labyrinth`/`verbindungsgraben`/`feld` des „H".
+ */
 export type ZonenId =
-  | "feindzone"
-  | "labyrinth"
-  | "frontlinie"
-  | "feld"
-  | "verbindungsgraben"
-  | "homeline";
+  "feindseite" | "niemandsland" | "frontlinie" | "hinterland" | "homeline";
 
 export interface ZonenEintrag {
   id: ZonenId;
   bounds: Aabb;
 }
 
-/** Ein benannter Frontabschnitt (A / B / C …). Besitz/Bresche/Fall füllt AP4-03. */
+/**
+ * Eine haltbare Linie. Im Nacht-Sektor (AP6-01) genau zwei: die Frontlinie
+ * (`id: "front"`) und die Home-Line (`id: "home"`) — je **eine** Linie, die als
+ * Ganzes hält oder fällt. Die `front.ts`-Zustandsmaschine nimmt N Einträge; die
+ * bewusste Vereinfachung auf N = 1 (A/B/C-Reste raus) macht AP6-02.
+ */
 export interface FrontAbschnitt {
   id: string;
   bounds: Aabb;
@@ -30,7 +34,7 @@ export interface FrontAbschnitt {
   parapetBreschen: Vec3[];
   /** Klassen-Platzierungen (späteres Paket): Sandsäcke, MG, Draht. */
   bauSlots: Vec3[];
-  /** Kleines Nachschubdepot des Abschnitts — Uhr-Effekt bei Verlust (AP4-04). */
+  /** Kleines Nachschubdepot der Linie — Uhr-Effekt bei Verlust (AP4-04). */
   depot: Vec3;
 }
 
@@ -73,9 +77,10 @@ export type SpineSymbol = "dreieck" | "doppelstrich" | "kreis";
 
 /**
  * Eine Leit-„Spine" (Kommunikationskabel an der Grabenwand, ~Brusthöhe) von
- * einem Frontabschnitt zur Home-Line (KONZEPT.md §3). Je Route eine eigene
- * Farbe **und** ein eigenes Symbol — lesbar bei Nacht / Farbsehschwäche /
- * gedämpfter Palette. Nur Render — kein Sim-Verhalten hängt daran.
+ * der Frontlinie zur Home-Line (KONZEPT.md §3). Seit AP5-05 **nicht mehr
+ * gezeichnet** (im Spieltest wirkten die Linien wie Stricke) — das Datenmodell
+ * bleibt für eine spätere Lesbarkeits-Lösung (KONZEPT.md §10). Der Nacht-Sektor
+ * liefert `spineRouten: []`.
  */
 export interface SpineRoute {
   /** Deckungsgleich mit der Callout-Grammatik (`verbindungsgraben` …). */
@@ -96,21 +101,31 @@ export interface SektorMeta {
    * startet aber befestigt (mehr Bresche-HP). Alle `verloren` = Einsatz verloren.
    */
   homeAbschnitte: FrontAbschnitt[];
-  /** Anmarsch-/Spawn-Punkte am Nordrand (die zwei schrägen Korridore). */
+  /** Feind-Spawn-/Anmarsch-Punkte auf der Feindseite (verdeckt, KONZEPT.md §3). */
   feindAnmarsch: Vec3[];
-  /** Zugänge zur Home-Line: Verbindungsgraben + Feld links/rechts. */
+  /** Zugänge zur Home-Line (Kompass-Peilung / Audio-Panning). */
   homeZugaenge: HomeZugang[];
-  /** Großes Orientierungs-Landmark im Labyrinth (Panzerwrack o. Ä.). */
+  /** Großes Orientierungs-Landmark im Niemandsland (Beobachtungsturm-Ruine). */
   landmark: Vec3;
-  /** Leit-„Spines" Front → Home, je Route Farbe + Symbol (AP4-05). */
+  /**
+   * Instandsetzungs-Punkte (AP6-04): je Linie ein exponierter Marker, an dem
+   * eine gefallene Linie zurückerobert wird. AP6-01 liefert nur die Position.
+   */
+  instandPunkte: { linie: string; pos: Vec3 }[];
+  /**
+   * Statische Orientierungs-Lichter für die Nacht (AP6-01): Leuchtfeuer /
+   * Feuertonnen an markanten Stellen. Der Renderer setzt je Punkt einen
+   * statischen Strahler + ein emissives Mesh — keine dynamischen Lichter.
+   */
+  lichter: Vec3[];
+  /** Leit-„Spines" (AP4-05) — seit AP5-05 nicht mehr gezeichnet, hier `[]`. */
   spineRouten: SpineRoute[];
   /** Spieler-Startpunkte an der Frontlinie. */
   spielerSpawn: Vec3[];
   /**
-   * Semantischer Nav-Graph (AP4-02): von den Anmarschpunkten durchs Labyrinth
-   * an die Front, nach einem Durchbruch weiter übers Feld / durch den
-   * Verbindungsgraben zur Home-Line. Handgepflegt (der spätere Generator
-   * erzeugt ihn mit).
+   * Semantischer Nav-Graph (AP4-02): von den Feind-Spawns durchs Niemandsland
+   * an die Frontlinie, nach einem Durchbruch weiter durchs Hinterland zur
+   * Home-Line. Handgepflegt (der spätere Generator erzeugt ihn mit).
    */
   navGraph: NavGraph;
 }
@@ -139,8 +154,8 @@ export function inBoundsXZ(b: Aabb, p: Vec3): boolean {
 
 /**
  * Welche Zone deckt `pos` ab (X/Z)? Die Reihenfolge in `meta.zonen` entscheidet
- * bei Überlappung — speziellere Zonen (Verbindungsgraben) stehen vorn. `null`,
- * wenn keine Zone passt.
+ * bei Überlappung (der Nacht-Sektor legt sie als lückenlose Z-Bänder an).
+ * `null`, wenn keine Zone passt.
  */
 export function zoneAt(meta: SektorMeta, pos: Vec3): ZonenId | null {
   for (const z of meta.zonen) {

@@ -31,8 +31,9 @@ const lagekarte = createLagekarte();
 const audio = createAudio();
 
 const meta = sektorGreybox.meta;
-const homePos = meta.homeZugaenge.find((z) => z.id === "verbindungsgraben")
-  ?.pos ?? { x: 0, y: 0, z: -20 };
+const homePos = (
+  meta.homeZugaenge.find((z) => z.id === "mitte") ?? meta.homeZugaenge[0]
+)?.pos ?? { x: 0, y: 0, z: -35 };
 const abschnittMitte = meta.frontAbschnitte.map((a) => ({
   id: a.id,
   pos: {

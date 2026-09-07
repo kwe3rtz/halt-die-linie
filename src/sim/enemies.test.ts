@@ -157,8 +157,8 @@ describe("enemies — Nav-Graph folgen (AP4-02)", () => {
   // Kette n1 → n2 → front-A → home-ziel (letzte Kante anfangs zu).
   const graph: NavGraph = {
     knoten: [
-      { id: "n1", pos: { x: 0, y: 0, z: 30 }, zone: "labyrinth" },
-      { id: "n2", pos: { x: 0, y: 0, z: 18 }, zone: "labyrinth" },
+      { id: "n1", pos: { x: 0, y: 0, z: 30 }, zone: "niemandsland" },
+      { id: "n2", pos: { x: 0, y: 0, z: 18 }, zone: "niemandsland" },
       { id: "front-A", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
       { id: "home-ziel", pos: { x: 0, y: 0, z: -20 }, zone: "homeline" },
     ],
@@ -288,10 +288,14 @@ describe("enemies — Stuck-Watchdog (AP4-06)", () => {
   // Radius) kommt man herum.
   const graph: NavGraph = {
     knoten: [
-      { id: "n1", pos: { x: 0, y: 0, z: 20 }, zone: "labyrinth" },
-      { id: "seite", pos: { x: 14, y: 0, z: 14 }, zone: "labyrinth" },
+      { id: "n1", pos: { x: 0, y: 0, z: 20 }, zone: "niemandsland" },
+      { id: "seite", pos: { x: 14, y: 0, z: 14 }, zone: "niemandsland" },
       { id: "front-A", pos: { x: 0, y: 0, z: 5 }, zone: "frontlinie" },
-      { id: "reinforcement-A", pos: { x: 9, y: 0, z: 20 }, zone: "labyrinth" },
+      {
+        id: "reinforcement-A",
+        pos: { x: 9, y: 0, z: 20 },
+        zone: "niemandsland",
+      },
     ],
     kanten: [
       { von: "n1", nach: "front-A", offen: true },
@@ -479,7 +483,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
   it("die Spur fächert den Anmarsch stufenlos auf: zwei Gegner mit Spur −1/+1 laufen auf getrennten Bahnen zum selben Wegpunkt", () => {
     const graph: NavGraph = {
       knoten: [
-        { id: "n1", pos: { x: 0, y: 0, z: 30 }, zone: "labyrinth" },
+        { id: "n1", pos: { x: 0, y: 0, z: 30 }, zone: "niemandsland" },
         { id: "front-A", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
       ],
       kanten: [{ von: "n1", nach: "front-A", offen: true }],
@@ -529,7 +533,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     });
     const graph: NavGraph = {
       knoten: [
-        { id: "n1", pos: { x: 0, y: 0, z: 8 }, zone: "labyrinth" },
+        { id: "n1", pos: { x: 0, y: 0, z: 8 }, zone: "niemandsland" },
         {
           id: "sap",
           pos: { x: 9, y: 0, z: 5 },
@@ -587,7 +591,7 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     });
     const graph: NavGraph = {
       knoten: [
-        { id: "n1", pos: { x: 0, y: 0, z: 8 }, zone: "labyrinth" },
+        { id: "n1", pos: { x: 0, y: 0, z: 8 }, zone: "niemandsland" },
         {
           id: "bresche-B",
           pos: { x: -3, y: 0, z: 5 },
@@ -653,15 +657,15 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     });
     const graph: NavGraph = {
       knoten: [
-        { id: "n1", pos: { x: 0, y: 0, z: 10 }, zone: "labyrinth" },
+        { id: "n1", pos: { x: 0, y: 0, z: 10 }, zone: "niemandsland" },
         { id: "front-A", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
         {
           id: "durchgang",
           pos: { x: 7, y: 0, z: -5 },
-          zone: "feld",
+          zone: "hinterland",
           engstelle: true,
         },
-        { id: "hinten", pos: { x: 0, y: 0, z: -12 }, zone: "feld" },
+        { id: "hinten", pos: { x: 0, y: 0, z: -12 }, zone: "hinterland" },
       ],
       kanten: [
         { von: "n1", nach: "front-A", offen: true },
@@ -706,9 +710,9 @@ describe("enemies — Streuung & Feinschliff (AP5-04)", () => {
     });
     const graph: NavGraph = {
       knoten: [
-        { id: "n1", pos: { x: 0, y: 0, z: 10 }, zone: "labyrinth" },
+        { id: "n1", pos: { x: 0, y: 0, z: 10 }, zone: "niemandsland" },
         { id: "front-A", pos: { x: 0, y: 0, z: 0 }, zone: "frontlinie" },
-        { id: "hinten", pos: { x: 0, y: 0, z: -12 }, zone: "feld" },
+        { id: "hinten", pos: { x: 0, y: 0, z: -12 }, zone: "hinterland" },
       ],
       kanten: [
         { von: "n1", nach: "front-A", offen: true },

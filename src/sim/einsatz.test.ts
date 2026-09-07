@@ -28,26 +28,29 @@ function tick(state = createEinsatzState(), c: EinsatzKontext, n: number) {
 }
 
 describe("einsatz — zermuerbungProKill", () => {
-  it("Front zählt am meisten, Home am wenigsten", () => {
+  it("Frontlinie zählt am meisten, Home-Line am wenigsten", () => {
     const front = zermuerbungProKill("frontlinie", false);
-    const feld = zermuerbungProKill("feld", false);
+    const hinterland = zermuerbungProKill("hinterland", false);
     const home = zermuerbungProKill("homeline", false);
-    expect(front).toBeGreaterThan(feld);
-    expect(feld).toBeGreaterThan(home);
+    expect(front).toBeGreaterThan(hinterland);
+    expect(hinterland).toBeGreaterThan(home);
   });
 
-  it("verlorener Frontabschnitt zählt nur noch wie offenes Feld", () => {
+  it("verlorene Frontlinie zählt nur noch wie Hinterland", () => {
     expect(zermuerbungProKill("frontlinie", true)).toBe(
-      zermuerbungProKill("feld", false),
+      zermuerbungProKill("hinterland", false),
     );
   });
 
-  it("Labyrinth/Feindzone zwischen Front und Feld, außerhalb wie Feld", () => {
-    expect(zermuerbungProKill("labyrinth", false)).toBeGreaterThan(
-      zermuerbungProKill("feld", false),
+  it("Niemandsland/Feindseite zwischen Front und Hinterland, außerhalb wie Hinterland", () => {
+    expect(zermuerbungProKill("niemandsland", false)).toBeGreaterThan(
+      zermuerbungProKill("hinterland", false),
+    );
+    expect(zermuerbungProKill("feindseite", false)).toBe(
+      zermuerbungProKill("niemandsland", false),
     );
     expect(zermuerbungProKill(null, false)).toBe(
-      zermuerbungProKill("feld", false),
+      zermuerbungProKill("hinterland", false),
     );
   });
 });

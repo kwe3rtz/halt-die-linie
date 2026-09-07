@@ -104,7 +104,7 @@ export function createLagekarte(
   title.textContent = "Lagekarte — Sektor";
   const frontRow = el("div", "hdl-lagekarte__row hdl-lagekarte__front");
   const band = el("div", "hdl-lagekarte__band");
-  band.textContent = "◇ Feld · Verbindungsgraben ◇";
+  band.textContent = "◇ Hinterland ◇";
   const homeRow = el("div", "hdl-lagekarte__row hdl-lagekarte__home");
   const foot = el("div", "hdl-lagekarte__foot");
   const hint = el("div", "hdl-lagekarte__hint");

@@ -138,39 +138,55 @@ function parapet(
 ): LevelBox[] {
   const wandHoehe = PARAPET_OBERKANTE - GRABEN_SOHLE;
   const wandY = (GRABEN_SOHLE + PARAPET_OBERKANTE) / 2;
-  // Brustwehr-Wand bei lokal x = 0 — in Segmente geteilt: zwischen den Lücken
-  // feste Wand, an jeder Lücke ein eigenes, getaggtes (schaltbares) Segment.
-  const wand: LevelBox[] = [];
-  const segment = (z0: number, z1: number, tag?: string): void => {
+  // Eine Bresche ist ein **echtes Loch** durch die ganze Brustwehr: Wand,
+  // Feuertritt-Stufe und Feuertritt-Bank werden an jeder Lücke unterbrochen,
+  // die drei Lücken-Stücke tragen dasselbe Etikett — `setKolliderAktiv` schaltet
+  // sie zusammen ab (AP6-01: sonst blockiert die Bank den Feind, der durch die
+  // offene Bresche kommt).
+  const out: LevelBox[] = [];
+  const streifen = (
+    lokalX: number,
+    cy: number,
+    breite: number,
+    hoehe: number,
+    z0: number,
+    z1: number,
+    tag?: string,
+  ): void => {
     if (z1 - z0 <= 1e-6) {
       return;
     }
-    const b = box(0, wandY, (z0 + z1) / 2, WAND, wandHoehe, z1 - z0);
-    wand.push(tag === undefined ? b : { ...b, tag });
+    const b = box(lokalX, cy, (z0 + z1) / 2, breite, hoehe, z1 - z0);
+    out.push(tag === undefined ? b : { ...b, tag });
   };
-  let cursor = 0;
-  for (const l of [...luecken].sort((a, b) => a.z - b.z)) {
-    const z0 = Math.max(cursor, Math.min(laenge, l.z - l.breite / 2));
-    const z1 = Math.max(z0, Math.min(laenge, l.z + l.breite / 2));
-    segment(cursor, z0);
-    segment(z0, z1, l.tag);
-    cursor = z1;
-  }
-  segment(cursor, laenge);
-  return [
-    ...wand,
-    // Feuertritt Stufe 1 (Oberkante −1,4; Δ0,4 von der Sohle), lokal −X.
-    box(-0.7, GRABEN_SOHLE + 0.2, laenge / 2, 0.4, 0.4, laenge),
-    // Feuertritt-Bank (Oberkante FEUERTRITT_OBERKANTE; Δ0,45), an der Wand.
-    box(
-      -0.25,
-      (GRABEN_SOHLE + FEUERTRITT_OBERKANTE) / 2,
-      laenge / 2,
-      0.5,
-      FEUERTRITT_OBERKANTE - GRABEN_SOHLE,
-      laenge,
-    ),
-  ];
+  const teil = (
+    lokalX: number,
+    cy: number,
+    breite: number,
+    hoehe: number,
+  ): void => {
+    let cursor = 0;
+    for (const l of [...luecken].sort((a, b) => a.z - b.z)) {
+      const z0 = Math.max(cursor, Math.min(laenge, l.z - l.breite / 2));
+      const z1 = Math.max(z0, Math.min(laenge, l.z + l.breite / 2));
+      streifen(lokalX, cy, breite, hoehe, cursor, z0);
+      streifen(lokalX, cy, breite, hoehe, z0, z1, l.tag);
+      cursor = z1;
+    }
+    streifen(lokalX, cy, breite, hoehe, cursor, laenge);
+  };
+  // Brustwehr-Wand bei lokal x = 0.
+  teil(0, wandY, WAND, wandHoehe);
+  // Feuertritt Stufe 1 (Oberkante −1,4; Δ0,4 von der Sohle), lokal −X.
+  teil(-0.7, GRABEN_SOHLE + 0.2, 0.4, 0.4);
+  // Feuertritt-Bank (Oberkante FEUERTRITT_OBERKANTE; Δ0,45), an der Wand.
+  teil(
+    -0.25,
+    (GRABEN_SOHLE + FEUERTRITT_OBERKANTE) / 2,
+    0.5,
+    FEUERTRITT_OBERKANTE - GRABEN_SOHLE,
+  );
+  return out;
 }
 
 /** Stufenrampe: Oberfläche bei lokal z = 0 → Grabensohle bei lokal z = laenge. */
@@ -186,12 +202,14 @@ function rampe(laenge: number, breite: number): LevelBox[] {
   return boxes;
 }
 
-/** Kleiner begehbarer Unterstand: drei Wände + Dach, offen nach lokal −Z. */
+/** Kleiner begehbarer Unterstand: Boden + drei Wände + Dach, offen nach lokal −Z. */
 function unterstand(breite: number, laenge: number): LevelBox[] {
   const h = 2.2;
   const cy = OBERFLAECHE + h / 2;
   const halbB = breite / 2;
   return [
+    // Boden (Oberkante = Anker-Höhe), damit man nicht durchfällt.
+    box(0, OBERFLAECHE - 0.5, laenge / 2, breite + 2 * WAND, 1, laenge + WAND),
     box(0, cy, laenge - WAND / 2, breite + 2 * WAND, h, WAND), // Rückwand +Z
     box(-(halbB + WAND / 2), cy, laenge / 2, WAND, h, laenge), // Wand −X
     box(halbB + WAND / 2, cy, laenge / 2, WAND, h, laenge), // Wand +X

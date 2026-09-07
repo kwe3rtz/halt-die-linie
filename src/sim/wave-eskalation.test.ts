@@ -50,13 +50,13 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
     knoten: sektorGreybox.meta.navGraph.knoten,
     kanten: sektorGreybox.meta.navGraph.kanten.map((k) => ({ ...k })),
   };
-  const spieler = { x: -12, y: -1.4, z: 13 }; // Spawn A, außer Sicht der Anmarschroute
+  const spieler = { x: 0, y: -1.6, z: -20 }; // tief im Hinterland, außer Sicht der Anmarschroute
 
   /** Lässt `anzahl` Gegner im Welle-5-Takt anmarschieren; liefert Ankunftszeiten (z ≤ 17). */
   function strom(anzahl: number, mitStreuung: boolean) {
     const rng = createRng(4242);
     const punkte = sektorGreybox.meta.feindAnmarsch;
-    const abschnitte = ["A", "B", "C"];
+    const abschnitte = ["front"];
     const nav = {
       graph,
       verloren: new Set<string>(),
@@ -83,7 +83,7 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
               id,
               p,
               1,
-              abschnitte[rng.int(0, 2)] ?? "B",
+              abschnitte[rng.int(0, abschnitte.length - 1)] ?? "front",
               streuung,
             ),
           );
@@ -120,22 +120,24 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
     };
   }
 
-  it("17 Gegner (Welle 5) kommen alle ohne Watchdog-Eingriff an der Front an", () => {
+  it("17 Gegner (Welle 5) kommen alle an der Front an, ohne dass einer despawnt", () => {
     const r = strom(wellenGroesse(5), true);
     expect(r.angekommen).toBe(17);
     expect(r.despawned).toEqual([]);
-    expect(r.maxFest).toBe(0);
+    // AP6-01: bei EINER Frontlinie strömen alle 17 auf `front-front` zu und
+    // stauen sich an den Sap-Lücken — der Watchdog repathed höchstens einmal,
+    // aber kein Gegner geht verloren.
+    expect(r.maxFest).toBeLessThanOrEqual(1);
   });
 
-  it("die Streuung zieht die Kette auseinander — ohne sie kommt die Welle als enge Formation", () => {
+  it("die Streuung zieht die Kette weiter auseinander als ohne", () => {
     const mit = strom(wellenGroesse(5), true);
     const ohne = strom(wellenGroesse(5), false);
     expect(ohne.angekommen).toBe(17);
-    expect(ohne.maxFest).toBe(0);
-    // Gleicher Weg, aber ±15 % Tempo und gestreute Spuren: die Marschzeiten
-    // gehen um Sekunden auseinander (gemessen ~5,3 s vs. ~2,1 s).
-    expect(ohne.spanne).toBeLessThan(3);
-    expect(mit.spanne).toBeGreaterThan(4);
+    expect(ohne.despawned).toEqual([]);
+    // ±15 % Tempo + gestreute Spuren spreizen die Marschzeiten spürbar weiter
+    // (gemessen ~10 s vs. ~6 s; drei Spawn-Punkte verschiedener Distanz geben
+    // schon ohne Streuung eine Grundspreizung).
     expect(mit.spanne).toBeGreaterThan(ohne.spanne + 2);
   });
 });

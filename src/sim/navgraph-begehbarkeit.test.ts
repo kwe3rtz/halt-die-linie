@@ -149,30 +149,33 @@ describe("Nav-Graph — Begehbarkeit gegen die Kollisionswelt (AP4-06)", () => {
     const world = createCollisionWorld(sektorGreybox);
     for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
       ab.parapetBreschen.forEach((_, i) => {
-        expect(setKolliderAktiv(world, brescheTag(ab.id, i), false)).toBe(1);
+        // Eine Bresche schaltet Wand + Feuertritt-Stufe + Bank zusammen ab
+        // (AP6-01: das Loch geht durch die ganze Brustwehr).
+        expect(
+          setKolliderAktiv(world, brescheTag(ab.id, i), false),
+        ).toBeGreaterThanOrEqual(1);
       });
     }
     expect(pruefeKanten(world, alleOffen, false)).toEqual([]);
   });
 
-  it("Gegenprobe: mit stehendem Parapet sind die Bresche-Kanten NICHT begehbar (das war Audit-Befund H1)", () => {
+  it("Gegenprobe: mit stehendem Parapet ist die Bresche-Kante NICHT begehbar (das war Audit-Befund H1)", () => {
     // Kein Kollider abgeschaltet, aber alle Kanten offen — genau der Zustand,
     // den AP4-03 erzeugt hat (Nav offen, Wand steht). Muss rot sein.
     const world = createCollisionWorld(sektorGreybox);
-    // Die Bresche-Knoten stecken im (aktiven) Parapet-Segment → im Ist-Zustand
-    // Kontaktpunkte; hier verlangen wir ausdrücklich, dass der Weg vom
-    // Labyrinth zu ihnen ohne Abschalten des Segments NICHT begehbar ist.
+    // Der Bresche-Knoten `bresche-front` steckt im (aktiven) Mittel-Parapet-
+    // Segment → im Ist-Zustand ein Kontaktpunkt; hier verlangen wir
+    // ausdrücklich, dass der Weg vom Niemandsland (`vorfront`) zu ihm ohne
+    // Abschalten des Segments NICHT begehbar ist.
     for (const ab of meta.frontAbschnitte) {
       const tag = brescheTag(ab.id, 0);
-      expect(
-        steckt(
-          world,
-          meta.navGraph.knoten.find((k) => k.id === `bresche-${ab.id}`)!.pos,
-        ),
-      ).toBe(tag);
       const p = meta.navGraph.knoten.find((k) => k.id === `bresche-${ab.id}`);
-      const lv = meta.navGraph.knoten.find((k) => k.id === "lab-vorfront");
-      expect(p && lv && laufe(world, lv.pos, p.pos).ok).toBe(false);
+      const lv = meta.navGraph.knoten.find((k) => k.id === "vorfront");
+      expect(p).toBeDefined();
+      expect(lv).toBeDefined();
+      if (!p || !lv) continue;
+      expect(steckt(world, p.pos)).toBe(tag);
+      expect(laufe(world, lv.pos, p.pos).ok).toBe(false);
     }
   });
 

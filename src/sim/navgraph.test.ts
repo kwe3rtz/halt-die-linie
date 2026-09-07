@@ -6,11 +6,11 @@ import { sektorGreybox } from "../data/sektor";
 // Kleiner Testgraph: Kette a — b — c — d, plus die Abkürzung b — d (anfangs zu).
 const graph: NavGraph = {
   knoten: [
-    { id: "a", pos: { x: 0, y: 0, z: 0 }, zone: "feindzone" },
-    { id: "b", pos: { x: 10, y: 0, z: 0 }, zone: "labyrinth" },
-    { id: "c", pos: { x: 20, y: 0, z: 0 }, zone: "labyrinth" },
+    { id: "a", pos: { x: 0, y: 0, z: 0 }, zone: "feindseite" },
+    { id: "b", pos: { x: 10, y: 0, z: 0 }, zone: "niemandsland" },
+    { id: "c", pos: { x: 20, y: 0, z: 0 }, zone: "niemandsland" },
     { id: "d", pos: { x: 30, y: 0, z: 0 }, zone: "frontlinie" },
-    { id: "e", pos: { x: 15, y: 0, z: 5 }, zone: "feld" },
+    { id: "e", pos: { x: 15, y: 0, z: 5 }, zone: "hinterland" },
   ],
   kanten: [
     { von: "a", nach: "b", offen: true },
@@ -51,8 +51,8 @@ describe("navgraph — kuerzesterPfad", () => {
       kuerzesterPfad(graph, "a", "d"),
     );
     const g = sektorGreybox.meta.navGraph;
-    expect(kuerzesterPfad(g, "anmarsch-west", "front-C")).toEqual(
-      kuerzesterPfad(g, "anmarsch-west", "front-C"),
+    expect(kuerzesterPfad(g, "spawn-w", "front-front")).toEqual(
+      kuerzesterPfad(g, "spawn-w", "front-front"),
     );
   });
 });

@@ -431,24 +431,32 @@ export function createSim(
       }
     }
   };
-  const HINTEN_KANTE: Record<string, readonly [string, string]> = {
-    A: ["front-A", "parados-A"],
-    B: ["front-B", "graben-mund"],
-    C: ["front-C", "parados-C"],
-  };
+  // Nav-Knoten unmittelbar vor der Frontlinie — die Bresche-Kante ins
+  // Niemandsland hängt hier (AP6-01: hieß im alten „H" `lab-vorfront`).
+  const VORFRONT = "vorfront";
+  // Kanten Frontlinie → Hinterland, die beim Linienfall aufgehen (AP4-03).
+  // Der Nacht-Sektor hat EINE Frontlinie ("front") mit mehreren Rückwegen;
+  // die A/B/C-Reste baut AP6-02 zurück.
+  const HINTEN_KANTEN: Record<string, readonly (readonly [string, string])[]> =
+    {
+      front: [
+        ["front-w", "parados-w"],
+        ["front-front", "parados-m"],
+        ["front-e", "parados-e"],
+      ],
+    };
   const setAbschnittVerloren = (id: string, verloren: boolean): void => {
     if (verloren) {
       verloreneAbschnitte.add(id);
     } else {
       verloreneAbschnitte.delete(id);
     }
-    const paar = HINTEN_KANTE[id];
-    if (paar) {
-      setKanteOffen(paar[0], paar[1], verloren);
+    for (const [von, nach] of HINTEN_KANTEN[id] ?? []) {
+      setKanteOffen(von, nach, verloren);
     }
-    // Zurückgesetzt: auch den Bresche-Zugang aus dem Labyrinth wieder sperren.
+    // Zurückgesetzt: auch den Bresche-Zugang aus dem Niemandsland wieder sperren.
     if (!verloren) {
-      setKanteOffen(`bresche-${id}`, "lab-vorfront", false);
+      setKanteOffen(`bresche-${id}`, VORFRONT, false);
     }
   };
 
@@ -486,9 +494,9 @@ export function createSim(
   // AP4-06: eine offene Bresche ist ein echtes Loch — das getaggte Parapet-
   // Segment (`brescheTag`) verschwindet aus der Kollisionswelt, eine wieder
   // geschlossene (Reset-Testeingang) kommt zurück. Gleichzeitig öffnet die
-  // Bresche unter dem Knoten `bresche-<id>` den Labyrinth-Zugang im Nav-Graph
-  // (KONZEPT.md §3: „durch eine Bresche strömt der Feind") — genau diese
-  // Bresche, sonst führt die Kante in eine stehende Wand (Audit H1). Nur
+  // Bresche unter dem Knoten `bresche-<id>` den Zugang aus dem Niemandsland im
+  // Nav-Graph (KONZEPT.md §3: „durch eine Bresche strömt der Feind") — genau
+  // diese Bresche, sonst führt die Kante in eine stehende Wand (Audit H1). Nur
   // öffnen; Schließen macht `setAbschnittVerloren(id, false)`. Idempotent,
   // läuft nach jedem `updateFront` und nach den direkten Zustandsänderungen,
   // damit Kollision und Nav nie auseinanderlaufen.
@@ -499,7 +507,7 @@ export function createSim(
       );
       const i = brescheUnterKnoten.get(f.id);
       if (i !== undefined && f.breschen[i]?.offen) {
-        setKanteOffen(`bresche-${f.id}`, "lab-vorfront", true);
+        setKanteOffen(`bresche-${f.id}`, VORFRONT, true);
       }
     }
     for (const f of homeState) {
@@ -576,13 +584,16 @@ export function createSim(
     }
     const a = abschnitt ?? waehleAbschnitt();
     let p = pos;
-    // Infiltration: verlorener Abschnitt → verdeckter Verstärkungs-Knoten,
-    // aber nie im offenen Feld im Sichtkegel des Spielers.
+    // Infiltration: verlorene Linie → verdeckter Verstärkungs-Knoten, aber nie
+    // im Hinterland im Sichtkegel des Spielers.
     if (a !== "" && verloreneAbschnitte.has(a) && navGraph) {
       const rk = navGraph.knoten.find((k) => k.id === `reinforcement-${a}`);
       if (
         rk &&
-        !(rk.zone === "feld" && imSichtkegel(player.pos, player.yaw, rk.pos))
+        !(
+          rk.zone === "hinterland" &&
+          imSichtkegel(player.pos, player.yaw, rk.pos)
+        )
       ) {
         p = rk.pos;
       }

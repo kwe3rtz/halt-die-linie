@@ -200,7 +200,7 @@ function zielKnoten(e: EnemyEntity, nav: NavKontext): string {
   if (e.abschnitt !== "") {
     return nav.verloren.has(e.abschnitt) ? "home-ziel" : `front-${e.abschnitt}`;
   }
-  let best = "front-B";
+  let best = "front-front";
   let bestD = Infinity;
   for (const k of nav.graph.knoten) {
     if (!k.id.startsWith("front-")) {

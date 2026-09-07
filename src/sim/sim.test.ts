@@ -460,41 +460,39 @@ describe("golden replay — Sektor-Nav-Graph", () => {
 
   it("trifft den Nav-Golden-Anker", () => {
     const s = replay();
+    // AP6-01 (Neubaseline, begründet): neuer Nacht-Sektor mit EINER Frontlinie
+    // (`front`) + EINER Home-Line (`home`) statt A/B/C, größeres Grabennetz,
+    // neue Nav-Knoten (`front-front`, drei Feind-Spawns). Der Zielknoten aller
+    // Wellengegner ist damit `front-front`, der Abschnitt `"front"`. Die Sim-
+    // Regeln (Wellenkurve 5·8·…, Uhr, Klassenmischung) sind unverändert; nur
+    // Sektor-Geometrie/Nav wurde ausgetauscht. Gegenprobe: der Determinismus-
+    // Test oben (zwei identische Läufe) und die ganze Wellen-Eskalation in
+    // wave-eskalation.test.ts laufen mit denselben Regeln grün.
     expect(s.tick).toBe(600);
-    expect(s.player.pos.x).toBeCloseTo(5.6891, 3);
-    expect(s.player.pos.z).toBeCloseTo(11.3298, 3);
+    expect(s.player.pos.x).toBeCloseTo(3.6891, 3);
+    expect(s.player.pos.z).toBeCloseTo(12.1298, 3);
     expect(s.wave.welle).toBe(1);
-    // AP5-04 (Neubaseline, begründet im Ticket-Bericht): Welle 1 hat 5 statt 4
-    // Gegner, Start-Angriffskraft 150 statt 60 → 145 (vorher 56 mit 4 Gegnern);
-    // die Positionen tragen jetzt Tempo-/Spur-Streuung je Gegner. Spieler-
-    // Werte, Abschnitts-Zuweisung (eigener Rng-Strom) und Zielknoten der
-    // ersten vier Gegner sind unverändert.
-    expect(s.wave.angriffskraftRest).toBe(145);
+    expect(s.wave.angriffskraftRest).toBe(145); // 150 − 5 Spawns
     expect(s.nachschub).toBe(0);
 
     expect(s.enemies.length).toBe(5);
     const nach = [...s.enemies].sort((a, b) => a.id - b.id);
-    expect(nach.map((e) => e.abschnitt)).toEqual(["C", "B", "C", "A", "B"]);
+    expect(nach.map((e) => e.abschnitt)).toEqual([
+      "front",
+      "front",
+      "front",
+      "front",
+      "front",
+    ]);
     expect(nach.map((e) => e.zielKnoten)).toEqual([
-      "front-C",
-      "front-B",
-      "front-C",
-      "front-A",
-      "front-B",
+      "front-front",
+      "front-front",
+      "front-front",
+      "front-front",
+      "front-front",
     ]);
-    expect(nach.map((e) => e.zustand)).toEqual([
-      "anmarsch",
-      "anmarsch",
-      "anmarsch",
-      "anmarsch",
-      "anmarsch",
-    ]);
-    // AP5-06 (Neubaseline, begründet im Ticket-Bericht): die Klasse je Gegner
-    // kommt aus dem Director-Rng. Gegner 0 und 3 sind jetzt „schwer" (Tempo
-    // 0,65) — Nr. 0 steht nach 10 s weiter hinten (z 38,4 statt 34,9) — und der
-    // verschobene Rng-Strom wählt andere Spawnpunkte (x-Seite). Abschnitte
-    // (eigener Rng-Strom), Zielknoten, Angriffskraft (5 Spawns) und Spieler-
-    // Werte sind unverändert.
+    expect(nach.every((e) => e.zustand === "anmarsch")).toBe(true);
+    // Klassenmischung aus dem Director-Rng (AP5-06, unverändert).
     expect(nach.map((e) => e.defId)).toEqual([
       "linieninfanterie-schwer",
       "linieninfanterie-schnell",
@@ -502,22 +500,13 @@ describe("golden replay — Sektor-Nav-Graph", () => {
       "linieninfanterie-schwer",
       "linieninfanterie",
     ]);
-    expect(nach[0]?.pos.x).toBeCloseTo(0.935, 2);
-    expect(nach[0]?.pos.z).toBeCloseTo(38.424, 2);
-    expect(nach[3]?.pos.x).toBeCloseTo(-5.821, 2);
-    expect(nach[3]?.pos.z).toBeCloseTo(43.1, 2);
+    expect(nach[0]?.pos.x).toBeCloseTo(9.995, 2);
+    expect(nach[0]?.pos.z).toBeCloseTo(47.375, 2);
 
-    // Frontabschnitte (AP4-03): die Gegner sind noch im Anmarsch, die Linie hält.
-    expect(s.front.map((f) => f.id)).toEqual(["A", "B", "C"]);
-    expect(s.front.map((f) => f.zustand)).toEqual([
-      "stabil",
-      "stabil",
-      "stabil",
-    ]);
+    expect(s.front.map((f) => f.id)).toEqual(["front"]);
+    expect(s.front.map((f) => f.zustand)).toEqual(["stabil"]);
     expect(s.front.every((f) => f.breschenOffen === 0)).toBe(true);
-
-    // Einsatzbogen (AP4-04): im Wellen-Regime, kein Kill → die Uhr ruht.
-    expect(s.home.map((f) => f.id)).toEqual(["H-West", "H-Ost"]);
+    expect(s.home.map((f) => f.id)).toEqual(["home"]);
     expect(s.einsatz.phase).toBe("wellen");
     expect(s.einsatz.ergebnis).toBe("offen");
     expect(s.einsatz.finaleRest).toBe(0);
@@ -527,10 +516,20 @@ describe("golden replay — Sektor-Nav-Graph", () => {
 // Golden-/Replay-Anker für „die Uhr" (AP4-04): ein Kill an der Frontlinie
 // zermürbt die Angriffskraft stärker als an einer gefallenen Front.
 describe("golden replay — die Uhr (AP4-04)", () => {
+  // AP6-01 (Neubaseline): EINE Frontlinie `front` statt Abschnitt `A`, neuer
+  // Spawn (Seed 1 → (−10, 15)); der Gegner steht direkt davor (+Z). Die Uhr
+  // selbst (−2 an der stehenden Frontlinie, −1 an der gefallenen) ist
+  // unverändert. Gegenprobe: der Determinismus-Test oben.
   const bau = () =>
     createSim(1, sektorGreybox, {
-      enemies: [{ defId: "linieninfanterie", pos: { x: -12, y: 0, z: 15 } }],
-      aktiveAchsen: ["A"],
+      enemies: [
+        {
+          defId: "linieninfanterie",
+          pos: { x: -10, y: 0, z: 16 },
+          abschnitt: "front",
+        },
+      ],
+      aktiveAchsen: ["front"],
     });
   const feuere = (sim: ReturnType<typeof createSim>) => {
     for (let i = 0; i < 500; i += 1)
@@ -549,12 +548,10 @@ describe("golden replay — die Uhr (AP4-04)", () => {
     const steht = bau();
     feuere(steht);
     expect(steht.getState().nachschub).toBe(5); // genau ein Kill
-    // AP5-04: Start-Angriffskraft 150 statt 60 — die Uhr selbst (−2 vorn, −1
-    // an gefallener Front) ist unverändert.
     expect(steht.getState().wave.angriffskraftRest).toBe(148); // 150 − 1*2
 
     const fiel = bau();
-    fiel._setAbschnittVerloren("A", true);
+    fiel._setAbschnittVerloren("front", true);
     feuere(fiel);
     expect(fiel.getState().nachschub).toBe(5);
     expect(fiel.getState().wave.angriffskraftRest).toBe(149); // 150 − 1*1

@@ -292,6 +292,54 @@ opt)` → `LevelBox[]`. Typen: `grabengerade`, `grabenknick`, `parapet` (Wand +
   `wave-eskalation.test.ts`. Beide Wave-abhängigen Golden-Anker in
   `sim.test.ts` neu baseliniert (Klassenwahl verschiebt die Director-Würfe).
 
+### Nacht-Sektor (AP6-01) — neue Bühne, gleiche Sim-Technik
+
+- **`src/data/sektor.ts` komplett neu:** der Nacht-Sektor aus KONZEPT.md §3
+  (neu gefasst 2026-09-07) statt des „H". Größer (x ±34 · z −46…72), verzweigt,
+  von der Feindseite nach hinten: **Feindseite → Niemandsland → Frontlinie →
+  Hinterland → Home-Line**. Genau **EINE** Frontlinie (`frontAbschnitte`:
+  `{ id: "front" }`) + **EINE** Home-Line (`{ id: "home" }`) — die
+  `front.ts`-Maschine läuft damit mit N = 1 **ohne Code-Änderung**; die
+  bewusste Vereinfachung auf eine Linie (A/B/C-Reste in `index.ts`/`enemies.ts`)
+  macht AP6-02. Nur die Bühne — Zustandsmaschine/Uhr/Spawn-Verlagerung sind
+  AP6-02 ff.
+- **Zonen** (`ZonenId` in `src/sim/sektor.ts`): `feindseite` · `niemandsland`
+  · `frontlinie` · `hinterland` · `homeline` — lückenlose Z-Bänder über die
+  volle Breite (die alten `feindzone`/`labyrinth`/`verbindungsgraben`/`feld`
+  entfallen). `zermuerbungProKill` (`einsatz.ts`) mappt darauf: `frontlinie` 2,
+  `niemandsland`/`feindseite` 1,5, `hinterland`/außerhalb 1, `homeline` 0,5.
+- **Nav-Graph** 34 Knoten (alter Sektor ~30): drei Feind-Spawns
+  (`spawn-w/-m/-e`), verzweigtes Niemandsland (`nm-*`, `vorfront{,-w,-e}`,
+  verdeckter `reinforcement-front`), Frontlinie (`sap-w/-e`, `bresche-front`,
+  `front-{w,front,e}`, `parados-{w,m,e}`), Hinterland (zentraler Laufgraben
+  `hl-mitte/-sued` + zwei Seitenrouten `hl-{w,e}1..3`), Home-Line
+  (`home-{graben,w,e,ziel}`). Der Zielknoten aller Wellengegner ist
+  `front-front` (Abschnitt `"front"` → `front-${abschnitt}`). `index.ts`
+  angepasst: `HINTEN_KANTEN` öffnet drei Front→Hinterland-Kanten beim
+  Linienfall, `VORFRONT`-Konstante (früher `lab-vorfront`), Infiltrations-Guard
+  auf `zone === "hinterland"`.
+- **Instand-Punkte** (`SektorMeta.instandPunkte`, je Linie ein Marker — AP6-04
+  nutzt sie) und **Nacht-Lichter** (`SektorMeta.lichter`) sind neue Datenfelder;
+  `spineRouten` liefert `[]` (KONZEPT.md §10).
+- **`parapet()` in `module.ts`:** eine Bresche schaltet jetzt **Wand +
+  Feuertritt-Stufe + Bank** zusammen ab (drei Lücken-Stücke, dasselbe Etikett)
+  — sonst blockiert die Bank den Feind, der durch die offene Bresche kommt.
+  `unterstand()` hat jetzt einen Boden (man fällt nicht durch).
+- **Renderer (`src/render/index.ts`) Nacht:** fast schwarzer Himmel, dichter
+  dunkler Dunst (`fogStart` 14, `fogEnd` 58), Mond-Ambient ~0,16; je
+  `meta.lichter` ein statischer `PointLight` + emissives „Feuertonne"-Mesh
+  (keine dynamischen Lichter). Zonen-Farbtöne durchweg dunkel, aber
+  unterscheidbar; Linien-Schilder FRONT/HOME, Zonen-Tore + Instand-Marker aus
+  den Meta-Bounds abgeleitet.
+- **Tests:** `navgraph-begehbarkeit.test.ts` auf den neuen Graphen umgestellt
+  (Pflicht-Sicherheitsnetz — jede Kante beidseitig begehbar, Ist + „alles
+  offen"). `sektor.test.ts` komplett neu (Wohlgeformtheit, `zoneAt`,
+  Sim-Integration, Linien-Zustandsmaschine, die Uhr, AP4-06-Fixes,
+  AP5-02/03). Beide Sektor-Golden-Anker in `sim.test.ts` bewusst neu
+  baseliniert (Begründung am Test); `collision-verbindungsgraben.test.ts` auf
+  den zentralen Laufgraben umgezielt; `wave-eskalation.test.ts` /
+  `gegner-klassen.test.ts` / `einsatz.test.ts` auf die neuen Zonen/Ids.
+
 ## Bundle-Größe
 
 Produktions-Build (`npm run build`), gemessen 2026-09-02, nur `src/main.ts`

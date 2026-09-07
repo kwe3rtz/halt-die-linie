@@ -31,8 +31,8 @@ export const FINALE_COUNTDOWN = 90;
 export const VERLAENGERN_COUNTDOWN = 45;
 /** Zermürbung der Angriffskraft pro getötetem Gegner, je Todeszone. */
 const FRONT_ZERMUERBUNG = 2;
-const LAB_ZERMUERBUNG = 1.5;
-const FELD_ZERMUERBUNG = 1;
+const NIEMANDSLAND_ZERMUERBUNG = 1.5;
+const HINTERLAND_ZERMUERBUNG = 1;
 const HOME_ZERMUERBUNG = 0.5;
 
 /** Kontext, den `updateEinsatz` je Tick bekommt. */
@@ -54,24 +54,25 @@ export function createEinsatzState(): EinsatzState {
 
 /**
  * Zermürbung der Angriffskraft für **einen** getöteten Gegner. Tod an der
- * `frontlinie` zählt am meisten — es sei denn, der Abschnitt ist schon
- * `verloren` (dann wie offenes Feld). `homeline` am wenigsten.
+ * `frontlinie` zählt am meisten — es sei denn, die Linie ist schon `verloren`
+ * (dann wie Hinterland). `homeline` am wenigsten (KONZEPT.md §3 „die Uhr":
+ * frontlinie am teuersten, hinterland mittel, homeline am billigsten).
  */
 export function zermuerbungProKill(
   zone: ZonenId | null,
   abschnittVerloren: boolean,
 ): number {
   if (zone === "frontlinie") {
-    return abschnittVerloren ? FELD_ZERMUERBUNG : FRONT_ZERMUERBUNG;
+    return abschnittVerloren ? HINTERLAND_ZERMUERBUNG : FRONT_ZERMUERBUNG;
   }
-  if (zone === "labyrinth" || zone === "feindzone") {
-    return LAB_ZERMUERBUNG;
+  if (zone === "niemandsland" || zone === "feindseite") {
+    return NIEMANDSLAND_ZERMUERBUNG;
   }
   if (zone === "homeline") {
     return HOME_ZERMUERBUNG;
   }
-  // feld, verbindungsgraben, außerhalb
-  return FELD_ZERMUERBUNG;
+  // hinterland, außerhalb
+  return HINTERLAND_ZERMUERBUNG;
 }
 
 /** Schreibt den Einsatzzustand um `dt` fort. Mutiert `state` in-place. */

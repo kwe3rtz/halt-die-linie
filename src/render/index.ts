@@ -12,6 +12,7 @@ import {
   type LinesMesh,
   type Mesh,
   MeshBuilder,
+  PointLight,
   Scene,
   StandardMaterial,
   Vector3,
@@ -89,15 +90,16 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + delta * t;
 }
 
-// Zonen-Farbtöne — auf Wiedererkennung getrimmt (AP4-05): Labyrinth erdig-dunkel,
-// Front sandhell, Feld oliv, Verbindungsgraben & Home kühl (Beton/Blau).
+// Zonen-Farbtöne — Nacht-Palette (AP6-01): durchweg dunkel und entsättigt, aber
+// je Zone noch unterscheidbar (KONZEPT.md §3 Lesbarkeit). Feindseite kalt-rötlich,
+// Niemandsland erdig, Frontlinie am hellsten (Bezugsanker), Hinterland oliv,
+// Home-Line kühl-blau (befestigt).
 const ZONEN_TON: Record<ZonenId, [number, number, number]> = {
-  feindzone: [0.24, 0.17, 0.17],
-  labyrinth: [0.29, 0.23, 0.15],
-  frontlinie: [0.54, 0.49, 0.37],
-  feld: [0.35, 0.42, 0.27],
-  verbindungsgraben: [0.22, 0.27, 0.36],
-  homeline: [0.29, 0.31, 0.42],
+  feindseite: [0.12, 0.09, 0.1],
+  niemandsland: [0.13, 0.12, 0.1],
+  frontlinie: [0.2, 0.19, 0.16],
+  hinterland: [0.13, 0.15, 0.12],
+  homeline: [0.12, 0.14, 0.19],
 };
 
 export function createRenderer(
@@ -107,20 +109,26 @@ export function createRenderer(
 ): Renderer {
   const engine = new Engine(canvas, true, { stencil: true });
   const scene = new Scene(engine);
-  scene.clearColor = new Color4(0.63, 0.66, 0.69, 1); // diesiger Himmel
-  // Sichtweite (AP5-03): linearer Dunst in Himmelsfarbe — das Umland läuft in
-  // den Himmel aus, statt an einer Kante zu enden. Setzt erst jenseits der
-  // längsten Sichtlinie im Sektor (~90 m) spürbar ein: Front und Home-Line
-  // bleiben scharf lesbar, die Umland-Außenkante (200 m) verschwindet.
+  // Nacht (AP6-01): dunkelblauer Nachthimmel. Kein „Tag mit Fog", aber hell
+  // genug, dass die Grabenstruktur lesbar bleibt.
+  scene.clearColor = new Color4(0.05, 0.06, 0.09, 1);
+  // Sichtweite: dunkler Dunst — die Nacht schluckt alles jenseits von ~65 m,
+  // Front und Home-Line bleiben lesbar. Die Umland-Außenkante (AP5-03)
+  // verschwindet vollständig, ohne harte Silhouette.
   scene.fogMode = Scene.FOGMODE_LINEAR;
-  scene.fogColor = new Color3(0.63, 0.66, 0.69);
-  scene.fogStart = 60;
-  scene.fogEnd = 190;
+  scene.fogColor = new Color3(0.05, 0.06, 0.09);
+  scene.fogStart = 22;
+  scene.fogEnd = 68;
 
+  // Mondlicht: gedämpftes kühles Ambient + ein Hauch Richtungslicht von oben.
+  // Die warmen Akzente kommen von den statischen Lichtern (`meta.lichter`).
   const sky = new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
-  sky.intensity = 0.75;
-  const sun = new DirectionalLight("sun", new Vector3(-0.4, -1, 0.6), scene);
-  sun.intensity = 0.7;
+  sky.intensity = 0.34;
+  sky.diffuse = new Color3(0.52, 0.58, 0.75);
+  sky.groundColor = new Color3(0.06, 0.07, 0.1);
+  const sun = new DirectionalLight("mond", new Vector3(-0.3, -1, 0.4), scene);
+  sun.intensity = 0.22;
+  sun.diffuse = new Color3(0.58, 0.63, 0.8);
 
   const camera = new FreeCamera("player", new Vector3(0, EYE_HEIGHT, 0), scene);
   camera.minZ = 0.1;
@@ -512,10 +520,11 @@ export function createRenderer(
     }
   };
 
-  // --- Lesbarkeit (AP4-05): Spine-Routen, Abschnittsschilder, Zonen-Tore ------
+  // --- Lesbarkeit: Linien-Schilder, Zonen-Tore, Instand-Marker, Nacht-Lichter -
   const leitMeshes: Mesh[] = [];
   const leitMats: StandardMaterial[] = [];
   const leitTexturen: DynamicTexture[] = [];
+  const nachtLichter: PointLight[] = [];
 
   const emissivMat = (
     name: string,
@@ -529,37 +538,41 @@ export function createRenderer(
   };
 
   if (meta) {
-    // Leit-„Spines" (AP4-05: Polylinie + Pfosten + Symbole je Route) werden
-    // seit AP5-05 nicht mehr gezeichnet — im Spieltest wirkten die Linien wie
-    // Stricke, die Pfosten „stehen im Boden", und Symbole allein schwebten
-    // in der Luft. `meta.spineRouten` bleibt als Datenmodell bestehen.
+    // Leit-„Spines" (AP4-05) werden seit AP5-05 nicht mehr gezeichnet;
+    // `meta.spineRouten` bleibt als Datenmodell (KONZEPT.md §10).
 
-    // Abschnittsschilder A/B/C an der Grabenlinie (Y-Billboard, immer lesbar).
-    for (const ab of meta.frontAbschnitte) {
+    // Linien-Schilder (FRONT / HOME) an der jeweiligen Grabenlinie, Y-Billboard.
+    for (const [ab, text, z] of [
+      ...meta.frontAbschnitte.map(
+        (a) => [a, "FRONT", a.bounds.maxZ - 8] as const,
+      ),
+      ...meta.homeAbschnitte.map(
+        (a) => [a, "HOME", a.bounds.maxZ + 1] as const,
+      ),
+    ]) {
       const tex = new DynamicTexture(
         `schild_${ab.id}`,
-        { width: 128, height: 128 },
+        { width: 256, height: 96 },
         scene,
         false,
       );
       tex.hasAlpha = true;
       const ctx = tex.getContext();
       ctx.fillStyle = "#12140f";
-      ctx.fillRect(0, 0, 128, 128);
-      tex.drawText(ab.id, null, 96, "bold 88px sans-serif", "#e8e4c8", "");
+      ctx.fillRect(0, 0, 256, 96);
+      tex.drawText(text, null, 68, "bold 56px sans-serif", "#e8e4c8", "");
       const mat = new StandardMaterial(`schildMat_${ab.id}`, scene);
       mat.diffuseTexture = tex;
       mat.emissiveColor = new Color3(0.5, 0.48, 0.4);
       mat.specularColor = new Color3(0, 0, 0);
       leitMats.push(mat);
       leitTexturen.push(tex);
-      const mx = (ab.bounds.minX + ab.bounds.maxX) / 2;
       const schild = MeshBuilder.CreatePlane(
         `schild_${ab.id}`,
-        { size: 1.3 },
+        { width: 2.4, height: 0.9 },
         scene,
       );
-      schild.position.set(mx, 0.9, 9.5);
+      schild.position.set((ab.bounds.minX + ab.bounds.maxX) / 2, 0.9, z);
       schild.billboardMode = 2; // BILLBOARDMODE_Y
       schild.material = mat;
       schild.isPickable = false;
@@ -567,22 +580,64 @@ export function createRenderer(
       leitMeshes.push(schild);
     }
 
-    // Zonen-Tore: markieren die zwei Rückzugs-Übergänge (Front→Feld, Feld→Home).
-    const torMat = emissivMat("zonentor", [0.6, 0.58, 0.5]);
-    for (const z of [10, -19.5]) {
-      for (const seite of [-23, 23]) {
-        const pylon = MeshBuilder.CreateBox(
-          `zonentor_${z}_${seite}`,
-          { width: 0.5, height: 4.5, depth: 0.5 },
-          scene,
-        );
-        pylon.position.set(seite, 1.2, z);
-        pylon.material = torMat;
-        pylon.isPickable = false;
-        pylon.renderingGroupId = GROUP_WORLD;
-        leitMeshes.push(pylon);
-      }
+    // Zonen-Tore: Pylone an den Rückzugs-Übergängen (Frontlinie → Hinterland,
+    // Hinterland → Home-Line), aus den Linien-Bounds abgeleitet.
+    const torMat = emissivMat("zonentor", [0.55, 0.53, 0.42]);
+    const tore: [number, number][] = [];
+    for (const ab of [...meta.frontAbschnitte, ...meta.homeAbschnitte]) {
+      const rand = Math.min(ab.bounds.maxX - 3, 30);
+      const z = ab.bounds.minZ + 1;
+      tore.push([-rand, z], [rand, z]);
     }
+    for (const [x, z] of tore) {
+      const pylon = MeshBuilder.CreateBox(
+        `zonentor_${x}_${z}`,
+        { width: 0.5, height: 4.5, depth: 0.5 },
+        scene,
+      );
+      pylon.position.set(x, 1.2, z);
+      pylon.material = torMat;
+      pylon.isPickable = false;
+      pylon.renderingGroupId = GROUP_WORLD;
+      leitMeshes.push(pylon);
+    }
+
+    // Instandsetzungs-Punkte (AP6-04): niedriger leuchtender Marker je Linie.
+    const instandMat = emissivMat("instand", [0.9, 0.72, 0.25]);
+    for (const ip of meta.instandPunkte) {
+      const m = MeshBuilder.CreateBox(
+        `instand_${ip.linie}`,
+        { width: 0.6, height: 1.2, depth: 0.6 },
+        scene,
+      );
+      m.position.set(ip.pos.x, ip.pos.y + 0.6, ip.pos.z);
+      m.material = instandMat;
+      m.isPickable = false;
+      m.renderingGroupId = GROUP_WORLD;
+      leitMeshes.push(m);
+    }
+
+    // Nacht-Lichter (AP6-01): statische Feuertonnen / Leuchtfeuer — je ein
+    // kleiner Punktstrahler + ein emissives Mesh als Orientierungspunkt. Keine
+    // dynamischen Lichter, keine Animation (Greybox-Niveau).
+    const feuerMat = emissivMat("feuer", [1, 0.66, 0.28]);
+    meta.lichter.forEach((pos, i) => {
+      const glut = MeshBuilder.CreateBox(`feuer_${i}`, { size: 0.5 }, scene);
+      glut.position.set(pos.x, pos.y, pos.z);
+      glut.material = feuerMat;
+      glut.isPickable = false;
+      glut.renderingGroupId = GROUP_WORLD;
+      leitMeshes.push(glut);
+      const licht = new PointLight(
+        `feuer_l_${i}`,
+        new Vector3(pos.x, pos.y + 0.6, pos.z),
+        scene,
+      );
+      licht.diffuse = new Color3(1, 0.68, 0.36);
+      licht.intensity = 14;
+      licht.range = 26;
+      nachtLichter.push(licht);
+    });
   }
 
   const resize = () => engine.resize();
@@ -714,6 +769,9 @@ export function createRenderer(
       truemmerMat?.dispose();
       for (const m of leitMeshes) {
         m.dispose();
+      }
+      for (const l of nachtLichter) {
+        l.dispose();
       }
       for (const m of leitMats) {
         m.dispose();

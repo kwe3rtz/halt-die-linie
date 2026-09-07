@@ -1,16 +1,18 @@
-// Durchlauf-Test für den Verbindungsgraben (AP5-01): eine Spielerkapsel läuft
-// den zentralen Verbindungsgraben des Greybox-Sektors mehrfach in beide
-// Richtungen ab — mittig, an beiden Wänden schleifend (seitlicher Druck), im
-// Zickzack, gehend, sprintend, springend, plus einmal durch die Spieler-Sim
-// selbst. Pro Tick darf sich die Kapsel höchstens so weit bewegen, wie ihr
-// Tempo × dt erlaubt; alles darüber ist ein „Teleport".
+// Durchlauf-Test für den zentralen Laufgraben (AP5-01, auf den Nacht-Sektor
+// umgestellt in AP6-01): eine Spielerkapsel läuft den langen gedeckten
+// Laufgraben mehrfach in beide Richtungen ab — mittig, an beiden Wänden
+// schleifend (seitlicher Druck), im Zickzack, gehend, sprintend, springend,
+// plus einmal durch die Spieler-Sim selbst. Pro Tick darf sich die Kapsel
+// höchstens so weit bewegen, wie ihr Tempo × dt erlaubt; alles darüber ist ein
+// „Teleport".
 //
 // Hintergrund (Spieltest 2026-09-04): beim Wandkontakt schleuderte
-// `moveCapsule` die Kapsel in einem Tick an das Ende der 33-m-Grabenwand. Der
+// `moveCapsule` die Kapsel in einem Tick an das Ende der langen Grabenwand. Der
 // X-Push auf `box.minX − radius` ließ in Gleitkomma einen Rest von 2e-16 m
 // Durchdringung stehen, und die Z-Achse „löste" diesen Rest an der nächsten
 // Z-Fläche der Wand — bis zu 16,5 m entfernt. Die Gegenprobe unten trifft
-// genau diesen Zustand.
+// genau diesen Zustand. Der Fix sitzt in `collision.ts` (KONTAKT_EPS +
+// achsenweise Tiefengrenze), nicht in der Sektorgeometrie.
 import { describe, expect, it } from "vitest";
 import {
   createCollisionWorld,
@@ -33,26 +35,25 @@ const SPRUNG = 7.2;
 /** Rundungsspielraum auf die Plausibilitätsgrenze. */
 const TOLERANZ = 1e-3;
 /** Zeitbudget je Durchlauf (~35 m mit Seitendruck bei Gehtempo ≈ 11 s). */
-const MAX_SEKUNDEN = 30;
+const MAX_SEKUNDEN = 45;
 
-// Verbindungsgraben (src/data/sektor.ts): Sohle −1,8, lichte Breite
-// x ∈ [−1,8, 1,8], Wände von z = −21,5 (Home-Graben) bis 11,5 (Frontgraben).
+// Zentraler Laufgraben (src/data/sektor.ts): Sohle −1,8, lichte Breite
+// x ∈ [−1,8, 1,8], Wände von z = −31 bis 9. Die Sohle reicht z −32..12 und
+// mündet nach Norden in den Frontgraben, nach Süden in den Home-Graben.
 const SOHLE = -1.8;
 const WAND_INNEN = 1.8;
-const GRABEN_SUED = -21.5;
-const GRABEN_NORD = 11.5;
+const GRABEN_SUED = -30.5;
+const GRABEN_NORD = 8.5;
 /** Start-/Zielpunkte jenseits beider Mündungen (Frontgraben / Home-Graben). */
-const FRONT_Z = 13;
-const HOME_Z = -24;
+const FRONT_Z = 14;
+const HOME_Z = -36;
 /**
- * Nur hier ist der Graben beidseitig geschlossen: die Home-Sohle reicht bis
- * z = −20, die Frontgraben-Sohle beginnt bei z = 10,3 (dort münden die Wände in
- * die breiten Quergräben). Seitendruck, Sprünge und die Wand-Invarianten gelten
- * im Korridor; außerhalb steuert die Kapsel zur Mittellinie, um die Mündung zu
- * treffen.
+ * Der Korridor (beidseitig geschlossene Grabenwände) reicht z ≈ −30,5 … 8,5.
+ * Seitendruck, Sprünge und die Wand-Invarianten gelten im Korridor; außerhalb
+ * steuert die Kapsel zur Mittellinie, um die Mündung zu treffen.
  */
-const KORRIDOR_SUED = -20 + 0.5;
-const KORRIDOR_NORD = 10.3 - 0.5;
+const KORRIDOR_SUED = -31 + 0.5;
+const KORRIDOR_NORD = 9 - 0.5;
 const imKorridor = (z: number): boolean =>
   z > KORRIDOR_SUED && z < KORRIDOR_NORD;
 
@@ -283,12 +284,12 @@ function cmd(mx: number, my: number, sprint: boolean): InputCommand {
 }
 
 describe("Verbindungsgraben — Spieler-Sim, hin und zurück mit Wandkontakt (AP5-01)", () => {
-  /** Seed, dessen Spawn der mittlere vor der Grabenmündung ist (0, −1,4, 13). */
+  /** Seed, dessen Spawn der mittlere ist (0, −1,4, 15). */
   function mittlererSeed(): number {
     for (let seed = 1; seed < 100; seed += 1) {
       const p = createSim(seed, sektorGreybox, { waves: false }).getState()
         .player.pos;
-      if (p.x === 0 && p.z === 13) {
+      if (p.x === 0 && p.z === 15) {
         return seed;
       }
     }
@@ -298,17 +299,23 @@ describe("Verbindungsgraben — Spieler-Sim, hin und zurück mit Wandkontakt (AP
   it("rückwärts an der Ostwand nach Süden, vorwärts an der Westwand nach Norden — kein Tick über Sprint × dt", () => {
     const sim = createSim(mittlererSeed(), sektorGreybox, { waves: false });
     // yaw 0: move.y = −1 → −Z (Richtung Home), move.x = +1 → +X (Ostwand).
+    // Hin: Sprint diagonal an der Ostwand nach Süden. Zurück: nach Norden,
+    // dabei zur Mitte steuern, um die Home-Parapet-Lücke (x ±4) zu treffen.
     const plan = (t: number): InputCommand => {
+      const px = sim.getState().player.pos.x;
       if (t < 60) return cmd(0, -1, false); // 1 s in die Mündung
-      if (t < 60 * 9) return cmd(1, -1, true); // Sprint diagonal an der Ostwand nach Süden
-      if (t < 60 * 10) return cmd(0, 0, false); // stehen
-      return cmd(-1, 1, true); // Sprint diagonal an der Westwand zurück nach Norden
+      if (t < 60 * 12) return cmd(1, -1, true); // Sprint diagonal Süden (Ostwand)
+      if (t < 60 * 13) return cmd(0, 0, false); // stehen
+      // Zurück: erst auf die Mittellinie schleifen (Home-Parapet-Lücke x ±4 /
+      // Laufgraben x ±1,8), dann geradeaus nach Norden.
+      if (Math.abs(px) > 1.2) return cmd(px > 0 ? -1 : 1, 0, true);
+      return cmd(0, 1, true);
     };
     let prev = sim.getState().player.pos;
     let minZ = Infinity;
     let maxZDanach = -Infinity;
     const fehler: string[] = [];
-    for (let t = 0; t < 60 * 19; t += 1) {
+    for (let t = 0; t < 60 * 28; t += 1) {
       sim.tick(plan(t), DT);
       const p = sim.getState().player.pos;
       const dh = Math.hypot(p.x - prev.x, p.z - prev.z);
@@ -321,7 +328,7 @@ describe("Verbindungsgraben — Spieler-Sim, hin und zurück mit Wandkontakt (AP
         fehler.push(`Tick ${t}: vertikaler Sprung → y ${p.y.toFixed(2)}`);
       }
       minZ = Math.min(minZ, p.z);
-      if (t >= 60 * 10) maxZDanach = Math.max(maxZDanach, p.z);
+      if (t >= 60 * 13) maxZDanach = Math.max(maxZDanach, p.z);
       prev = p;
     }
     expect(fehler).toEqual([]);
