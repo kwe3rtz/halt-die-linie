@@ -73,19 +73,21 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
    (Verhaltenswechsel) ist der Ist-Zustand der beste Checkpoint. Quer durch:
    Front → Laufgraben → Hinterland-Seitenrouten → Home-Line → zurück.
    Merkposten: klumpen sich die Wellengegner an den 2 Sap-Lücken?
+   Wenn die Wellengegner sichtbar klumpen: Wellenziele über
+   `front-w`/`front-front`/`front-e` streuen oder Saps verbreitern (Sektor-
+   Daten, billig — ggf. eigenes Mini-Ticket vor AP6-02b).
 2. **AP6-02b** — Bresche → Durchbruch → Linienfall (Halte-Punkte je Bresche,
    lokaler Druck öffnet die Bresche physisch, Gegner hinter der Linie →
    „DURCHBRUCH" → Fall; abwendbar solange der Spieler den Einbruch räumt) +
    Uhr-Regel (Frontfall = gefährlicher, nicht schneller). „Anzahl bedrohter
    Zugänge" für die Wave-Skalierung. Golden-Anker hier bewusst neu +
-   Stub-Gegenprobe.
-3. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen") → AP6-05
-   (Roam + Perf-Broadphase, Audit H1/M5/M6).
-4. Nach AP6-02 kurz anspielen (`arbeitspaket-6`): quer durch den Nacht-Sektor.
-   **Merkposten aus AP6-01-Review:** klumpen sich die Wellengegner sichtbar an
-   den 2 Sap-Lücken? (dann Wellenziele über `front-w/-front/-e` streuen oder
-   Saps verbreitern — Sektor-Daten, billig). Voller Spieltest, wenn AP6 steht.
-5. Ende AP6: PR `arbeitspaket-6` → `main`.
+   Stub-Gegenprobe. Spec ist fertig (inkl. Copilot-Härtung):
+   `tickets/AP6-02b-bresche-durchbruch-linienfall.md`. **Planer schreibt den
+   Kickoff aus der Spec** (Worker macht vorher `/clear` — großer Brocken).
+3. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
+   Design-Runde davor mit `SPARRING-ANTWORTEN.md` Runde 3) → AP6-05 (Roam +
+   Perf-Broadphase, Audit H1/M5/M6).
+4. Ende AP6: PR `arbeitspaket-6` → `main`.
 
 ## Offene Fäden — nicht vergessen
 
