@@ -1,6 +1,7 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-08 (AP6-01 + AP6-02 erledigt, AP6-02b als nächstes)
+**Stand:** 2026-09-08 (AP6-01/02 erledigt · 4. Spieltest: Map ist zu abstrakt +
+jank → wird neu gebaut · **AP6-06 → AP6-01b** als Nächstes, AP6-02b wartet)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -35,8 +36,17 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     Verhaltenswechsel — `FrontLinie` mit Rollen-Feldern statt String-Ableitung,
     N=1-Lade-Assert, `abschnittRng` raus, tote Audio-Callouts weg. Golden-Anker
     bit-identisch. 292 Tests.
-  - **AP6-02b** (nächstes, `ki-game-e6`): Bresche → Durchbruch → Linienfall
-    (Golden-Rebaseline nur hier).
+  - **4. Spieltest (2026-09-08):** „geht in die richtige Richtung", aber die
+    Map ist **zu abstrakt** (Box-Korridore statt Grabensystem) **und jank**
+    (Löcher, an Kanten hängen); Gegner kleben an den Stufen-Rampen; die
+    Repetierer-Startwaffe macht jede Welle zäh; Nacht etwas zu dunkel.
+  - **AP6-06** (nächstes, `ki-game-e6`): Reibung raus — automatische Testwaffe
+    + glatte Rampen + Nacht heller. Klein, schnell, Golden-Anker unberührt.
+  - **AP6-01b** (danach, ENTWURF/Design-Runde): Sektor als **echtes
+    Grabensystem** neu (gezähnter Feuergraben, Traversen, Zickzack-
+    Verbindungsgräben, begehbare Unterstände) + Jank-Pass.
+  - **AP6-02b** (wartet auf AP6-01b — Halte-Punkte/Breschen/Nav hängen am
+    Layout): Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
   - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
     Perf-Broadphase.
 
@@ -68,26 +78,28 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **Anspielen fällig:** der Nacht-Sektor (`arbeitspaket-6`) ist seit AP6-01
-   ungespielt. AP6-02 war reiner Refactor (nichts zu sehen), aber vor AP6-02b
-   (Verhaltenswechsel) ist der Ist-Zustand der beste Checkpoint. Quer durch:
-   Front → Laufgraben → Hinterland-Seitenrouten → Home-Line → zurück.
-   Merkposten: klumpen sich die Wellengegner an den 2 Sap-Lücken?
-   Wenn die Wellengegner sichtbar klumpen: Wellenziele über
-   `front-w`/`front-front`/`front-e` streuen oder Saps verbreitern (Sektor-
-   Daten, billig — ggf. eigenes Mini-Ticket vor AP6-02b).
-2. **AP6-02b** — Bresche → Durchbruch → Linienfall (Halte-Punkte je Bresche,
-   lokaler Druck öffnet die Bresche physisch, Gegner hinter der Linie →
-   „DURCHBRUCH" → Fall; abwendbar solange der Spieler den Einbruch räumt) +
-   Uhr-Regel (Frontfall = gefährlicher, nicht schneller). „Anzahl bedrohter
-   Zugänge" für die Wave-Skalierung. Golden-Anker hier bewusst neu +
-   Stub-Gegenprobe. Spec ist fertig (inkl. Copilot-Härtung):
-   `tickets/AP6-02b-bresche-durchbruch-linienfall.md`. **Planer schreibt den
-   Kickoff aus der Spec** (Worker macht vorher `/clear` — großer Brocken).
-3. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
+1. **AP6-06 (Reibung raus)** — Worker `ki-game-e6`. Automatische Testwaffe
+   (MP-18-artig, nur der Spielpfad — `standardWaffe` bleibt das Gewehr, Golden
+   unberührt) + `rampe()` glatt (mehr/flachere Stufen, breiter) + Nacht heller
+   (Renderer-Dreh). Spec: `tickets/AP6-06-spieltest-reibung.md`. Klein, kein
+   `/clear` nötig.
+2. **AP6-01b (Map-Neubau)** — Design-Runde mit dem Nutzer läuft
+   (`tickets/AP6-01b-sektor-neubau-grabensystem.md`, Abschnitt „Offen": wie
+   stark gezähnt · Unterstände echt vs. simpel · Größe · was war der Jank).
+   Danach schreibt der Planer den Kickoff, Worker `/clear` vorher (großer
+   Brocken). Sektor als echtes Grabensystem, noch Greybox.
+3. **AP6-02b** — erst wenn der neue Sektor steht. Bresche → Durchbruch →
+   Linienfall (Halte-Punkte je Bresche, lokaler Druck öffnet die Bresche
+   physisch, Gegner hinter der Linie → „DURCHBRUCH" → Fall) + Uhr-Regel
+   (Frontfall = gefährlicher, nicht schneller). Golden-Anker hier bewusst neu +
+   Stub-Gegenprobe. Spec fertig (inkl. Copilot-Härtung):
+   `tickets/AP6-02b-bresche-durchbruch-linienfall.md`.
+4. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
    Design-Runde davor mit `SPARRING-ANTWORTEN.md` Runde 3) → AP6-05 (Roam +
-   Perf-Broadphase, Audit H1/M5/M6).
-4. Ende AP6: PR `arbeitspaket-6` → `main`.
+   Perf-Broadphase, Audit H1/M5/M6). **„Gegner-KI deutlich besser" (Spieltest)**
+   fällt hierunter: heute laufen alle stur auf `front-front` und klumpen —
+   AP6-05 + ggf. eigenes Ticket.
+5. Ende AP6: PR `arbeitspaket-6` → `main`.
 
 ## Offene Fäden — nicht vergessen
 
@@ -112,6 +124,17 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
 
+- **2026-09-08** — **4. Spieltest → Map wird neu gebaut.** Nacht-Sektor
+  (AP6-01/02) auf `arbeitspaket-6` angespielt: Richtung stimmt, aber die Map
+  ist **zu abstrakt** (gerade Box-Korridore + leere Flächen, liest sich nicht
+  als Grabensystem) **und jank** (Löcher, Hängenbleiben). Weiter: Gegner
+  kleben an den Stufen-Rampen, Repetierer-Startwaffe macht Wellen zäh, Nacht
+  zu dunkel. **Beschlüsse** (AskUserQuestion): (1) Map „richtig neu bauen" als
+  echtes Grabensystem, noch Greybox → **AP6-01b** (Design-Runde läuft).
+  (2) Zuerst ein schnelles Reibungs-Ticket **AP6-06** (autom. Testwaffe,
+  glatte Rampen, Nacht heller), damit das nächste Anspielen taugt. (3)
+  **AP6-02b pausiert**, bis der neue Sektor steht. Grafik/Punkte/Upgrades/
+  Fähigkeiten bleiben Zukunftsmusik (KONZEPT §4/§7/§8/§9.10).
 - **2026-09-08** — **Design-Runde nach Sparring Runde 3 (AP6-Kern).** Drei
   externe KIs deckungsgleich: der binäre „ganze Linie fällt bei Drucksumme X"
   ist der Hauptfehler (unfair/unlesbar für Solo). **Beschlüsse:** (1) Frontfall
