@@ -83,13 +83,16 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 | Ticket | Status |
 |---|---|
 | AP6-01 Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung | ✅ `erledigt/` (`c4d21f5`) |
-| AP6-02 Kern-Bogen auf eine Frontlinie + eine Home-Line umstellen | offen (nächstes) |
+| AP6-02 Eine Frontlinie/Home-Line: A/B/C-Verdrahtung raus (Bereinigung) | offen (nächstes) |
+| AP6-02b Druck-Radius-Halte-Semantik + Uhr an einer Linie | offen |
 | AP6-03 Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 „Instand setzen" — gefallene Linie zurückerobern | offen |
-| AP6-05 Roamende Nacht-Gegner (wandern / sammeln / losbrechen) | offen |
+| AP6-05 Roamende Nacht-Gegner + Perf-Broadphase | offen |
 
-**Reihenfolge:** AP6-01 zuerst. AP6-02…05 werden verfeinert, sobald AP6-01
-steht.
+**Reihenfolge:** AP6-01 → AP6-02 (Bereinigung, Golden-Anker bleiben grün) →
+AP6-02b (Druck-Radius, Golden-Anker bricht bewusst) → 03 → 04 → 05. Split +
+Audit-Einarbeitung nach Copilot-Spec-Review + `AUDIT-2026-09-07-ap5.md`
+(2026-09-07).
 
 ## Arbeitspaket 7+
 

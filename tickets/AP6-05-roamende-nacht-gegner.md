@@ -1,6 +1,6 @@
 # AP6-05 — Roamende Nacht-Gegner (wandern / sammeln / losbrechen)
 
-**Status:** offen (wird nach AP6-01/02 verfeinert)
+**Status:** offen (letztes AP6-Ticket — nach AP6-02/02b/03/04)
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** `KONZEPT.md` §3 („materialisieren nie im Sichtfeld", Roam-Raum
 Niemandsland/Hinterland) + §5 („Nacht — Roaming, BESCHLOSSEN 2026-09-07"),
@@ -15,6 +15,26 @@ Heute laufen Gegner nach dem Spawn stur den Nav-Pfad zur Front / zum Spieler
 und greifen an — das ist das „statisch/unlebendig", das der dritte Spieltest
 bemängelt hat. `KONZEPT.md` §5 will für die **Nacht** (die zuerst gebaut
 wird) roamende Tote: „die Gräben sind nie ganz leer."
+
+## Audit-Vorgabe (`AUDIT-2026-09-07-ap5.md`)
+
+Dauerhafte Roamer **zusätzlich** zu den Wellengegnern machen die bekannten
+Skalierungskosten dauerhaft statt selten. **Vor diesem Ticket** (oder als
+erster Teil davon):
+
+- **Befund H1** — die Gegner-Separation ist O(E²) pro Tick
+  (`enemies.ts:390–395, 524–551`, Snapshot + Voll-Scan + neue Arrays/Tick).
+  Deterministischen X/Z-Spatial-Hash / Grid einführen, nur Nachbarzellen
+  prüfen, Scratch-Buffer wiederverwenden.
+- **Befund M5/M6** — `kuerzesterPfad` baut pro Aufruf eine neue Adjazenz-Map
+  + sortiert (`navgraph.ts:22–61`); `erreichbarerKnoten`/`sichtlinie` scannen
+  linear. Roam-Zielwechsel häufen das. Adjazenz pro Graph-Revision
+  vorbereiten, Pfade nach `(start, ziel, revision)` cachen.
+- **Zuerst ein N-Gegner-Tick-Benchmark als Budget-Anker** (deterministisch),
+  damit „Roam macht's langsam" messbar ist statt Bauchgefühl.
+
+Ob H1/M5/M6 in dieses Ticket gehören oder in ein vorgezogenes AP7-Perf-Ticket:
+mit dem Planer klären, sobald AP6-02…04 stehen.
 
 ## Ziel
 

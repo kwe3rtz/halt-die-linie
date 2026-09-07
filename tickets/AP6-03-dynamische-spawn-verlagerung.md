@@ -1,11 +1,23 @@
 # AP6-03 — Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor)
 
-**Status:** offen (wird nach AP6-01/02 verfeinert)
+**Status:** offen (wird nach AP6-02/02b verfeinert)
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** `KONZEPT.md` §3 („Die Linie fällt — der Feind rückt vor") + §6,
-`src/sim/wave.ts` (`starteWelle`, Spawn-Knoten-Wahl), `src/sim/enemies.ts`
-(`spawnEnemy`, Nav-Ziel), `src/sim/navgraph.ts`, `src/sim/sektor.ts`
-(`feindAnmarsch`, Nav-Knoten), `src/sim/front.ts` (Linienzustände aus AP6-02).
+`AUDIT-2026-09-07-ap5.md` **Befund H4** (der Wave-API fehlt heute jeder Ort
+für Spawn-Verlagerung — `enemySpawnPunkte` wird einmal gelesen, `WaveContext`
+kennt nur die Punktliste, nicht die gehaltene Linie), `src/sim/wave.ts`
+(`starteWelle`, Spawn-Knoten-Wahl, `WaveContext` ~Z. 118–129),
+`src/sim/index.ts` (~359, 798–819), `src/sim/enemies.ts` (`spawnEnemy`,
+Nav-Ziel), `src/sim/navgraph.ts`, `src/sim/sektor.ts` (`feindAnmarsch`,
+Spawn-Rollen aus AP6-02), `src/sim/front.ts` (Linienzustände aus AP6-02b).
+
+## Audit-Vorgabe (H4)
+
+Der `WaveContext` muss die **aktive Spawn-Staffel** kennen, nicht nur eine
+statische Punktliste. Die Staffel wird **vor** dem Wellen-Tick aus dem
+Front-/Home-Zustand bestimmt. Die Auswahl **muss deterministisch bleiben und
+darf den Wave-RNG nicht unkontrolliert verschieben** (eigener Pfad, kein
+`rng.int` in der Staffel-Wahl).
 
 ## Ausgangslage
 

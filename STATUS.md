@@ -51,9 +51,16 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   verzweigtes Grabennetz (34-Knoten-Nav-Graph, 3 Wege vorn↔hinten), genau
   eine Front-/Home-„Linie" (N=1, `front.ts` unverändert). Nur die Bühne —
   der Kern-Bogen-Umbau ist AP6-02.
-- **Als Nächstes:** `ki-game-e6` baut **AP6-02** (Kern-Bogen auf eine
-  Frontlinie + eine Home-Line: A/B/C-Mechanik raus, Halte-Bedingung als
-  Druck-Radius, Uhr an eine Linie, stale Audio-Callouts).
+- **Unabhängiger Audit vor AP6-02** (`AUDIT-2026-09-07-ap5.md`, GitHub
+  Copilot, rein lesend): AP5-Kern lokal gut abgesichert, Risiken an den
+  Integrationsgrenzen. H2/H3 (A/B/C-Verdrahtung, Zonenvertrag) sind durch
+  AP6-01 schon teils erledigt; Rest in die AP6-Tickets eingearbeitet.
+- **AP6-02 in zwei Tickets geteilt** (Copilot-Spec-Review): **AP6-02** =
+  mechanische A/B/C-Bereinigung ohne Verhaltenswechsel (Golden-Anker bleiben
+  grün); **AP6-02b** = Druck-Radius-Halte-Semantik + Uhr an einer Linie
+  (Golden-Rebaseline nur hier). Die Trennung isoliert den Rebaseline auf die
+  eine echte Semantik-Änderung.
+- **Als Nächstes:** `ki-game-e6` baut **AP6-02** (Bereinigung).
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -80,14 +87,18 @@ angesagt.
 
 ## Als Nächstes
 
-1. **`ki-game-e6` baut AP6-02** — Kern-Bogen auf **eine** Frontlinie + **eine**
-   Home-Line: A/B/C-Mechanik aus `src/sim/**` + HUD raus, Halte-Bedingung als
-   Druck-Radius statt Linien-Bounds (AP6-01 TODO 2), die Uhr an eine Linie,
-   stale Audio-Callouts (AP6-01 TODO 3). Spec: `tickets/AP6-02-*.md`.
-2. Danach AP6-03…05:
-   - AP6-03 Spawn-Verlagerung (Linie fällt → Spawn rückt vor).
+1. **`ki-game-e6` baut AP6-02** — mechanische A/B/C-Bereinigung: A/B/C-
+   Konvention + `aktiveAchsen` + String-Ableitung der Ziel-/Kanten-/Spawn-
+   Knoten raus (Metadaten stattdessen), N=1-Lade-Assert (Audit N2),
+   `_setAbschnittVerloren` → Linien-Hook, Audio-Callouts aufräumen. **Kein
+   Verhaltenswechsel — Golden-Anker bleiben grün.** Spec: `tickets/AP6-02-*.md`.
+2. **AP6-02b** — Druck-Radius-Halte-Semantik (Halte-Punkte je Bresche, lokaler
+   Druck, Aggregation → Linie fällt als Ganzes) + „Anzahl bedrohter Zugänge"
+   für die Wave-Skalierung. Golden-Anker hier bewusst neu + Stub-Gegenprobe.
+3. Danach AP6-03…05:
+   - AP6-03 Spawn-Verlagerung (Linie fällt → Spawn rückt vor; Audit H4).
    - AP6-04 „Instand setzen" (gefallene Linie zurückerobern).
-   - AP6-05 roamende Nacht-Gegner.
+   - AP6-05 roamende Nacht-Gegner + Perf-Broadphase (Audit H1/M5/M6).
 3. Nach AP6-02 kurz anspielen (`arbeitspaket-6` auschecken): quer durch den
    neuen Nacht-Sektor — Front → Laufgraben → Hinterland-Seitenrouten →
    Home-Line → zurück. Merkposten aus AP6-01-Review: klumpen sich die
@@ -188,6 +199,27 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-07** — **Unabhängiger Audit vor AP6-02 + AP6-02 geteilt.** GitHub
+  Copilot (rein lesend, großes Kontextfenster) hat (a) einen Voll-Audit des
+  AP5-Stands auf `main` gemacht (`AUDIT-2026-09-07-ap5.md`) und (b) die
+  AP6-02-Spec gegen den echten Code gegengelesen. Audit-Kernaussage: AP5 ist
+  lokal gut getestet, die Risiken liegen an den Integrationsgrenzen (O(E²)-
+  Gegner-Separation, `dt≤0` ungeschützt, hartkodiertes Sektor-Wissen,
+  `festVersuche` ohne Abklingen). H2 (A/B/C-Verdrahtung) + H3 (Zonenvertrag)
+  sind durch AP6-01 schon teils erledigt. Spec-Review-Kernaussage: der
+  AP6-02-Umbau ist **deutlich größer** als „Listen → Objekte" (SimState,
+  Spawn-/Testhooks, Audio, `main.ts`-Marker, Renderer-Iteration), und der
+  „Druck-Radius" ist kein kleiner Austausch — eine globale `LinienFront` hat
+  heute *einen* Druckwert; mit zwei Breschen braucht es ein Datenmodell mit
+  Aggregationsregel. **Entscheidung:** AP6-02 wird geteilt — **AP6-02**
+  (mechanische A/B/C-Bereinigung, N=1 im Datenvertrag, **kein**
+  Verhaltenswechsel → Golden-Anker bleiben grün) + **AP6-02b** (Druck-Radius-
+  Halte-Semantik mit Halte-Punkten je Bresche + Aggregation, „Anzahl
+  bedrohter Zugänge" als Wave-Skalierung, Golden-Rebaseline **nur hier** mit
+  Stub-Gegenprobe). Die restlichen Audit-Befunde sind in AP6-03 (H4 Spawn-
+  API), AP6-05 (H1/M5/M6 Perf) und ein AP7-Politur-/Perf-Ticket eingearbeitet
+  (`AUFGABEN.md`). Copilot bleibt beratend/lesend — kein Schreiber im
+  Ticket-Loop.
 - **2026-09-07** — **AP6-01 „Neuer Greybox-Nacht-Sektor" erledigt** (`c4d21f5`,
   reviewed, 286 Tests, Coverage src/sim 98,54 %). `src/data/sektor.ts` komplett
   neu nach `KONZEPT.md` §3: größeres verzweigtes Grabennetz (Feindseite →

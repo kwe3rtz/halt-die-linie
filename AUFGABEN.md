@@ -722,13 +722,20 @@ in `tickets/`.
 | Nr | Ticket | Status |
 |---|---|---|
 | AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
-| AP6-02 | Kern-Bogen auf eine Frontlinie + eine Home-Line umstellen (Zustandsmaschine, Nav, Uhr) | offen (nächstes) |
+| AP6-02 | Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung, kein Verhaltenswechsel) | offen (nächstes) |
+| AP6-02b | Druck-Radius-Halte-Semantik + die Uhr an einer Linie (Golden-Rebaseline hier) | offen |
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 | „Instand setzen" — gefallene Linie zurückerobern | offen |
-| AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) | offen |
+| AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) + Perf-Broadphase | offen |
 
-**Reihenfolge wichtig:** AP6-01 (Karte) zuerst, weil alles andere darauf
-aufbaut. AP6-02…05 werden verfeinert, sobald AP6-01 steht.
+**Reihenfolge wichtig:** AP6-01 (Karte) zuerst. Dann AP6-02 (mechanische
+Bereinigung, Golden-Anker bleiben grün) **vor** AP6-02b (Verhaltenswechsel
+Druck-Radius, hier bricht der Golden-Anker bewusst) — die Trennung isoliert
+den Rebaseline auf die eine echte Semantik-Änderung (Copilot-Spec-Review
+2026-09-07). AP6-03/04/05 setzen auf der stabilen Linien-Referenz auf.
+Der unabhängige Audit `AUDIT-2026-09-07-ap5.md` (2026-09-07, vor AP6-02) ist
+in die Tickets eingearbeitet: H2/H3/N2 → AP6-02, H4 → AP6-03, H1/M5/M6 →
+AP6-05/AP7, der Rest → AP7-Politur.
 
 **Ausdrücklich NICHT in AP6:** Tag-Fernkampf-KI (eigenes Paket danach) ·
 prozeduraler Generator · neue Gegnertypen jenseits der Roam-Variante ·
@@ -744,9 +751,20 @@ Zielbild „Fernkampf-Soldaten mit Deckung" kommt als **AP7**.
   Erst wenn der handgebaute Nacht-Sektor im Spieltest trägt.
 - **Gegner-Roster-Ausbau** (`KONZEPT.md` §5, `BACKLOG.md`): Nacht-Roster
   (Läufer, Grabengänger, Heuler, Koloss), dann Tag-Roster.
-- Ein **Politur-Ticket** aus den Audit-Medium-Befunden
-  (`AUDIT-2026-09-04-ap4.md`) — hartkodiertes Sektor-Wissen in der Sim,
-  `createSim`-Größe, `festVersuche` ohne Abklingen, Respawn-Punkt an der
-  Home-Line, Perf-Vorbereitung.
+- Ein **Politur-Ticket** aus den Audit-Befunden (`AUDIT-2026-09-04-ap4.md`
+  **+ `AUDIT-2026-09-07-ap5.md`**): hartkodiertes Sektor-Wissen in der Sim,
+  `createSim`-Größe, `festVersuche` ohne Abklingen (M3), Respawn-Punkt an der
+  Home-Line, `dt≤0`-Guard am Sim-Eingang (N1), leere Spawn-Liste als Fehler
+  statt Phantom-Fortschritt (M1), `spawn`-Callback gibt Erfolg zurück (M2),
+  zweite Bresche voll ins Nav-Modell (M7), Ziel-/Kanten-/Spawn-Rollen ganz
+  aus Metadaten (H2-Rest).
+- **Perf-Broadphase** (Audit H1/M4/M5/M6): deterministischer X/Z-Spatial-Hash
+  für Gegner-Separation, statische Kollisions-Broadphase vor der AABB-
+  Narrowphase, Adjazenz/Pfad-Cache pro Graph-Revision, gemeinsame Broadphase
+  für Bewegung + Sichtlinie. Mit N-Gegner-Tick-Benchmark als Budget-Anker.
+  Teile davon zieht AP6-05 vor, wenn Roamer es dringend machen.
+- **Multi-Seed-Replay-Harness** (Audit §4): deterministischer Harness mit
+  *semantischen* Assertions (Linie gefallen, Spawn-Staffel gewechselt,
+  Roamer reagiert) statt Positionen auf 2 Nachkommastellen — vor AP6-05.
 - Klassen + Fähigkeiten · Nachschub-Ökonomie (eine Währung + Budgets/Slots) ·
   Bauen/Platzierungen · Quartier.
