@@ -1,6 +1,6 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-04
+**Stand:** 2026-09-07
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions.
 
@@ -10,9 +10,13 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
 
 ## Wo wir stehen
 
-- **Konzept:** beschlossen. §3 (Sektor) am 2026-09-03 aus der Map-Design-Runde
-  neu gefasst — H-Grundriss, offenes Feld statt hartem Korridor, „die Uhr",
-  Generator später.
+- **Konzept:** beschlossen. §3/§5/§6/§9/§10 am **2026-09-07** in der
+  Design-Runde neu gefasst (Entwurf v0.3): **eine Frontlinie statt
+  A/B/C-Abschnitte**, größeres frei begehbares WW1-Grabennetz (Feindseite →
+  Niemandsland → Frontlinie → Hinterland → Home-Line), Feind-Spawn folgt der
+  vordersten gehaltenen Linie, „Instand setzen" als Rückeroberung, **Nacht
+  zuerst** (roamende Tote), Skirmish-Rahmen vereinfacht, Generator später
+  fürs ganze Netz. Das kompakte „H" mit A/B/C ist verworfen (§10).
 - **Code:** AP1–AP4 (inkl. Nachzügler AP4-06) auf `main`, PR #7 gemergt. Der
   Kern-Bogen läuft jetzt Ende-zu-Ende bugfrei durch.
 - **Zweiter Spieltest (2026-09-04):** Finale erreicht, „E" extrahiert →
@@ -35,9 +39,14 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   unterscheidbar), Wave-Director mischt sie gewichtet (60/20/20).
 - **Arbeitspaket 5 (inkl. Nachzügler AP5-05/06) ist damit vollständig
   komplett** — 296 Tests, Coverage src/sim 98,59 %. PR #9
-  (`arbeitspaket-5` → `main`) offen.
-- **Als Nächstes:** PR #9 mergen, dann der **eigentliche dritte Spieltest**
-  über mehrere Wellen (bisher nur angespielt) — trägt der Loop jetzt?
+  (`arbeitspaket-5` → `main`) **noch offen — muss vor AP6 gemergt werden**
+  (AP6 zweigt von `main` und braucht den AP5-05/06-Code).
+- **Dritter Spieltest (2026-09-07, nur erste Wellen):** „an sich in Ordnung",
+  aber weiter „sehr statisch und unlebendig" — und die Sektor-Struktur mit
+  A/B/C ist nicht das gewünschte Spiel. → **Konzept-Design-Runde** (oben) →
+  **Arbeitspaket 6** spezifiziert (5 Tickets, `tickets/AP6-*`).
+- **Als Nächstes:** PR #9 mergen → `ki-game-e6` startet **AP6-01** (neuer
+  Nacht-Sektor, verzweigtes Grabennetz).
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -64,38 +73,25 @@ angesagt.
 
 ## Als Nächstes
 
-1. **Dritter Spieltest — diesmal über mehrere Wellen** (bisher nur
-   angespielt). Gegenchecken:
-   - **Kernfrage:** wirken die Wellen jetzt bedrohlich/eskalierend (vorher
-     max. 8–9 gleichzeitig, jetzt Peak 14–17 laut Worker-Messung)? F3 zeigt
-     jetzt `gegner N lebend`.
-   - **Gegner-Klassen (AP5-06):** normal (Feldgrau) / schnell-schwach (Sand,
-     fällt nach 1 Treffer) / langsam-stark (Dunkelblau, 3 Treffer) — farblich
-     unterscheidbar auf kurze/mittlere Distanz? Fühlt sich die schnelle
-     Klasse bedrohlich, aber fair an? Gewichte (60/20/20) in
-     `GEGNER_MISCHUNG` (`wave.ts`), Werte in `src/data/gegner.ts`.
-   - Mittelgang (Verbindungsgraben): keine Teleports mehr beim Anlehnen/
-     Strafen gegen die Wand (AP5-01).
-   - Munition: an den Depots (Front A/B/C an der Parados-Rückwand, Home-Line
-     im Unterstand) mit `E` auffüllbar, sichtbare Munitionskiste (AP5-02).
-   - Kartengrenze: keine sichtbare Wand mehr am Kartenrand, offenes Gelände
-     im Dunst (AP5-03) — fühlt sich die *unsichtbare* Kollisionsgrenze
-     seltsam an?
-   - Leit-Spines (AP5-05) sind komplett weg — reicht Kompass + A/B/C-Schilder
-     + Zonen-Tore zur Orientierung?
-   - Solo-Balance ab Welle 4 (AP5-04-Merkposten, durch AP5-06 mit Zahlen
-     unterlegt: Respawn-Spirale trifft ~1 von 5 Seeds 40+ Mal): stirbt man zu
-     oft? Stellschrauben: `ZUWACHS`/`START_ANGRIFFSKRAFT` (`wave.ts`),
-     Respawn-Punkt wäre die konsequente Lösung (bisher am Front-Spawn, mitten
-     in der Welle).
-   - Tasten weiterhin: **F3** Debug (Mac: `fn+F3`) · **M** Lagekarte · **T**
-     Ton · **E** extrahieren/Munition auffüllen · **Q** verlängern.
-2. Danach, je nach Eindruck: entweder direkt an den gesammelten AP5-
-   Merkposten nachjustieren (kleine Zahlenänderungen/Respawn-Punkt, kein
-   neues Ticket zwingend nötig), oder zurück Richtung Graben-Konzept
-   vertiefen — ein Politur-Ticket aus den Audit-Medium-Befunden, dann „Zwei
-   Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale Generator
-   fürs vordere Labyrinth (`AUFGABEN.md` „Arbeitspaket 6+").
+1. **PR #9 mergen** (`arbeitspaket-5` → `main`, MERGEABLE) — enthält AP5-05/06.
+   Muss zuerst passieren: AP6 zweigt von `main` und baut auf dem
+   AP5-05/06-Code auf.
+2. **`ki-game-e6` startet Arbeitspaket 6** mit **AP6-01** (neuer Nacht-Sektor:
+   verzweigtes Grabennetz + Nacht-Beleuchtung, nur die Bühne — Daten +
+   Renderer + Nav-Graph + Begehbarkeits-Test). Branch `arbeitspaket-6` von
+   `main`. Spec: `tickets/AP6-01-neuer-sektor-grabennetz.md`.
+3. Danach AP6-02…05 der Reihe nach (`tickets/AP6-02…05-*.md`) — jeweils nach
+   AP6-01 verfeinern:
+   - AP6-02 Kern-Bogen auf **eine** Frontlinie + **eine** Home-Line.
+   - AP6-03 Spawn-Verlagerung (Linie fällt → Spawn rückt vor).
+   - AP6-04 „Instand setzen" (gefallene Linie zurückerobern).
+   - AP6-05 roamende Nacht-Gegner.
+4. Nach jedem AP6-Ticket kurz anspielen; voller Spieltest, wenn AP6 steht —
+   trägt „eine Frontlinie + Nacht + Roam" das Gefühl?
+
+**AP5-Merkposten** (fließen in AP6 ein bzw. AP7-Politur-Ticket): Solo-Balance
+ab Welle 4 / Respawn-Punkt an der Home-Line statt am Front-Spawn,
+`festVersuche` ohne Abklingen, Finale-Pacing.
 
 ## Spieltest-Feedback (2026-09-04, AP5-Anlass)
 
@@ -185,6 +181,31 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-07** — **Konzept-Design-Runde: neuer Sektor + neuer Kern-Bogen
+  (Arbeitspaket 6).** Der dritte Spieltest (nur erste Wellen) war „an sich in
+  Ordnung", fühlte sich aber weiter „sehr statisch und unlebendig" an — und
+  die A/B/C-Abschnitts-Struktur ist nicht das gewünschte Spiel. Nutzer-Vision:
+  Gegner sollen nicht stur ihre Route ablaufen und angreifen; nachts sollen
+  Tote **roamen**; die Karte soll **größer, freier, begehbarer, echter WW1**
+  sein (verzweigtes Grabennetz, eigene und Feindgräben getrennt); **keine
+  A/B/C-Sektoren** — nur **eine Frontlinie**, dahinter eine **Home-Line** als
+  echte Verlustgrenze; fällt eine Linie, spawnt der Feind weiter vorn; es
+  braucht eine Mechanik, eine gefallene Linie **zurückzuerobern**. Zwei
+  AskUserQuestion-Runden → Beschlüsse: **(1)** größerer Neuschnitt, Karte
+  zuerst (handgebaut), Generator viel später fürs *ganze* Netz. **(2)**
+  Skirmish-Rahmen behalten, vereinfacht (endliche Angriffskraft → Zeit-Finale
+  an der Home-Line → extrahieren/verlängern; Verlust = Home-Line verloren oder
+  Trupp aus; jetzt mit *einer* Linie + Rückeroberung). **(3)** Rückeroberung
+  = „**Instand setzen**": exponierte, zeitkostende Pionier-Interaktion an einem
+  festen Punkt, zieht Gegner an, jeder Versuch kostet echt. **(4)** **Nacht
+  zuerst** — näher am aktuellen Stand als der Tag-Fernkampf. `KONZEPT.md`
+  §1/§3/§5/§6/§9/§10 neu gefasst (Entwurf v0.3). **Arbeitspaket 6** = 5
+  Tickets (`tickets/AP6-01…05`, Branch `arbeitspaket-6` von `main` nach
+  PR-#9-Merge): neuer Nacht-Sektor · eine Frontlinie/Home-Line · Spawn-
+  Verlagerung · „Instand setzen" · Roam-Gegner. Reihenfolge: AP6-01 (Karte)
+  zuerst, Rest danach verfeinern. AP4/AP5-Sim-Technik wird umgebaut, nicht
+  weggeworfen. Tag-Fernkampf-KI + Generator fürs ganze Netz = AP7. Worker-
+  Session `ki-game-e6`.
 - **2026-09-07** — **Nachzügler AP5-05/06 komplett** (296 Tests, Coverage
   src/sim 98,59 %). Nach dem AP5-Merge (PR #8) hat der Nutzer kurz angespielt
   (nicht der volle dritte Spieltest) und zwei Punkte sofort gemeldet: die

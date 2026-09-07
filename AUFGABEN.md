@@ -688,18 +688,65 @@ Balancing (eigenes späteres Politur-Ticket aus dem Audit) · neue KI-Rollen
 (Charger/Suppressor/Disruptor) · zweite Waffe · volle Nachschub-Ökonomie
 (§9.6) · prozeduraler Generator · Tag/Nacht.
 
-## Arbeitspaket 6+ (Skizze — nach AP5)
+## Arbeitspaket 6 — Neuer Sektor + neuer Kern-Bogen (Nacht, handgebaut)
 
+**Ziel:** Der dritte Spieltest (AP5) hat gezeigt: der Loop läuft technisch, ist
+aber „statisch/unlebendig", und die A/B/C-Sektor-Struktur ist nicht das, was
+der Nutzer will. In der Design-Runde 2026-09-07 neu gefasst (`KONZEPT.md`
+§3/§5/§6):
+
+- **Eine durchgehende Frontlinie + eine Home-Line** statt A/B/C-Abschnitte —
+  jede hält oder fällt als Ganzes (`stabil → bedrängt → gebrochen → verloren`).
+- **Größeres, frei begehbares, verzweigtes WW1-Grabennetz** (Feindseite →
+  Niemandsland → Frontlinie → Hinterland → Home-Line), eigene Gräben und
+  Feindgräben getrennt. Handgebaut zuerst, Generator viel später.
+- **Feind-Spawn folgt der vordersten gehaltenen Linie:** Frontlinie fällt →
+  Spawn rückt nach vorn; Home-Line fällt → Spawn direkt davor.
+- **„Instand setzen":** eine gefallene Linie per exponierter Pionier-artiger
+  Interaktion an einem festen Punkt zurückerobern — zieht Gegner an, jederzeit
+  möglich, aber jeder Versuch kostet echt.
+- **Nacht zuerst:** roamende Tote (wandern, sammeln sich, brechen los — nicht
+  stur zur Linie / zum Spieler). Tag-Fernkampf-KI ist ein späteres Paket.
+- Skirmish-Rahmen bleibt (endliche Angriffskraft zermürben → Zeit-Finale an
+  der Home-Line → extrahieren oder verlängern; Verlust = Home-Line verloren
+  oder Trupp aus). Die „Uhr" auf eine Linie vereinfacht.
+
+**Was weiterträgt (kein Neuanfang):** die Sim-Technik aus AP4/AP5 — Kollision
+(`moveCapsule`), semantischer Nav-Graph, Zustandsmaschine `front.ts`,
+Wave-Director, Begehbarkeits-Test, Munitions-Depots, Gegner-Klassen. Das wird
+umgebaut, nicht weggeworfen.
+
+Branch: `arbeitspaket-6` (von `main`). Ablauf: `WORKFLOW.md`. Ticket-Dateien
+in `tickets/`.
+
+| Nr | Ticket | Status |
+|---|---|---|
+| AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | offen |
+| AP6-02 | Kern-Bogen auf eine Frontlinie + eine Home-Line umstellen (Zustandsmaschine, Nav, Uhr) | offen |
+| AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
+| AP6-04 | „Instand setzen" — gefallene Linie zurückerobern | offen |
+| AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) | offen |
+
+**Reihenfolge wichtig:** AP6-01 (Karte) zuerst, weil alles andere darauf
+aufbaut. AP6-02…05 werden verfeinert, sobald AP6-01 steht.
+
+**Ausdrücklich NICHT in AP6:** Tag-Fernkampf-KI (eigenes Paket danach) ·
+prozeduraler Generator · neue Gegnertypen jenseits der Roam-Variante ·
+Klassen/Fähigkeiten · Nachschub-Ökonomie · Quartier · echte Art. Das
+Zielbild „Fernkampf-Soldaten mit Deckung" kommt als **AP7**.
+
+## Arbeitspaket 7+ (Skizze — nach AP6)
+
+- **Tag-Modus / Fernkampf-KI:** menschliche Soldaten mit Schusswaffen,
+  Deckung, Sichtlinien, Unterdrückung; Nahkampf nur nah. Derselbe Sektor.
+- **Prozeduraler Generator** — jetzt fürs *ganze* Grabennetz, authored Module
+  + Makrolayout + Nav-Graph automatisch, geschützt vom Begehbarkeits-Test.
+  Erst wenn der handgebaute Nacht-Sektor im Spieltest trägt.
+- **Gegner-Roster-Ausbau** (`KONZEPT.md` §5, `BACKLOG.md`): Nacht-Roster
+  (Läufer, Grabengänger, Heuler, Koloss), dann Tag-Roster.
 - Ein **Politur-Ticket** aus den Audit-Medium-Befunden
-  (`AUDIT-2026-09-04-ap4.md`, hartkodiertes Sektor-Wissen in der Sim,
-  `createSim`-Größe, Zonen-Bounds-Überlappung, Perf-Vorbereitung) — sobald der
-  Boxhead-Kern-Loop steht.
-- **„Zwei Kampfsprachen":** ein überzeugender Tag-Fernkampf-Gegner + ein
-  Nacht-Gegner, derselbe Sektor zweimal (ChatGPT-Vorschlag).
-- **Prozeduraler Generator** — nur fürs vordere Grabenlabyrinth, authored Module
-  + Makrolayout + Nav-Graph automatisch. Erst wenn der AP4-Kern im Spieltest
-  trägt; ggf. vorher ein zweiter handgebauter Sektor als Gegenprobe.
-- **Gegner-Roster-Ausbau:** Bajonett-Charger, MG-Trupp, Grabenräumer, Sturmtrupp
-  (`BACKLOG.md`).
+  (`AUDIT-2026-09-04-ap4.md`) — hartkodiertes Sektor-Wissen in der Sim,
+  `createSim`-Größe, `festVersuche` ohne Abklingen, Respawn-Punkt an der
+  Home-Line, Perf-Vorbereitung.
 - Klassen + Fähigkeiten · Nachschub-Ökonomie (eine Währung + Budgets/Slots) ·
   Bauen/Platzierungen · Quartier.

@@ -1,6 +1,9 @@
 # Halt die Linie — Konzeptdokument
 
-**Entwurf v0.2 · Stand 2. September 2026**
+**Entwurf v0.3 · Stand 7. September 2026** (§1/§3/§5/§6/§9/§10 in der
+Design-Runde 2026-09-07 neu gefasst: eine Frontlinie statt A/B/C-Abschnitte,
+größeres begehbares Grabennetz, „Instand setzen" als Rückeroberung, Nacht
+zuerst)
 
 Koop-Wave-Survival-Shooter im Grabenkrieg des Ersten Weltkriegs, First-Person.
 Dieses Dokument hält den im Gespräch beschlossenen Konzeptkern fest — als
@@ -18,11 +21,12 @@ noch nicht final · `OFFEN` = nächste Ebene, siehe §9
 ## §1 Der Kern in einem Satz
 
 First-Person-Koop-Wave-Survival-Shooter im Ersten Weltkrieg. Du führst einen
-Soldaten deiner Kompanie in einen prozedural erzeugten **Frontsektor mit Tiefe**
-und überstehst Wellen — **tagsüber** gegen die feindliche Armee, **nachts** gegen
-die Toten des Niemandslands. Fällt die vordere Linie, ziehst du dich fechtend
-zurück; die rückwärtige Linie ist die echte Verlustgrenze. Zwischen den
-Einsätzen baust du das Kompanie-Quartier aus.
+Soldaten deiner Kompanie in einen **weitläufigen Frontsektor mit Tiefe** — ein
+verzweigtes Grabensystem — und überstehst Wellen: **tagsüber** gegen die
+feindliche Armee, **nachts** gegen die Toten des Niemandslands. Fällt die
+Frontlinie, ziehst du dich fechtend zurück und versuchst, sie wieder instand
+zu setzen; die Home-Line ist die echte Verlustgrenze. Zwischen den Einsätzen
+baust du das Kompanie-Quartier aus.
 
 ---
 
@@ -54,100 +58,130 @@ CoD-Zombies (Wellenstruktur, „du bist mittendrin") × Deep Rock Galactic
 
 ## §3 Der Sektor — Verteidigung in der Tiefe
 
-Ohne Türme ist der Graben trotzdem ein lebendiges Ziel: Die Linie hält oder
-bricht abschnittsweise, und der Sektor hat Tiefe, in die man zurückweichen kann.
-Grundriss in der Draufsicht: ein **H** — eine durchgehende Frontlinie oben, eine
-durchgehende Home-Line unten, dazwischen ein zentraler Verbindungsgraben.
+> **Neu gefasst in der Design-Runde 2026-09-07.** Das alte kompakte **H** mit
+> in Abschnitte (A/B/C) unterteilter Frontlinie ist verworfen (§10): der
+> Spieltest zeigte es als zu statisch, zu klein, zu abstrakt. Ersetzt durch
+> ein **größeres, frei begehbares, verzweigtes WW1-Grabensystem** mit **einer
+> durchgehenden Frontlinie** und **einer Home-Line**, die je als Ganzes halten
+> oder fallen. Die Technik-Basis aus AP4/AP5 (Kollision, Nav-Graph,
+> Zustandsmaschine `stabil→…→verloren`, fechtender Rückzug, Wave-Director)
+> trägt weiter und wird auf die neue Struktur umgestellt.
 
-### Grundriss — `BESCHLOSSEN` (Design-Runde 2026-09-03)
-Von der Feindseite nach hinten:
+Der Sektor ist ein **weitläufiges Grabennetz** mit Tiefe: viele verbundene
+Gräben, Laufgräben, Trichterfelder und Ruinen, durch die der Spieler sich frei
+bewegt. Von der Feindseite nach hinten:
 
-1. **Feindzone (nördlich)** — feindliche Gräben + zwei schräge Anmarsch-Korridore
-   aus den vorderen Ecken. Der Feind spawnt hier (Tag). Für den Spieler nicht
-   betretbar.
-2. **Vorderes Grabenlabyrinth (Niemandsland)** — teils feindgehaltene
-   Verzweigungsgräben zwischen den Anmarsch-Korridoren und der Frontlinie. Hier
-   arbeitet sich der Tag-Feind an die Front heran, Nahkampf um Ecken. Trichter,
-   versetzte Drahtfelder (kanalisieren, aber **keine** drei sauberen sichtbaren
-   Gassen), ein großes Landmark (Panzerwrack o. Ä.). **Das ist der einzige Teil,
-   den der spätere Generator würfelt** — der Rest ist handgebaut.
-3. **Frontlinie** — *eine durchgehende* Grabenlinie über die volle Breite,
-   unterteilt in benannte Abschnitte (A / B / C …). Feuertritt, Parapet, ein bis
-   zwei Bresche-Punkte je Abschnitt, Bau-Slots, ein kleines Nachschubdepot je
-   Abschnitt. Abschnitte fallen einzeln.
-4. **Das offene Feld („die Wanne")** — offenes Trichtergelände zwischen Front und
-   Home, beidseitig des Verbindungsgrabens. **Nicht** kanalisiert: fällt die
-   Front, queren Gegner offenes Gelände Richtung Home-Line, unter Feuer von
-   Front *und* Home. Links und rechts hart gesperrt (Kartengrenze: Sumpf,
-   zerbombtes Gelände) — Weite ja, Umgehen der Home-Line nein.
-5. **Verbindungsgraben** — zentral, die *gedeckte* Route zwischen Home und Front.
-   Enge, ein paar Knicke mit kleinen defensiven Nischen, evtl. eine Sprengbarriere
-   als Rückzugs-Notbremse. Eine Route von mehreren, nicht die einzige.
-6. **Home-Line** — durchgehende rückwärtige Linie über die volle Breite, startet
-   befestigt, begehbare Unterstände (Munitionslager, Verbandsplatz,
-   Feldkommandeur). Zugänge: der Verbindungsgraben **und** das offene Feld
-   beidseitig. Die echte Verlustgrenze.
+### Grundriss — `BESCHLOSSEN` (Design-Runde 2026-09-07)
+
+1. **Feindseite** — feindliches Grabensystem + Anmarschwege. Der Feind spawnt
+   hier, **solange die Frontlinie steht**. Nicht mit den eigenen Gräben
+   durchgängig verbunden (die Front trennt), für den Spieler nicht betretbar.
+2. **Niemandsland** — Trichterfeld, Drahtreste, Ruinen, alte teils verfallene
+   Gräben zwischen Feindseite und Frontlinie. Verzweigt, nicht kanalisiert,
+   mit Deckung und Sichthindernissen. Nachts der Roam-Raum der Toten.
+3. **Frontlinie** — *eine durchgehende* Grabenlinie über die Sektorbreite:
+   Feuertritt, Parapet, Unterstände, ein bis zwei Bresche-Punkte, Bau-Slots,
+   ein Nachschubdepot. Sie hält oder fällt **als Ganzes**
+   (`stabil → bedrängt → gebrochen → verloren`) — **keine A/B/C-Abschnitte**.
+4. **Hinterland** — größerer, frei begehbarer Bereich zwischen Frontlinie und
+   Home-Line: Reserve- und Laufgräben, Geschützstellungen, Trichter,
+   Baracken-Ruinen. **Mehrere Wege** nach vorn und hinten, alle irgendwie
+   verbunden. Hier spielt sich der fechtende Rückzug ab.
+5. **Home-Line** — durchgehende rückwärtige Linie, befestigt, begehbare
+   Unterstände (Munitionslager, Verbandsplatz, Feldkommandeur). Hält oder
+   fällt als Ganzes. **Die echte Verlustgrenze.**
+
+### Die Linie fällt — der Feind rückt vor — `BESCHLOSSEN`
+
+Der Feind-Spawn folgt der vordersten gehaltenen Linie:
+
+- **Frontlinie steht** → Spawn auf der Feindseite, der Feind kämpft sich durchs
+  Niemandsland heran (lange Vorwarnzeit).
+- **Frontlinie gefallen** → Spawn rückt nach vorn, an/hinter die gefallene
+  Front; der Feind drückt durchs Hinterland Richtung Home-Line. Kürzerer Weg,
+  die Uhr läuft schneller, das Front-Depot ist weg.
+- **Home-Line gefallen** → Spawn unmittelbar davor; jetzt nur noch Überleben
+  bis zum Finale — oder bis eine Linie zurückerobert ist.
+
+Gegner **materialisieren nie im Sichtfeld** — Spawns liegen in verdeckten
+Bereichen (feindliche / verfallene Gräben, hinter Ruinen, im Rauch).
+
+### Eine gefallene Linie zurückerobern — „Instand setzen" — `BESCHLOSSEN`
+
+Rückeroberung ist jederzeit möglich, aber teuer und riskant. An der gefallenen
+Linie gibt es einen (oder wenige) **Instandsetzungs-Punkte**. Dort hält der
+Spieler eine **Pionier-artige Interaktion über mehrere Sekunden** — dabei
+exponiert und langsam, und die Interaktion **zieht Gegner an / lässt
+Verstärkung nachströmen**. Erfolgreich zu Ende gebracht: die Linie kippt zurück
+(auf `bedrängt`/`stabil`), die Feind-Spawnzone rückt wieder nach vorn, das
+Depot ist wieder da. Bricht die Interaktion ab (Tod, weglaufen), war der
+Versuch umsonst. **Kein ständiges Hin- und Hercapturen** — jeder Versuch
+kostet echt. *(Werkzeug, Dauer, Kosten, Fiktion — offen, §9.)*
 
 ### Die „Uhr" — warum die Front halten — `BESCHLOSSEN`
-Die endliche Angriffskraft des Feindes (§6) wird dort zermürbt, wo der Trupp
-hält. Die Front zu halten heißt: mehr Feindverluste pro Welle, bevor der Feind
-die Home-Line erreicht — also Zeitgewinn bis zum Zeit-Finale. Fällt ein
-Frontabschnitt, wird der Weg des Feindes nach hinten kürzer und die Uhr läuft
-schneller; zusätzlich ist das Nachschubdepot des Abschnitts weg und die
-Vorwarnzeit kürzer. Rückzug ist also eine echte Abwägung, kein reiner Verlust.
 
-### Maßstab kompakt halten — `RICHTUNG`
-Externes Sparring (alle drei KIs) + Planer: in First Person wirken Strecken
-doppelt so lang. Frontbreite, Verbindungsgraben und das offene Feld bleiben
-**kompakt** — der freie Rückweg Front → Home soll wenige Sekunden dauern; lang
-wird der Rückzug, weil der Feind ihn verlängert, nicht weil der Weg weit ist.
-Konkrete Maße stehen in den AP4-Tickets, nicht hier (Greybox-Startwerte,
-im Spieltest justiert).
+Die endliche Angriffskraft des Feindes (§6) wird dort am stärksten zermürbt,
+wo der Trupp **an der Frontlinie** hält (weit vorne = teurer Anmarsch für den
+Feind). Kills im Hinterland zermürben weniger, an der Home-Line am wenigsten.
+Fällt die Frontlinie, läuft die Uhr schneller (kürzerer Feindweg). Die Front
+halten heißt: mehr Feindverluste pro Zeit → schnelleres Ende. Rückzug ist eine
+Abwägung, kein reiner Verlust — aber Zurückerobern lohnt.
+
+### Maßstab — größer, aber lesbar — `RICHTUNG`
+
+Die Karte darf deutlich größer und weitläufiger sein als das alte H — echtes
+Grabensystem-Gefühl, mehrere Wege, Raum zum Ausweichen und für roamende
+Gegner. Grenze: der freie Rückweg Frontlinie → Home-Line soll für einen
+Solo-Spieler in überschaubarer Zeit machbar bleiben; lang wird der Rückzug
+durch Feinddruck, nicht durch bloße Distanz. Konkrete Maße in den Tickets
+(Greybox, im Spieltest justiert).
 
 ### Handgebaut zuerst, Generator später — `BESCHLOSSEN`
-Erst ein **einziger, komplett handgebauter Greybox-Sektor** (das H), um den
-Kern-Bogen — Front halten → Abschnitt verlieren → geordnet zurückfallen →
-Home-Line halten — überhaupt zu beweisen. Aus modularen Rasterbausteinen gebaut,
-damit derselbe Baukasten später der Generator nutzt. Die prozedurale Erzeugung
-ist ein **eigenes späteres Arbeitspaket** und betrifft nur das vordere
-Grabenlabyrinth (§9.5).
+
+Erst **ein einziger, komplett handgebauter Greybox-Sektor** im neuen Stil, um
+den überarbeiteten Kern-Bogen zu beweisen (Frontlinie halten → fällt →
+zurückfallen → Home-Line halten → ggf. zurückerobern). Aus modularen
+Rasterbausteinen, damit derselbe Baukasten später der Generator nutzt. Die
+prozedurale Erzeugung ist ein **eigenes späteres Arbeitspaket** und darf dann
+das **ganze Grabennetz** würfeln — aber erst, wenn der Handbau im Spieltest
+trägt (§9.5).
 
 ### Parapet als lebendiges Ziel — `BESCHLOSSEN`
-Grabenwände haben Struktur. Gegner reißen an einzelnen Abschnitten Löcher; durch
-eine Bresche strömt der Feind. Der Trupp muss die Lücke physisch stopfen oder
-den Abschnitt aufgeben.
 
-### Fechtender Rückzug, Boden wechselt — `BESCHLOSSEN`
-Frontabschnitte durchlaufen `stabil → bedrängt → gebrochen → verloren`. Ein
-verlorener Abschnitt öffnet dem Feind den Weg nach hinten (durch den Abschnitt
-Richtung offenes Feld / Verbindungsgraben) — Gegner **materialisieren nie im
-Sichtfeld**, Verstärkung kommt aus verdeckten Bereichen / hinter Rauch.
-„Zurückziehen" ist eine Entscheidung des Spielers, kein Skript. Rückeroberung ist
-möglich, aber **selten und teuer** (in Wellenpausen, mit KI-Trupps) — kein
-ständiges Hin- und Hercapturen.
+Grabenwände haben Struktur. Gegner reißen Löcher; durch eine Bresche strömt
+der Feind. Der Trupp stopft die Lücke physisch oder gibt die Linie auf.
+
+### Fechtender Rückzug — `BESCHLOSSEN`
+
+Frontlinie und Home-Line durchlaufen je `stabil → bedrängt → gebrochen →
+verloren` (als ganze Linie, nicht abschnittsweise). Eine verlorene Linie
+öffnet dem Feind den Weg nach hinten. „Zurückziehen" ist eine Entscheidung
+des Spielers, kein Skript.
 
 ### Lesbarkeit im First-Person-Graben — `BESCHLOSSEN`
-Keine Minikarte als Krücke für verwirrendes Layout. In dieser Reihenfolge:
-klar unterschiedliche **Silhouetten** der Zonen (Front weit/flach, Labyrinth
-eng, Home hoch/befestigt) · ein durchgehender **„Spine"** an der Grabenwand
-(Kommunikationskabel + Pfosten) von jedem Frontabschnitt zur Home-Line, **redundant
-codiert** (Farbe + geometrisches Symbol) · nummerierte Frontabschnitte auf
-Schildern · **Kompass** im HUD mit „HOME"-Marker und Markern nur für strategische
-Zustände (Abschnitt bedrängt / gebrochen) · eine **Lagekarte** an der Home-Line.
-Dazu **direktionales Audio** als Pflicht — Signalhorn aus Richtung Home-Line beim
-Abschnittsverlust, Truppen-Rufe. Eine feste Callout-Grammatik von Anfang an
-(Front A/B/C, Route Verbindungsgraben / Feld links / Feld rechts).
+
+Keine Minikarte. Klar unterschiedliche **Silhouetten** (Frontlinie flach/weit,
+Hinterland verwinkelt, Home-Line hoch/befestigt) · **Kompass** im HUD mit
+„HOME"-Marker + Zustand von Frontlinie / Home-Line · eine **Lagekarte** an der
+Home-Line · **direktionales Audio** als Pflicht (Signalhorn bei Linienverlust,
+Truppen-Rufe). Die farbigen Leit-„Spines" an der Grabenwand sind verworfen
+(AP5-05, §10) — bei Bedarf eine andere Wegführung. Callout-Grammatik
+vereinfacht: „die Front" / „die Home-Line" / Himmelsrichtungen, **kein**
+A/B/C mehr.
 
 ### Platzierungen sind klassen-gebunden — `BESCHLOSSEN`
+
 Kein Bau-Raster für alle. Sandsäcke, Stacheldraht, MG-Stellung, Sprengladungen,
-Granatwerfer-Ruf — jeweils an bestimmte Klassen gebunden, bezahlt aus der
-leichten Einsatz-Währung. Verbrauchsmaterial, keine Bauökonomie. Schwerpunkt:
-Frontlinie und Verbindungsgraben.
+Granatwerfer-Ruf — an bestimmte Klassen gebunden, bezahlt aus der leichten
+Einsatz-Währung. Verbrauchsmaterial, keine Bauökonomie. Schwerpunkt: Frontlinie
+und die Zugänge zur Home-Line.
 
 ### Zuweisbare KI-Trupps — `BESCHLOSSEN`
-Geschützbesatzungen bzw. kleine Trupps sind rufbar und einem Abschnitt
-zuweisbar. Sie halten die Stelle oder erobern zurück, während du woanders bist.
-In der Solo-Variante sichern KI-Kameraden ohnehin die Linie mit.
+
+Geschützbesatzungen bzw. kleine Trupps sind rufbar, der Frontlinie oder der
+Home-Line zuweisbar. Sie halten die Stelle oder unterstützen die
+Rückeroberung, während du woanders bist. In der Solo-Variante sichern
+KI-Kameraden ohnehin mit.
 
 ---
 
@@ -262,22 +296,37 @@ auch Entsatz-Rufer / Nachschub-Zugang).
 Kein Mischen innerhalb eines Einsatzes, kein „Tag speist Nacht"-Mechanismus.
 Jede Einsatzart ist klar profiliert und kürzer.
 
-### Tag — Die feindliche Armee
+### Reihenfolge: Nacht zuerst — `BESCHLOSSEN` (Design-Runde 2026-09-07)
+Der Nacht-Modus (roamende Tote) wird zuerst gebaut — er ist näher am aktuellen
+Stand (Nahkampf-Gegner) und die KI ist schrittweise ausbaubar. Der Tag-Modus
+(Fernkampf-Soldaten, Deckungsgefecht) ist der größere KI-Sprung und folgt als
+eigenes Arbeitspaket danach.
+
+### Nacht — Die Toten stehen auf
+Horde, Nahdruck, Umzingelung — kein Deckungsspiel. Drei Parteien: die Untoten
+greifen auch feindliche Soldaten an. Chaos als Ventil, Grabenhorror als Ton.
+First Person macht die Enge der Gräben nachts maximal.
+
+**Roaming — `BESCHLOSSEN` (2026-09-07):** die Toten laufen **nicht** stur auf
+die Linie oder den Spieler zu. Sie wandern durchs Niemandsland und Hinterland,
+sammeln sich an Geräusch / Licht / Nähe und brechen dann los. Weniger „eine
+Welle marschiert", mehr „die Gräben sind nie ganz leer". Das ist der Kern von
+„Lebendigkeit" für den Nacht-Modus.
+
+### Tag — Die feindliche Armee *(nach dem Nacht-Modus)*
 Sie schießt zurück. Nutzt Granattrichter als Deckung, unterdrückt dich, hat
 eigene MG-Trupps und Scharfschützen, kriechendes Sperrfeuer. Deckungsgefecht um
 Feuerüberlegenheit — spähen ohne sich zu zeigen, Vorstoß in Sprüngen.
 
-### Nacht — Die Toten stehen auf
-Horde, Nahdruck, Umzingelung — kein Deckungsspiel mehr. Drei Parteien: die
-Untoten greifen auch die feindlichen Soldaten an. Chaos als Ventil, Grabenhorror
-als Ton. First Person macht die Enge im Verbindungsgraben nachts maximal.
+**Stand:** die aktuelle „Linieninfanterie" (AP2–AP5) kann nur Nahkampf —
+Platzhalter für 1.0. Zielbild: **Schusswaffen / Fernkampf**, Nahkampf **nur auf
+kurze Distanz**. Das ist ein eigenes Arbeitspaket nach der Nacht.
 
 ### Feind im Graben — `BESCHLOSSEN`
-Gegner kommen übers offene Feld UND kämpfen IM Grabensystem — durchgebrochene
-Soldaten infiltrieren die Gräben, Nahkampf um Ecken im Verbindungsgraben,
-Handgemenge. Das prägt das Tag-Gefecht mit, nicht nur Fernkampf übers Feld. Ein
-durchbrochener Frontabschnitt lässt den Feind den Verbindungsgraben hinab zur
-Home-Line fluten — der Druckvektor nach hinten.
+Gegner kommen übers offene Gelände UND kämpfen IM Grabensystem —
+durchgebrochene Feinde infiltrieren die Gräben, Nahkampf um Ecken, Handgemenge.
+Eine gefallene Frontlinie lässt den Feind durchs Hinterland und die
+Reservegräben zur Home-Line fluten — der Druckvektor nach hinten.
 
 ### v1-Roster — `BESCHLOSSEN` (Zahlen offen)
 
@@ -314,20 +363,26 @@ Home-Line fluten — der Druckvektor nach hinten.
 
 ## §6 Einsatzstruktur
 
-### Der Bogen eines Skirmish — `BESCHLOSSEN`
-Wellen zermürben die *endliche* Angriffskraft des Feindes. Über den Einsatz wirst
-du in der Regel von der Frontlinie zurückgedrückt und komprimiert. Ist die
-Angriffskraft gebrochen, folgt als Höhepunkt der **Zeit-Hold an der Home-Line** —
-„haltet die Stellung, bis der Entsatz eintrifft".
+### Der Bogen eines Skirmish — `BESCHLOSSEN` (vereinfacht 2026-09-07)
+Wellen zermürben die *endliche* Angriffskraft des Feindes. Über den Einsatz
+wirst du in der Regel von der Frontlinie zurückgedrückt. Ist die Angriffskraft
+gebrochen, folgt als Höhepunkt der **Zeit-Hold an der Home-Line** — „haltet die
+Stellung, bis der Entsatz eintrifft". Danach die Entscheidung: sicher
+extrahieren mit gesicherter Beute, oder freiwillig in eskalierende
+Reserve-Wellen für mehr Beute weiterspielen.
 
-Danach die Entscheidung: sicher extrahieren mit gesicherter Beute, oder
-freiwillig in eskalierende Reserve-Wellen für mehr Beute weiterspielen.
+**Eine Frontlinie, eine Home-Line** (Design-Runde 2026-09-07): keine Abschnitte
+mehr. Die Frontlinie hält oder fällt als Ganzes; fällt sie, rückt der Feind vor
+(§3) und die Uhr läuft schneller. Zurückerobern per **„Instand setzen"** (§3) —
+eine exponierte Pionier-Interaktion an einem festen Punkt, jederzeit möglich,
+aber teuer. Der Bogen ist damit nicht mehr streng einbahnig: Front fällt →
+Hinterland-Kampf → entweder Front zurückerobern oder weiter auf die Home-Line
+zurückfallen.
 
 ### Verlustbedingung — `BESCHLOSSEN`
-Der Einsatz ist verloren, wenn die **Home-Line komplett überrannt** ist (eigene
-Abschnitte + Struktur, alle gebrochen) — oder der gesamte Trupp ausgeschaltet
-ist (im Koop mit Wiederbelebungs-Fenster). Frontlinie und Verbindungsgraben zu
-verlieren tut weh, beendet den Einsatz aber nicht.
+Der Einsatz ist verloren, wenn die **Home-Line als Linie verloren** ist — oder
+der gesamte Trupp ausgeschaltet ist (im Koop mit Wiederbelebungs-Fenster). Die
+Frontlinie zu verlieren tut weh, beendet den Einsatz aber nicht.
 
 ### Einsatz-Kurve — `BESCHLOSSEN`
 Du kommst mit deinem Loadout auf brauchbarer Stärke rein — nicht bei null wie in
@@ -335,12 +390,12 @@ Zombies. Im Einsatz rüstest du mit erbeutetem Material auf: bessere Wandwaffe,
 Munitionstyp, Platzierungen, KI-Trupp. Spürbare Kurve über den Einsatz.
 
 ### Sektor — `BESCHLOSSEN`
-Grundriss + Zonen: §3. Handgebaut zuerst (ein Greybox-Sektor), Generator als
-eigenes späteres Paket und nur für das vordere Grabenlabyrinth. Skalierung mit
-der Spielerzahl über die **Anzahl gleichzeitig aktiver Frontabschnitte** (solo
-~2, bei 4 Spielern ~4) und primär über den Wave-Director (Angriffsachsen,
-Gleichzeitigkeit, Gegnerzahl) — **nicht** über breitere Gräben oder immer längere
-Wege. Verbindungsgraben + Home-Line bleiben. Kurz — eine Belagerung, dann vorbei.
+Grundriss: §3 (weitläufiges verzweigtes Grabennetz, eine Frontlinie + eine
+Home-Line). Handgebaut zuerst (ein Greybox-Sektor im neuen Stil), Generator als
+eigenes späteres Paket (dann fürs ganze Netz). Skalierung mit der Spielerzahl
+**primär über den Wave-Director** (Angriffsachsen, Gleichzeitigkeit, Gegnerzahl)
+und über die Zahl gleichzeitig bedrohter Zugänge — **nicht** über breitere
+Gräben oder immer längere Wege. Kurz — eine Belagerung, dann vorbei.
 
 ---
 
@@ -389,9 +444,10 @@ Ton in Grabenhorror — Angst und Enge statt Splatter.
 
 ```
 01 Lobby        Soldat aus dem Kader wählen, Loadout einstellen
-02 Einsatz      Tag oder Nacht, dreistufiger Sektor (Front → Feld → Home-Line)
+02 Einsatz      Nacht (zuerst) oder Tag, weitläufiges Grabennetz
+                (Frontlinie → Hinterland → Home-Line)
 03 Wellen       Endliche Angriffskraft zermürben, im Einsatz aufrüsten,
-                fechtend von der Frontlinie zurückweichen
+                fechtend zurückweichen — gefallene Linie ggf. „instand setzen"
 04 Zeit-Finale  Home-Line halten, bis der Entsatz eintrifft
 05 Entscheidung Sicher extrahieren — oder für mehr Beute verlängern
 06 Quartier     Beute: Ressourcen · Soldaten-XP · Freischaltungen
@@ -409,23 +465,32 @@ Systemdesign. In grober Reihenfolge der Dringlichkeit.
    Nachlade-Arten, Vertrautheit). Offen: nur Zahlenbalance.
 3. **Klassen** — `BESCHLOSSEN` im Rahmen (§4, vier Startklassen). Offen:
    Zahlenbalance, Nachschub-Kosten, die genauen Quest-Bedingungen je Klasse.
-4. **Gegner-Roster je Modus** — `BESCHLOSSEN` (§5, 5+5 mit Konter-Karte). Offen:
-   Zahlenbalance, KI-Verhalten (Feuer & Bewegung, Infiltration, Horde-Pathing).
-5. **Prozedurale Sektor-Erzeugung** — Grundriss + Lesbarkeit `BESCHLOSSEN`
-   (§3, Design-Runde 2026-09-03): das H handgebaut, Generator ein eigenes
-   späteres Paket und nur für das vordere Grabenlabyrinth (authored Module +
-   prozedurales Makrolayout, semantischer Nav-Graph, kein NavMesh). Offen: das
-   konkrete Erzeugungsverfahren fürs Labyrinth — erst nachdem der handgebaute
-   Kern-Bogen im Spieltest trägt (AP4).
-6. **Einsatz-Währung Nachschub** — eine oder zwei getrennte Währungen;
+4. **Gegner-Roster & KI je Modus** — Roster `BESCHLOSSEN` (§5, 5+5 mit
+   Konter-Karte), Reihenfolge **Nacht zuerst** (2026-09-07). Offen und
+   dringend: **Roam-Verhalten der Toten** (nicht stur zur Linie/zum Spieler —
+   wandern, sammeln, losbrechen), dann **Fernkampf-KI der Tag-Soldaten**
+   (Deckung, Sichtlinien, Unterdrückung; heute nur Nahkampf-Platzhalter).
+   Zahlenbalance nachgelagert.
+5. **„Instand setzen" — Rückeroberungs-Mechanik** (§3, 2026-09-07): Prinzip
+   `BESCHLOSSEN` (exponierte Pionier-Interaktion an einem festen Punkt, zieht
+   Gegner an, jederzeit möglich aber teuer). Offen: Werkzeug/Fiktion, Dauer,
+   ob es Nachschub kostet, ob KI-Trupps es übernehmen können.
+6. **Prozedurale Sektor-Erzeugung** — Grundriss-Prinzip `BESCHLOSSEN` (§3,
+   2026-09-07): weitläufiges verzweigtes Grabennetz, eine Frontlinie + eine
+   Home-Line. Generator ist ein eigenes späteres Paket und darf dann das
+   **ganze Netz** würfeln (authored Module + prozedurales Makrolayout,
+   semantischer Nav-Graph, kein NavMesh) — **erst**, wenn ein handgebauter
+   Referenzsektor im neuen Stil im Spieltest trägt.
+7. **Einsatz-Währung Nachschub** — eine oder zwei getrennte Währungen;
    Verdienst-Raten, Kosten-Tabelle, Auffüll-Regeln.
-7. **Onboarding / erste Stunde** — Wie sich „klein starten" konkret anfühlt: ein
-   Soldat, eine Klasse, leichte Tag-Einsätze, dann Aufbau.
-8. **Quartier-Ausbau** — Welche Räume, welche Upgrades, wie tief die Meta-Ebene
+8. **Onboarding / erste Stunde** — Wie sich „klein starten" konkret anfühlt: ein
+   Soldat, eine Klasse, leichte Einsätze, dann Aufbau.
+9. **Quartier-Ausbau** — Welche Räume, welche Upgrades, wie tief die Meta-Ebene
    reicht.
-9. **Art- und Render-Stil in 3D** — Wie die Feldpost/Schlachtplan-Optik als
-   stilisierte 3D-Umgebung aussieht (Platzhalter → Zielstil).
-10. **„Krieg"-Modus** — Übergeordnete Struktur (Feldzugskarte, Dauerlauf,
+10. **Art- und Render-Stil in 3D** — Wie die Feldpost/Schlachtplan-Optik als
+    stilisierte 3D-Umgebung aussieht (Platzhalter → Zielstil). Nacht-Atmosphäre
+    (Licht, Dunst, Sicht) rückt durch „Nacht zuerst" nach vorn.
+11. **„Krieg"-Modus** — Übergeordnete Struktur (Feldzugskarte, Dauerlauf,
     Kapitel) — später.
 
 ---
@@ -442,18 +507,36 @@ Systemdesign. In grober Reihenfolge der Dringlichkeit.
   Verworfen zugunsten reiner Tag-ODER-Nacht-Einsätze.
 - **Permadeath** — verworfen wegen Zugänglichkeit und Koop.
 - **Top-Down- / 3rd-Person-Kamera** — verworfen zugunsten First Person.
-- **Einzelne Grabenlinie ohne Tiefe** — ersetzt durch den dreistufigen Sektor
-  (Frontlinie / Verbindungsgraben / Home-Line).
-- **Sektor als harter Korridor** (Zugang zur Home-Line praktisch nur über den
-  Verbindungsgraben, Flanken komplett gesperrt) — ersetzt durch das offene Feld
-  zwischen Front und Home (§3); nur die Kartengrenzen sind gesperrt, umgangen
-  wird die Home-Line trotzdem nicht.
-- **Sektor pro Einsatz vollprozedural** — ersetzt durch handgebautes H +
-  späterer Generator nur fürs vordere Labyrinth (§3, §9.5).
+- **Einzelne Grabenlinie ohne Tiefe** — ersetzt durch einen Sektor mit Tiefe
+  (Frontlinie → Hinterland → Home-Line).
+- **Sektor als harter Korridor** — ersetzt durch offenes/verzweigtes Gelände;
+  nur die Kartengrenzen sind gesperrt, umgangen wird die Home-Line trotzdem
+  nicht.
 - **Reine 2D-Version** — verworfen, da 3D „ziemlich sicher" ist; direkt 3D mit
   Platzhalter-Geometrie.
 - **Einmalige Klassenwahl bei Spielstart** — ersetzt durch das Kader-Modell.
 - **Kampagne als Startumfang** — zurückgestellt, erst Skirmish.
+- **Kompaktes H als Grundriss** (durchgehende Front + zentraler
+  Verbindungsgraben + Home-Line, klein gehalten) — verworfen in der
+  Design-Runde 2026-09-07: im Spieltest zu statisch, zu klein, zu abstrakt.
+  Ersetzt durch ein größeres, frei begehbares, verzweigtes Grabennetz (§3).
+  Der zentrale Verbindungsgraben als benanntes Einzel-Feature entfällt (viele
+  verbundene Wege).
+- **Frontlinie in benannte Abschnitte (A/B/C) unterteilt** — verworfen
+  2026-09-07: zu abstrakt, „welchen Abschnitt halte ich" trug nicht. Ersetzt
+  durch **eine** durchgehende Frontlinie, die als Ganzes hält oder fällt. Die
+  abschnittsweise Zustandsmaschine, die Uhr-Kopplung an Abschnitte und die
+  Skalierung über die Abschnittszahl entfallen.
+- **Generator nur fürs vordere Labyrinth** — der spätere Generator darf das
+  ganze Grabennetz würfeln, nachdem ein handgebauter Referenzsektor im neuen
+  Stil im Spieltest trägt (§3, §9.6).
+- **Rückeroberung nur selten, in Wellenpausen, mit KI-Trupps** — ersetzt durch
+  „Instand setzen": jederzeit möglich per exponierte Pionier-Interaktion an
+  einem festen Punkt, aber jeder Versuch kostet echt (§3).
+- **Farbige Leit-„Spines" an der Grabenwand** (Polylinie + Pfosten + Symbol als
+  Wegweiser Front → Home) — verworfen (AP5-05): im Spieltest als verwirrende
+  „Stricke" wahrgenommen, kein Wegweiser. Datenmodell bleibt für eine andere
+  Darstellung.
 
 ---
 
