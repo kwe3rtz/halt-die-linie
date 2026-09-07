@@ -34,9 +34,10 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   (normal/schnell-schwach/langsam-stark, reine Statistik-Varianten, farblich
   unterscheidbar), Wave-Director mischt sie gewichtet (60/20/20).
 - **Arbeitspaket 5 (inkl. Nachzügler AP5-05/06) ist damit vollständig
-  komplett** — 296 Tests, Coverage src/sim 98,59 %.
-- **Als Nächstes:** der **eigentliche dritte Spieltest** über mehrere Wellen
-  (bisher nur angespielt) — trägt der Loop jetzt?
+  komplett** — 296 Tests, Coverage src/sim 98,59 %. PR #9
+  (`arbeitspaket-5` → `main`) offen.
+- **Als Nächstes:** PR #9 mergen, dann der **eigentliche dritte Spieltest**
+  über mehrere Wellen (bisher nur angespielt) — trägt der Loop jetzt?
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
