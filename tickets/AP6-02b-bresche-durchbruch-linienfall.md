@@ -21,6 +21,11 @@ deckungsgleich): das binäre „ganze Linie fällt, wenn eine unsichtbare
 Drucksumme eine Schwelle reißt" ist der Hauptfehler — unfair und unlesbar für
 Solo. Der Fall muss **ein sichtbares Ereignis im Raum** sein.
 
+Die Timer-/Bresche-Auswahl-/Randfall-Regeln unten sind nach einem
+**Copilot-Spec-Review** geschärft: der Umbau des Übergangsblocks in `front.ts`
+ist eine eigene Implementierungsaufgabe, `brescheIndex` ist Pflicht, und die
+Wave-Skalierung darf **keine** Rng-Ziehung im Director hinzufügen/entfernen.
+
 ## Ziel — die Zustandskette
 
 ```
@@ -58,15 +63,33 @@ stabil → bedrängt → BRESCHE OFFEN → DURCHBRUCH → verloren
 ## Datenmodell
 
 - **`HaltePunkt`** je Bresche der Linie: `{ pos, name, druck /*0..1*/,
-  brescheIndex }`. Positionen aus `parapetBreschen`. `name` = Landmark-String
-  für die HUD-Warnung (AP6-01 hat 2 Breschen: „Mitte"/„West" — für den
-  Greybox reicht das; 4–5 benannte Punkte sind AP6-01-Politur / AP7).
+  brescheIndex /*PFLICHT — Index in parapetBreschen, nicht die Array-Position
+  im haltePunkte-Feld*/, hatNavZugang /*bool*/ }`. `name` = Landmark-String
+  für die HUD-Warnung (AP6-01 hat 2 Breschen „Mitte"/„West" — reicht für den
+  Greybox; 4–5 benannte Punkte sind AP6-01-Politur / AP7).
+  `brescheIndex` **muss** explizit sein — sobald optionale Parapet-Segment-
+  Punkte dazukommen, ist die Array-Position nicht mehr stabil (Copilot-Review).
 - **`LinienFront`** bekommt `haltePunkte: HaltePunkt[]`, `zustand` (die Kette
-  oben), `durchbruchTimer`. `angriffTimer`/`verlorenTimer` der alten Logik
-  entfallen bzw. werden zu `durchbruchTimer`.
-- **Home-Line:** dieselbe Kette (ihre Breschen als Halte-Punkte),
-  `HOME_BRESCHE_FAKTOR` weiter (Home-Breschen brauchen mehr Druck).
-  Home-Line `verloren` = Einsatz verloren.
+  oben), `durchbruchTimer`, `bruchGegner` (Zähler Gegner hinter der Linie).
+  `angriffTimer`/`verlorenTimer` der alten Logik entfallen.
+- **Home-Line:** dieselbe Kette. Unterschiede: **keine `HINTEN_KANTEN`**
+  (nichts dahinter zu öffnen); `zustand === "verloren"` löst direkt
+  `homeVerloren` aus (= Einsatz verloren). `HOME_BRESCHE_FAKTOR` weiter
+  (Home-Breschen brauchen mehr Druck).
+
+## Welche Bresche reißt auf — deterministische Regel
+
+Beim Übergang nach `bresche-offen`:
+- Kandidaten = Halte-Punkte mit `druck >= 1,0`, deren Bresche **noch nicht
+  offen** ist.
+- Es öffnet **die mit dem höchsten Druck**; bei Gleichstand die mit dem
+  **kleinsten `brescheIndex`**. Genau eine pro Tick.
+- Sind alle Breschen der Linie offen → keine weitere öffnet, der Druck läuft
+  weiter in die Durchbruch-Messung.
+- `syncBreschen()` (`index.ts`) schaltet Kollider + Nav wie AP4-06. **Nur die
+  Mittel-Bresche hat einen Nav-Knoten** (`hatNavZugang`, AP6-01 TODO 1) — eine
+  Flanken-Bresche reißt physisch auf (Kollisions-Loch), bekommt aber keine
+  Nav-Kante. Das ist bekannt und bleibt so bis zum AP7-Politur-Ticket.
 
 ## Regeln je Tick (alles über `dt`, deterministisch, Zufall nur `rng.ts`)
 
@@ -75,10 +98,54 @@ stabil → bedrängt → BRESCHE OFFEN → DURCHBRUCH → verloren
   ~8 m). Skaliert mild mit der Gegnerzahl am Punkt (gedeckelt).
 - **Druck runter:** `-= ENTLAST_RATE * dt` (`> DRUCK_RATE`), wenn ein Spieler
   im `HALTE_RADIUS` ist **oder** kein Gegner am Punkt.
-- **Durchbruch-Messung:** Gegner mit `pos.z` zwischen `FRONT_MIN_Z` und
-  `FRONT_MIN_Z - DURCHBRUCH_TIEFE` (~10 m hinter der Linie), die durch eine
-  offene Bresche kamen (oder einfach: alle dort — die kommen ja nur durch die
-  Bresche/Sap-Lücke). Zählung, Schwelle, Karenz wie oben.
+- **Durchbruch-Messung:** `bruchGegner` = Zahl lebender Gegner mit `pos.z`
+  zwischen `FRONT_MIN_Z` und `FRONT_MIN_Z - DURCHBRUCH_TIEFE` (~10 m hinter der
+  Linie). (Vereinfachung: alle dort zählen — durch die stehende Wand kommen
+  sie nicht, nur durch offene Bresche oder Sap-Lücke; ob eine offene Bresche
+  Voraussetzung ist, im Bericht entscheiden.)
+
+## Zustandsübergänge — präzise (vor dem Coding als kleines Diagramm in den Bericht)
+
+Der alte Timer-/Übergangsblock (`front.ts` ~Z. 185–201: `angriffTimer`,
+`verlorenTimer`, `ruheTimer` an `!gehalten` bzw. `gegnerImAbschnitt.length===0
+&& !brescheOffen`) wird **substanziell umgebaut** — das ist eine eigene
+Implementierungsaufgabe, nicht ein Ersetzen von `f.druck` durch `maxDruck`.
+
+| von | nach | Bedingung |
+|---|---|---|
+| `stabil` | `bedrängt` | `max(haltePunkt.druck) > SCHWELLE_BEDRAENGT` |
+| `bedrängt` | `stabil` | `max(druck) <= SCHWELLE_BEDRAENGT` für `T_ERHOLUNG` s, **und** keine Bresche offen |
+| `bedrängt` | `bresche-offen` | ein Halte-Punkt erreicht `druck >= 1,0` → Bresche-Auswahl (oben) |
+| `bresche-offen` | `bedrängt` | `bruchGegner < SCHWELLE_DURCHBRUCH` **und** `max(druck) <= SCHWELLE_BEDRAENGT` für `T_ERHOLUNG` s (Breschen bleiben physisch offen) |
+| `bresche-offen` | `durchbruch` | `bruchGegner >= SCHWELLE_DURCHBRUCH` für `KARENZ` s |
+| `durchbruch` | `bresche-offen` | `bruchGegner < SCHWELLE_DURCHBRUCH` (Timer zurück auf 0) |
+| `durchbruch` | `verloren` | `durchbruchTimer >= T_DURCHBRUCH` (~12 s) |
+| `verloren` | `bedrängt`/`stabil` | nur durch `rueckerobern` (AP6-04) — schließt Breschen, setzt Timer/Druck zurück, kurze Schutzphase |
+
+Schwellen-Vergleiche: `>` für „drüber", `>=` für Bresche/Durchbruch-Auslöser
+(im Code konsistent, im Bericht festhalten). Bei großen `dt` (Test-Ticks):
+Timer-Akkumulation ist `+= dt`, keine Frame-Zählung — großer `dt` überspringt
+keine Übergänge, kann aber mehrere in einem Tick auslösen (dokumentieren).
+
+## Randfälle (im Ticket festlegen, mit Test)
+
+- **Spieler tot / kein Spieler im Sektor:** `index.ts` gibt keine
+  Spielerposition — alle Halte-Punkte dürfen Druck aufbauen. Respawn zählt ab
+  dem Tick wieder als Spielerpräsenz (kein Sonderfall).
+- **Alle Punkte gleichzeitig über Schwelle:** `bedrohteZugaenge` wird auf die
+  Punktzahl gedeckelt; kein Timer-Bonus jenseits `MAX_BEDROHT`.
+- **Keine Halte-Punkte (Linie ohne Bresche):** `max(druck) = 0`, Linie kann
+  nur über den Durchbruch (Sap-Lücken) fallen — im Bericht sagen, ob das ein
+  gültiger Sektor ist oder ein Konfig-Fehler.
+- **Gleichstand beim Maximaldruck:** genau eine Bresche öffnet (kleinster
+  `brescheIndex`), nicht mehrere.
+- **Bereits offene Maximaldruck-Bresche:** die nächste geschlossene Bresche
+  mit dem höchsten Druck ≥ 1,0 öffnet; sind alle offen, öffnet keine.
+- **`bresche-offen` ist dauerhaft** bis `rueckerobern` — die *Erholung* der
+  Bedrohung (`bresche-offen → bedrängt`) ändert nur den Zustand/Timer, die
+  Bresche bleibt ein physisches Loch.
+- **Home-Line:** dieselbe Drucklogik, aber `verloren` → `homeVerloren` direkt,
+  keine `HINTEN_KANTEN`.
 
 ## Die Uhr — Frontfall macht es GEFÄHRLICHER, nicht SCHNELLER
 
@@ -103,9 +170,17 @@ Minute erzeugen als erfolgreiches Halten.**
 ## Wave-Skalierung — „Anzahl bedrohter Zugänge"
 
 = Anzahl Halte-Punkte, die `offen` **oder** über `SCHWELLE_BEDRAENGT` sind
-(Front + Home). `wave.ts` nimmt das als milden Multiplikator auf
-Spawn-Takt/Reservegröße (Wellenkurve unverändert). Deterministisch, darf den
-Wave-Rng nicht verschieben.
+(Front + Home). Als **vorberechneter deterministischer Wert** (`bedrohteZugaenge:
+number`) in `index.ts` **nach** `updateFront()` gebildet und in den
+`WaveContext` gegeben — `wave.ts` würfelt ihn nicht selbst aus.
+
+**Wirkt NUR auf den Spawn-Abstand** (`spawnIntervall`-Modifikator): das
+verschiebt Tick-Zeitpunkte, aber **nicht die Rng-Sequenz**. Die Reservegröße
+**nicht** über diesen Wert skalieren — eine geänderte Reservegröße ändert die
+Anzahl `waehleGegner()`-Aufrufe und verschiebt damit den kompletten folgenden
+Wave-Rng-Verlauf (Copilot-Review). „Kein Rng verschieben" heißt hier
+ausdrücklich: **keine zusätzliche oder entfernte Ziehung im Director**, nicht
+nur „kein eigener Rng-Strom".
 
 ## HUD / Audio — die drei Warnstufen (gehört dazu, sonst ist der Durchbruch unsichtbar)
 
@@ -121,8 +196,14 @@ Wave-Rng nicht verschieben.
 - **Golden-Anker „Sektor-Nav-Graph" + „die Uhr": jetzt bewusst neu
   baselinieren** — Begründung am Test: das Fall-Modell ist neu (Bresche →
   Durchbruch → Fall statt „Gegner im Anmarsch, Linie hält"). **Gegenprobe:**
-  Fall-Modell per Stub auf „alt" (jeder Spieler in Bounds = gehalten) → die
-  alten Golden-Werte kommen exakt zurück. Inline-Testlevel-Anker unverändert.
+  die Halte-/Fall-Auswertung als **injizierbare reine Strategie** bauen
+  (`front.ts` bekommt sie als Parameter/Feld), nicht fest verdrahtet. Der Test
+  injiziert die **alte** Strategie (globaler Druck, `gehalten` = Spieler in
+  Linien-Bounds, alte Timerkopplung, `bedrohteZugaenge` = 0) → die alten
+  Golden-Werte kommen **exakt** zurück, inkl. identischer Wave-Rng-Anzahl und
+  -Reihenfolge (Copilot-Review: nachträgliches Überschreiben einzelner Werte
+  im Test wäre zu fragil und kein belastbarer Beweis). Inline-Testlevel-Anker
+  unverändert.
 - Neue `front.test.ts`-Fälle:
   - Gegner am Halte-Punkt, kein Spieler → Druck steigt → Bresche öffnet
     (`breschen[i].offen`), Zustand `bresche-offen`.
