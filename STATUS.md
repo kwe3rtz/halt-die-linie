@@ -27,13 +27,16 @@ Ablauf, `AUFGABEN.md` für die Konventionen. Dokumenten-Karte in `WORKFLOW.md`.
   (AP5-01…04, alle reviewed, 284 Tests, Coverage src/sim 98,58 %). PR #8
   gemergt nach `main`.
 - **Anspielen (nicht der volle dritte Spieltest):** Nutzer hat nur die
-  ersten Wellen gespielt, noch kein Eindruck zur AP5-04-Eskalation. **AP5-05
-  erledigt** (`a4f1f1a`, reviewed): die Leit-Spines (AP4-05) sind komplett
-  unsichtbar — Linie, Pfosten und Symbole, nicht nur die „Stricke". Kompass +
-  A/B/C-Schilder + Zonen-Tore tragen die Orientierung jetzt allein.
-- **Als Nächstes:** AP5-06 (Gegner-Klassen, mittelgroß — Worker meldet
-  Context unkritisch, direkt weiter möglich), dann der **eigentliche** dritte
-  Spieltest über mehrere Wellen.
+  ersten Wellen gespielt, noch kein Eindruck zur AP5-04-Eskalation. Zwei
+  Nachzügler daraus, **beide erledigt:** AP5-05 (`a4f1f1a`) — Leit-Spines
+  (AP4-05) komplett unsichtbar, Kompass + Schilder + Zonen-Tore tragen die
+  Orientierung jetzt allein. AP5-06 (`e878a64`) — drei Gegner-Klassen
+  (normal/schnell-schwach/langsam-stark, reine Statistik-Varianten, farblich
+  unterscheidbar), Wave-Director mischt sie gewichtet (60/20/20).
+- **Arbeitspaket 5 (inkl. Nachzügler AP5-05/06) ist damit vollständig
+  komplett** — 296 Tests, Coverage src/sim 98,59 %.
+- **Als Nächstes:** der **eigentliche dritte Spieltest** über mehrere Wellen
+  (bisher nur angespielt) — trägt der Loop jetzt?
 - Details zum Gebauten: `CHANGELOG.md` + `tickets/erledigt/`.
 
 ## Spielbar
@@ -60,28 +63,38 @@ angesagt.
 
 ## Als Nächstes
 
-1. **Nutzer:** PR #8 (`arbeitspaket-5` → `main`) mergen.
-2. **Dritter Spieltest.** Gegenchecken:
+1. **Dritter Spieltest — diesmal über mehrere Wellen** (bisher nur
+   angespielt). Gegenchecken:
    - **Kernfrage:** wirken die Wellen jetzt bedrohlich/eskalierend (vorher
      max. 8–9 gleichzeitig, jetzt Peak 14–17 laut Worker-Messung)? F3 zeigt
      jetzt `gegner N lebend`.
+   - **Gegner-Klassen (AP5-06):** normal (Feldgrau) / schnell-schwach (Sand,
+     fällt nach 1 Treffer) / langsam-stark (Dunkelblau, 3 Treffer) — farblich
+     unterscheidbar auf kurze/mittlere Distanz? Fühlt sich die schnelle
+     Klasse bedrohlich, aber fair an? Gewichte (60/20/20) in
+     `GEGNER_MISCHUNG` (`wave.ts`), Werte in `src/data/gegner.ts`.
    - Mittelgang (Verbindungsgraben): keine Teleports mehr beim Anlehnen/
      Strafen gegen die Wand (AP5-01).
    - Munition: an den Depots (Front A/B/C an der Parados-Rückwand, Home-Line
      im Unterstand) mit `E` auffüllbar, sichtbare Munitionskiste (AP5-02).
    - Kartengrenze: keine sichtbare Wand mehr am Kartenrand, offenes Gelände
      im Dunst (AP5-03) — fühlt sich die *unsichtbare* Kollisionsgrenze
-     seltsam an (Merkposten aus AP5-03)?
-   - Solo-Balance ab Welle 4 (AP5-04-Merkposten): stirbt man zu oft? Falls
-     ja: `ZUWACHS`/`START_ANGRIFFSKRAFT` in `wave.ts` sind die Stellschrauben.
+     seltsam an?
+   - Leit-Spines (AP5-05) sind komplett weg — reicht Kompass + A/B/C-Schilder
+     + Zonen-Tore zur Orientierung?
+   - Solo-Balance ab Welle 4 (AP5-04-Merkposten, durch AP5-06 mit Zahlen
+     unterlegt: Respawn-Spirale trifft ~1 von 5 Seeds 40+ Mal): stirbt man zu
+     oft? Stellschrauben: `ZUWACHS`/`START_ANGRIFFSKRAFT` (`wave.ts`),
+     Respawn-Punkt wäre die konsequente Lösung (bisher am Front-Spawn, mitten
+     in der Welle).
    - Tasten weiterhin: **F3** Debug (Mac: `fn+F3`) · **M** Lagekarte · **T**
      Ton · **E** extrahieren/Munition auffüllen · **Q** verlängern.
-3. Danach, je nach Eindruck: entweder direkt an den AP5-04-Merkposten
-   nachjustieren (kleine Zahlenänderungen, kein neues Ticket nötig), oder
-   zurück Richtung Graben-Konzept vertiefen — ein Politur-Ticket aus den
-   Audit-Medium-Befunden, dann „Zwei Kampfsprachen" (Tag-Fernkampf + Nacht),
-   dann der prozedurale Generator fürs vordere Labyrinth (`AUFGABEN.md`
-   „Arbeitspaket 6+").
+2. Danach, je nach Eindruck: entweder direkt an den gesammelten AP5-
+   Merkposten nachjustieren (kleine Zahlenänderungen/Respawn-Punkt, kein
+   neues Ticket zwingend nötig), oder zurück Richtung Graben-Konzept
+   vertiefen — ein Politur-Ticket aus den Audit-Medium-Befunden, dann „Zwei
+   Kampfsprachen" (Tag-Fernkampf + Nacht), dann der prozedurale Generator
+   fürs vordere Labyrinth (`AUFGABEN.md` „Arbeitspaket 6+").
 
 ## Spieltest-Feedback (2026-09-04, AP5-Anlass)
 
@@ -171,6 +184,25 @@ je mit Konvergenz-Analyse).
 
 ## Entscheidungs-Log (neueste zuerst)
 
+- **2026-09-07** — **Nachzügler AP5-05/06 komplett** (296 Tests, Coverage
+  src/sim 98,59 %). Nach dem AP5-Merge (PR #8) hat der Nutzer kurz angespielt
+  (nicht der volle dritte Spieltest) und zwei Punkte sofort gemeldet: die
+  AP4-05-„Leit-Spines" (Polylinie + Pfosten + Symbole als Wegweiser) wirkten
+  wie verwirrende „Stricke" — **AP5-05** entfernt ihre komplette Sichtbarkeit
+  (nicht nur die Linie, sonst hätten die Symbol-Billboards frei geschwebt),
+  das Datenmodell bleibt für später bestehen. Zweitens wünschte er mehr
+  Gegner-Varianz — **AP5-06** baut das als reine Statistik-Varianten der
+  Linieninfanterie (normal/schnell-schwach/langsam-stark, farblich
+  unterscheidbar), gewichtet gemischt über den bestehenden Wave-Director-Rng,
+  ausdrücklich ohne neue KI-Rolle. Beide Tickets mit der inzwischen
+  etablierten Sorgfalt gebaut: AP5-06 hat die im Ticket vorgeschlagenen
+  HP-Werte anhand des echten Waffenschadens korrigiert (sonst wäre der
+  Trefferzahl-Unterschied unsichtbar geblieben) und die Golden-Anker wieder
+  mit Gegenprobe neu baseliniert. Ein zusätzlicher Watchdog-Despawn (1/40
+  Seeds) ist sauber auf den bekannten AP5-04-Merkposten (`festVersuche` klingt
+  nie ab) zurückgeführt, nicht neu. **Damit ist Arbeitspaket 5 (AP5-01…06)
+  vollständig komplett** — als Nächstes der erste **echte** dritte Spieltest
+  über mehrere Wellen (das bisherige Anspielen deckte nur Welle 1 ab).
 - **2026-09-04** — **Arbeitspaket 5 „Boxhead-Kern" komplett** (AP5-01…04,
   alle reviewed, 284 Tests, Coverage src/sim 98,58 %, PR #8 offen). AP5-04
   war der größte Einzelschritt: Diagnose vor dem Tuning (headless Simulator)

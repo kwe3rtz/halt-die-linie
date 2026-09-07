@@ -66,7 +66,7 @@ ersten Wellen gespielt, aber zwei Punkte sofort gemeldet:
 | Ticket | Status |
 |---|---|
 | AP5-05 Leit-Spines: komplett unsichtbar (Linien + Pfosten + Symbole) | ✅ `erledigt/` |
-| AP5-06 Gegner-Klassen (Normal/Schnell-Schwach/Langsam-Stark) | offen |
+| AP5-06 Gegner-Klassen (Normal/Schnell-Schwach/Langsam-Stark) | ✅ `erledigt/` |
 
 ## Arbeitspaket 6+
 

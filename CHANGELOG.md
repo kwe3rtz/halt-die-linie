@@ -6,6 +6,26 @@ liegen in `tickets/erledigt/`.
 
 ## Arbeitspaket 5 — Boxhead-Kern (Moment-zu-Moment-Loop reparieren) · komplett
 
+- **AP5-06** · `e878a64` · **Gegner-Klassen.** Nutzer-Wunsch nach mehr
+  Gegner-Varianz: zwei weitere `EnemyDef`-Statistik-Varianten der
+  Linieninfanterie neben der Basis (`src/data/gegner.ts`) — **schnell,
+  schwach** (Tempo 1,5, 60 HP, 7 Schaden, 1 Treffer mit dem M98) und
+  **langsam, stark** (Tempo 0,65, 180 HP, 16 Schaden, 3 Treffer), gleiches
+  Bewegungs-/Nahkampfverhalten, keine neue KI-Rolle. Wave-Director
+  (`waehleGegner()`, `GEGNER_MISCHUNG` 60/20/20) zieht die Klasse je
+  geplantem Gegner aus dem bestehenden Director-Rng, Haupt- und
+  Reservewellen gleichermaßen. Visuelle Unterscheidung per Kapsel-Tönung
+  (Sand/Feldgrau/Dunkelblau) statt Kapselgröße — vermeidet Hitbox/Sichtbares-
+  Drift. 40-Seed-Messung (derselbe Simulator wie AP5-04): Eskalation
+  unangetastet, Klassenanteile im erwarteten Rahmen, 40/40 gewonnen. Golden-
+  Anker erneut bewusst neu baseliniert, mit Gegenprobe (Klassenwahl auf
+  "immer Basis" gestubbt → alte Werte exakt reproduziert). 296 Tests (+12),
+  Coverage src/sim 98,59 %.
+
+**Arbeitspaket 5 (inkl. Nachzügler AP5-05/06) ist jetzt vollständig
+komplett.** Als Nächstes: der eigentliche dritte Spieltest über mehrere
+Wellen.
+
 - **AP5-05** · `a4f1f1a` · **Leit-Spines: komplett unsichtbar.** Beim
   Anspielen nach dem AP5-Merge gemeldet: die AP4-05-„Leit-Spines" (farbige
   Polylinien Front→Home als Wegweiser) wirkten wie verwirrende Stricke,

@@ -1,6 +1,6 @@
 # AP5-06 — Gegner-Klassen: Normal / Schnell-Schwach / Langsam-Stark (Nachzügler zu AP5)
 
-**Status:** review
+**Status:** erledigt · `e878a64` · reviewed 2026-09-07
 **Arbeitspaket:** 5 (Nachzügler) · **Branch:** `arbeitspaket-5` (von `main`)
 **Referenz:** Dritter Spieltest (Anspielen) 2026-09-04 (Nutzer-Feedback),
 `KONZEPT.md` §5 (Gegner-Roster — die *volle* Ausbaustufe mit KI-Rollen bleibt
@@ -294,3 +294,52 @@ Gewichte in `GEGNER_MISCHUNG`, Farben in `ENEMY_KLASSEN_FARBE`.
    Welle 1 könnte als „Lehr-Welle" nur Normale bringen; die Angriffs-Tönung
    könnte die Klassenfarbe stärker durchlassen (heute 50 % Rotbraun). Alles
    Spieltest-Fragen.
+
+## Review — AP5-06 · 2026-09-07
+
+**Grünes Licht — damit ist der aktuell bekannte AP5-Umfang fertig.**
+
+Lokal nachvollzogen: `git pull` auf `arbeitspaket-5`, `typecheck`/`lint`/
+`format:check` grün, `test:coverage` 296/296 grün (Coverage src/sim
+98,59 %), `build` grün. CI + Pages Preview auf GitHub beide `success`.
+
+Diff gelesen (`gegner.ts`, `wave.ts`, `enemies.ts`/`index.ts`-Exports,
+`render/index.ts`, `sim.test.ts`). Genau im vorgegebenen Rahmen geblieben:
+drei reine Statistik-Varianten (gleicher `verhaltensTag`, keine neue
+Verzweigung in `enemies.ts`), `waehleGegner()` ist eine saubere gewichtete
+Ziehung aus dem bestehenden Director-Rng (kein neuer Zufallsstrom), Farbe
+statt Kapselgröße für die visuelle Unterscheidung war die richtige
+Entscheidung — eine skalierte Hitbox hätte Sichtbares und Kollision
+auseinanderlaufen lassen, genau das Risiko, das die Begründung benennt.
+
+Die HP-Korrektur (60/180 statt der im Ticket vorgeschlagenen ≈70/160) ist
+ein gutes Beispiel für „Vorschlag hinterfragen, wenn die Zahlen die
+eigentliche Absicht nicht tragen": mit dem tatsächlichen Waffenschaden (M98,
+85) wären 70 HP ab Welle 3 wieder zwei Treffer wie normal gewesen — die
+Trefferzahl-Tabelle (1·2·3 bis Welle 4) ist konkret nachgewiesen, nicht nur
+behauptet. Die Tempo-Sorge des Nutzers ("nicht zu schnell") ist ebenfalls
+quantifiziert statt nur eingehalten: die schnellste Ausprägung bleibt mit
+Streuung unter Gehtempo.
+
+**Golden-Anker:** beide Wave-Anker erneut bewusst neu baseliniert, mit
+Kommentar direkt am Test und einer Gegenprobe, die `waehleGegner` auf "immer
+Basis" stubbt und zeigt, dass dann exakt die alten Werte herauskommen — das
+isoliert die Ursache der Verschiebung sauber auf die neue Ziehung, keine
+andere Regel hat sich mitbewegt. Genau die Sorgfalt, die ich hier sehen
+will, und mittlerweile ein verlässliches Muster über AP5-04/06.
+
+**Die 40-Seed-Messung** mit demselben Simulator wie AP5-04 ist wieder der
+richtige Maßstab für ein Balance-Ticket: 40/40 gewonnen, Eskalation aus
+AP5-04 unangetastet (Wellen unverändert), Klassenanteile im erwarteten
+Rahmen. Der eine zusätzliche Watchdog-Despawn (1/40 statt 0/40) ist sauber
+erklärt (schwere Gegner leben länger, sammeln eher die drei Watchdog-
+Eingriffe, `festVersuche` klingt nie ab — bekannter AP5-04-Merkposten, kein
+neuer Mechanismus) und zu Recht nicht in diesem Ticket gefixt.
+
+Screenshot `01-aufstellung-5m` selbst angeschaut: drei klar unterscheidbare
+Tönungen (Sand/Feldgrau/Dunkelblau) nebeneinander, alle mit vollem
+HP-Balken — deckt sich exakt mit der Beschreibung.
+
+Ticket archiviert (`tickets/erledigt/AP5-06-gegner-klassen.md`). Damit ist
+der aktuell bekannte Umfang von Arbeitspaket 5 (inkl. Nachzügler AP5-05/06)
+fertig — als Nächstes der eigentliche dritte Spieltest über mehrere Wellen.
