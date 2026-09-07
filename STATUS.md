@@ -1,7 +1,8 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-08 (AP6-01/02 erledigt · 4. Spieltest: Map ist zu abstrakt +
-jank → wird neu gebaut · **AP6-06 → AP6-01b** als Nächstes, AP6-02b wartet)
+**Stand:** 2026-09-08 (AP6-01/02/06 erledigt · 4. Spieltest: Map ist zu
+abstrakt + jank → **AP6-01b** (Sektor-Neubau) als Nächstes, wartet auf
+Nutzer-„geht weiter" · AP6-02b danach)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -40,14 +41,17 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     Map ist **zu abstrakt** (Box-Korridore statt Grabensystem) **und jank**
     (Löcher, an Kanten hängen); Gegner kleben an den Stufen-Rampen; die
     Repetierer-Startwaffe macht jede Welle zäh; Nacht etwas zu dunkel.
-  - **AP6-06** (nächstes, `ki-game-e6`): Reibung raus — automatische Testwaffe
-    + glatte Rampen + Nacht heller. Klein, schnell, Golden-Anker unberührt.
-  - **AP6-01b** (danach, ENTWURF): Sektor als **echtes Grabensystem** neu.
-    Layout beschlossen: gezähnter Feuergraben + Home-Line (Nischen +
-    Traversen), Hinterland lockerer · echte Unterstände (Raum unter Flur) ·
-    ~30 % größer (~x±44, z−60…92, Nav ~80–100 Knoten). Jank-Beobachtungen aus
-    dem Spieltest im Ticket (schwebende Geometrie, man steht auf der Brustwehr,
-    Rampe ins Leere). Planer-Kickoff sobald AP6-06 durch, Worker `/clear`.
+  - **AP6-06 erledigt** (`a17e734`): automatische Testwaffe (`sturmMp18`, nur
+    Spielpfad), Rampen glatt (10 Stufen) + Sohle-Loch gefixt (Gegner fielen
+    an der Home-Flankenrampe durch die Welt), Nacht-Licht neu abgestimmt
+    (kein Washout, kein reines Schwarz). Golden-Anker bit-identisch.
+  - **AP6-01b** (als Nächstes, ENTWURF — wartet auf Nutzer-„geht weiter"):
+    Sektor als **echtes Grabensystem** neu. Layout beschlossen: gezähnter
+    Feuergraben + Home-Line (Nischen + Traversen), Hinterland lockerer · echte
+    Unterstände (Raum unter Flur) · ~30 % größer (~x±44, z−60…92, Nav ~80–100
+    Knoten). Jank-Beobachtungen im Ticket (schwebende Geometrie, man steht auf
+    der Brustwehr, Rampe ins Leere). Planer-Kickoff auf „geht weiter", Worker
+    `/clear`.
   - **AP6-02b** (wartet auf AP6-01b — Halte-Punkte/Breschen/Nav hängen am
     Layout): Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
   - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
@@ -59,7 +63,8 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
 mit A/B/C-Front + Verbindungsgraben. Auf `arbeitspaket-6` der neue **Nacht-
 Sektor**: eine durchgehende Frontlinie, Niemandsland davor, Hinterland mit
 zentralem Laufgraben + 2 Seitenrouten, durchgehende Home-Line; dunkel, enger
-Dunst, statische Leuchtfeuer, FRONT/HOME-Schilder. Gegner folgen dem Nav-
+Dunst, statische Leuchtfeuer, FRONT/HOME-Schilder. Seit AP6-06: Start mit der
+automatischen Sturm-MP 18, glattere Rampen, ausgewogeneres Nacht-Licht. Gegner folgen dem Nav-
 Graphen an die Front, reißen Parapet-Breschen auf; fällt die Front, öffnet
 sich der Weg ins Hinterland. Jeder Kill zermürbt die Angriffskraft
 (zonengewichtet) → Zeit-Finale an der Home-Line → extrahieren (`E`) oder
@@ -81,27 +86,23 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **AP6-06 (Reibung raus)** — Worker `ki-game-e6`. Automatische Testwaffe
-   (MP-18-artig, nur der Spielpfad — `standardWaffe` bleibt das Gewehr, Golden
-   unberührt) + `rampe()` glatt (mehr/flachere Stufen, breiter) + Nacht heller
-   (Renderer-Dreh). Spec: `tickets/AP6-06-spieltest-reibung.md`. Klein, kein
-   `/clear` nötig.
-2. **AP6-01b (Map-Neubau)** — Layout + konkrete Jank-Beobachtungen stehen im
-   Ticket (`tickets/AP6-01b-sektor-neubau-grabensystem.md`). Planer schreibt
-   den Kickoff, sobald AP6-06 durch ist; Worker `/clear` vorher (großer
-   Brocken). Sektor als echtes Grabensystem, noch Greybox.
-3. **AP6-02b** — erst wenn der neue Sektor steht. Bresche → Durchbruch →
+1. **AP6-01b (Map-Neubau)** — Layout + konkrete Jank-Beobachtungen stehen im
+   Ticket (`tickets/AP6-01b-sektor-neubau-grabensystem.md`). **Wartet auf
+   Nutzer-„geht weiter"** (großer Brocken, er pausiert gern). Dann schreibt
+   der Planer den Kickoff, Worker `/clear` vorher. Sektor als echtes
+   Grabensystem, noch Greybox. Worker `ki-game-e6` steht bereit.
+2. **AP6-02b** — erst wenn der neue Sektor steht. Bresche → Durchbruch →
    Linienfall (Halte-Punkte je Bresche, lokaler Druck öffnet die Bresche
    physisch, Gegner hinter der Linie → „DURCHBRUCH" → Fall) + Uhr-Regel
    (Frontfall = gefährlicher, nicht schneller). Golden-Anker hier bewusst neu +
    Stub-Gegenprobe. Spec fertig (inkl. Copilot-Härtung):
    `tickets/AP6-02b-bresche-durchbruch-linienfall.md`.
-4. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
+3. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
    Design-Runde davor mit `SPARRING-ANTWORTEN.md` Runde 3) → AP6-05 (Roam +
    Perf-Broadphase, Audit H1/M5/M6). **„Gegner-KI deutlich besser" (Spieltest)**
-   fällt hierunter: heute laufen alle stur auf `front-front` und klumpen —
-   AP6-05 + ggf. eigenes Ticket.
-5. Ende AP6: PR `arbeitspaket-6` → `main`.
+   fällt hierunter: heute laufen alle stur auf `front-front` und klumpen (auch
+   am Laufgraben-Mund, AP6-06-Fund) — AP6-05 + ggf. eigenes Ticket.
+4. Ende AP6: PR `arbeitspaket-6` → `main`.
 
 ## Offene Fäden — nicht vergessen
 
@@ -109,7 +110,8 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   Perf-Broadphase (O(E²)-Separation, Pfad-Cache), `dt≤0`-Guard, `festVersuche`
   ohne Abklingen, leere Spawn-Liste als Fehler, `spawn`-Erfolg-Vertrag, zweite
   Bresche voll ins Nav-Modell, hartkodiertes Sektor-Wissen, `createSim`-Größe,
-  Respawn-Punkt an der Home-Line (statt Front-Spawn mitten in der Welle).
+  Respawn-Punkt an der Home-Line (statt Front-Spawn mitten in der Welle),
+  **`FALL_LIMIT` auch für Gegner** (AP6-06-Fund).
 - **Solo-Balance ab Welle 4** (AP5-Merkposten): Zahlen im Spieltest justieren.
 - **Multi-Seed-Replay-Harness** mit semantischen Assertions — vor AP6-05.
 - **Prozeduraler Generator** (KONZEPT §9.6): jetzt fürs *ganze* Grabennetz,
@@ -126,6 +128,14 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
 
+- **2026-09-08** — **AP6-06 erledigt** (`a17e734`, reviewed, 303 Tests).
+  Automatische Testwaffe (`sturmMp18`, nur Spielpfad — `standardWaffe` +
+  Golden-Anker unberührt) · Rampen glatt (4→10 Stufen) · dabei ein echter Bug
+  gefunden: die Home-Grabensohle war x ±32, die Flankenrampen x ±31 reichen
+  bis x ±33,5 → Gegner-Kapseln fielen an der Kante durch die Welt (kein
+  `FALL_LIMIT` für Gegner) → Sohle auf volle Breite. Nacht-Licht neu: kein
+  Washout mehr (PointLight 14→2,4), kein reines Schwarz (Hemispheric
+  0,34→0,9). Golden-Anker bit-identisch (voller Präzisionsvergleich).
 - **2026-09-08** — **4. Spieltest → Map wird neu gebaut.** Nacht-Sektor
   (AP6-01/02) auf `arbeitspaket-6` angespielt: Richtung stimmt, aber die Map
   ist **zu abstrakt** (gerade Box-Korridore + leere Flächen, liest sich nicht

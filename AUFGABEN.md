@@ -728,7 +728,7 @@ in `tickets/`.
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 | „Instand setzen" — gefallene Linie zurückerobern | offen |
 | AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) + Perf-Broadphase | offen |
-| AP6-06 | Spieltest-Reibung: automatische Testwaffe + glatte Rampen + Nacht heller | offen — **wird als Nächstes gebaut** |
+| AP6-06 | Spieltest-Reibung: automatische Testwaffe + glatte Rampen + Nacht heller | ✅ erledigt/ (`a17e734`) |
 
 **4. Spieltest (2026-09-07)** des Nacht-Sektors auf `arbeitspaket-6`: „geht in
 die richtige Richtung", aber die Map ist **zu abstrakt** (gerade Box-Korridore
@@ -739,14 +739,16 @@ zuerst) + **AP6-01b** (Sektor als echtes Grabensystem neu, Design-Runde läuft).
 AP6-02b wartet bis der neue Sektor steht (Halte-Punkte/Breschen/Nav hängen am
 Layout).
 
-**Reihenfolge wichtig:** **AP6-06** (Reibung raus) → **AP6-01b** (Map-Neubau) →
-AP6-02 war schon vor AP6-02b (mechanische Bereinigung, Golden grün) — die
-Trennung isoliert den Golden-Rebaseline auf die eine echte Semantik-Änderung
-(Copilot-Spec-Review 2026-09-07). AP6-02b/03/04/05 setzen auf dem neuen Sektor
-+ der stabilen Linien-Referenz auf. Der unabhängige Audit
+**Reihenfolge wichtig:** AP6-06 (Reibung raus) ✅ → **AP6-01b** (Map-Neubau,
+als Nächstes) → AP6-02 war schon vor AP6-02b (mechanische Bereinigung, Golden
+grün) — die Trennung isoliert den Golden-Rebaseline auf die eine echte
+Semantik-Änderung (Copilot-Spec-Review 2026-09-07). AP6-02b/03/04/05 setzen
+auf dem neuen Sektor + der stabilen Linien-Referenz auf. Der unabhängige Audit
 `AUDIT-2026-09-07-ap5.md` (2026-09-07, vor AP6-02) ist in die Tickets
 eingearbeitet: H2/H3/N2 → AP6-02, H4 → AP6-03, H1/M5/M6 → AP6-05/AP7, der Rest
-→ AP7-Politur.
+→ AP7-Politur. **AP6-06 fand zusätzlich:** kein `FALL_LIMIT` für Gegner
+(durchgefallener Gegner fällt unendlich statt Despawn) → AP7-Politur;
+Laufgraben-Mund-Klumpen (Gegner überschießen `home-ziel`) → AP6-01b/AP6-05.
 
 **Ausdrücklich NICHT in AP6:** Tag-Fernkampf-KI (eigenes Paket danach) ·
 prozeduraler Generator · neue Gegnertypen jenseits der Roam-Variante ·
@@ -768,7 +770,8 @@ Zielbild „Fernkampf-Soldaten mit Deckung" kommt als **AP7**.
   Home-Line, `dt≤0`-Guard am Sim-Eingang (N1), leere Spawn-Liste als Fehler
   statt Phantom-Fortschritt (M1), `spawn`-Callback gibt Erfolg zurück (M2),
   zweite Bresche voll ins Nav-Modell (M7), Ziel-/Kanten-/Spawn-Rollen ganz
-  aus Metadaten (H2-Rest).
+  aus Metadaten (H2-Rest), **`FALL_LIMIT` auch für Gegner** (AP6-06: ein
+  durchgefallener Gegner fällt heute unendlich statt Despawn/Reset).
 - **Perf-Broadphase** (Audit H1/M4/M5/M6): deterministischer X/Z-Spatial-Hash
   für Gegner-Separation, statische Kollisions-Broadphase vor der AABB-
   Narrowphase, Adjazenz/Pfad-Cache pro Graph-Revision, gemeinsame Broadphase

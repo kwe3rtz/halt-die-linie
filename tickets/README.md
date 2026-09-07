@@ -89,14 +89,14 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 | AP6-03 Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 „Instand setzen" — gefallene Linie zurückerobern | offen |
 | AP6-05 Roamende Nacht-Gegner + Perf-Broadphase | offen |
-| AP6-06 Spieltest-Reibung: automatische Testwaffe + glatte Rampen + Nacht heller | offen — **als Nächstes** |
+| AP6-06 Spieltest-Reibung: automatische Testwaffe + glatte Rampen + Nacht heller | ✅ `erledigt/` (`a17e734`) |
 
 **Reihenfolge:** AP6-01 → AP6-02 (Bereinigung, Golden-Anker grün). Dann
 **4. Spieltest (2026-09-08)**: Map zu abstrakt + jank, Startwaffe zu zäh →
-**AP6-06** (schnelle Reibungs-Fixes) → **AP6-01b** (Sektor als echtes
-Grabensystem neu) → AP6-02b (Bresche→Durchbruch, Golden bricht bewusst) →
-03 → 04 → 05. AP6-02-Split + Audit-Einarbeitung nach Copilot-Spec-Review +
-`AUDIT-2026-09-07-ap5.md`.
+**AP6-06** ✅ (schnelle Reibungs-Fixes) → **AP6-01b** (Sektor als echtes
+Grabensystem neu — als Nächstes) → AP6-02b (Bresche→Durchbruch, Golden bricht
+bewusst) → 03 → 04 → 05. AP6-02-Split + Audit-Einarbeitung nach
+Copilot-Spec-Review + `AUDIT-2026-09-07-ap5.md`.
 
 ## Arbeitspaket 7+
 

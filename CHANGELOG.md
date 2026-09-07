@@ -12,6 +12,23 @@ begehbares WW1-Grabennetz, Feind-Spawn folgt der vordersten gehaltenen Linie,
 „Instand setzen" als Rückeroberung, Nacht zuerst mit roamenden Toten. Branch
 `arbeitspaket-6` von `main`.
 
+- **AP6-06** · `a17e734` · **Spieltest-Reibung: Testwaffe + glatte Rampen +
+  Nacht heller.** Nach dem 4. Spieltest (Map „zu abstrakt + jank", Startwaffe
+  zäh, Rampen-Stuck, Nacht zu dunkel), vor dem Map-Neubau (AP6-01b).
+  `src/data/waffen.ts`: `sturmMp18` (Vollauto, 20/120, Kadenz 450) — **nur
+  `src/main.ts` reicht sie an `createSim`**, `standardWaffe` (Langgewehr)
+  bleibt Sim-Default → alle Tests + beide Golden-Anker bit-identisch.
+  `src/data/module.ts`: `rampe()` 4 → 10 Stufen (`RAMPE_STUFEN`), Δy
+  0,45 → 0,18 m. `src/data/sektor.ts`: Home-Grabensohle x ±32 → x ±34 (volle
+  Breite) — die Flankenrampen (x ±31, bis x ±33,5) ragten über die Sohle
+  hinaus, Gegner-Kapseln fielen an der Kante durch die Welt (es gibt kein
+  `FALL_LIMIT` für Gegner → AP7-Politur). `src/render/index.ts`: Nacht-Licht
+  neu abgestimmt — PointLight-Feuer 14 → 2,4 / Reichweite 26 → 15 /
+  `FALLOFF_GLTF` (kein Washout), Hemispheric 0,34 → 0,9 + `groundColor` hoch
+  (kein reines Schwarz), Fog-Ende 68 → 88, `ZONEN_TON` +0,06/Kanal. 6
+  Vorher/Nachher-Screenshots in `tickets/AP6-06-screenshots/`. 303 Tests
+  (+11: Vollauto-Def-Fall + 10 Rampen-Regressionsfälle).
+
 - **AP6-02** · `f427ef1` · **Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung
   raus (Bereinigung).** Mechanischer Refactor, **kein Verhaltenswechsel** —
   beide Golden-Anker bleiben mit unveränderten Assertion-Werten grün.
