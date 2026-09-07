@@ -1,6 +1,6 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-07
+**Stand:** 2026-09-08 (AP6-01 + AP6-02 erledigt, AP6-02b als nächstes)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
