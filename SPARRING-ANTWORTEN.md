@@ -1042,3 +1042,1487 @@ Neue offene Konflikte aus Runde 2:
   Abschnitte), 1 zentraler Connector, **offenes Trichterfeld zwischen Front und
   Home** (kein harter Korridor), Verzweigungsgräben gehen *nach vorn* ins
   Niemandsland. → das ist die eigentliche Design-Runde.
+
+---
+
+## Konvergenz Runde 3 — Planer-Beobachtung (nicht von den KIs)
+
+Briefing: `SPARRING.md` Runde 3 — drei Fragen zum AP6-Kern (eine Frontlinie
+halten / „Instand setzen" / Nacht-Roaming). Alle drei KIs sehr deckungsgleich:
+
+**Frage 1 — Frontlinie halten:**
+- **Der binäre „ganze Linie fällt auf einmal" ist der Hauptfehler.** Alle drei
+  lehnen ihn ab: unfair + unlesbar für Solo („ich habe meinen Kampf gewonnen,
+  aber eine unsichtbare Zahl am anderen Ende der Karte hat entschieden, dass
+  wir verloren haben").
+- **Lösung: der Fall wird physisch + telegraphiert, keine Buchhaltung.**
+  Lokaler Druck öffnet eine **Bresche** (Krise, keine Niederlage). Die Linie
+  fällt erst, wenn Gegner **physisch durch die Bresche in den Graben strömen
+  und einen Fleck hinter der Linie ~10–15 s halten** → „DURCHBRUCH", mit
+  letzter Reaktionschance für den Spieler. (Perplexity als Mittelweg:
+  Integritäts-Balken pro unsichtbarer Zone, Zonen fallen einzeln, ganze Linie
+  erst wenn alle → praktisch weiche A/B/C-Zonen.)
+- **4–5 mögliche Bresche-Punkte, nach Landmarks benannt** (Panzerwrack,
+  Pumpenstand, Mörserbucht, Unterstand) — nicht A/B/C. Natürliche Koop-
+  Callouts. Solo: **höchstens eine echte Krise gleichzeitig** (Director
+  skaliert, wie viele Meter gleichzeitig relevant sind, nicht die 70 m).
+- **Handlungsmacht = der Spieler beeinflusst, wo er NICHT persönlich sein
+  muss.** Drei Werkzeuge, konvergent: (1) **vorbereitete Verzögerung**
+  (Draht/Barrikade/Stolperdraht zwischen Wellen — kauft Zeit, gewinnt keine
+  Stelle; ungesichert ~10–15 s, vorbereitet ~20–30 s), (2) **Feind
+  manipulieren** (Lärm/Licht, v. a. nachts — „wo will ich, dass sie
+  kämpfen?"), (3) *später evtl.* begrenzte KI-Sicherung — **alle drei: für
+  AP6 zunächst OHNE KI-Trupp testen.**
+- **Dreifache Kommunikation „wo brennt's":** Stufe 1 Frühwarnung (Rufe,
+  Pfeife, vereinzelte Schüsse, Untoten-Geräusch, Signallicht) → Stufe 2
+  Richtung (HUD-Kompass „BRESCHE — PANZERWRACK", kein abstrakter Balken) →
+  Stufe 3 Durchbruch (unmissverständlich, andere Mus-/Audiolage, „DURCHBRUCH
+  — 12 SEK"). Nie nur HUD oder nur Audio.
+- **Warnung: keine CoD-Zombies-Fenster** — „wenn mehrere Stellen ständig
+  kleine Reparaturen verlangen, wird Verteidigung zur Hausmeisterarbeit".
+  Halte-Punkte dürfen keine Balken-Auffüll-Objekte sein.
+
+**Frage 2 — „Instand setzen":**
+- **Strikte Trennung: Rückeroberung ≠ Reset.** „Instand setzen darf die
+  taktische Position zurückgeben, den Fall der Linie nicht rückwirkend
+  ungeschehen machen." → **Narben-Effekt:** Linie steht wieder, aber zerstörte
+  Befestigungen / verbrauchter Nachschub / verlorene Frontressourcen /
+  ein Teil der Widerstandsfähigkeit kommen **nicht** zurück.
+- **Womit:** alle drei lehnen „bloße Zeit" ab (zu billig). Konsens:
+  **Nachschub-Kosten + Material vor Ort** (keine Pflichtklasse — Pionier
+  +20–25 % Tempo/−Kosten, aber jeder kann es). ChatGPT: Teil beim Start
+  (~30 %), Rest bei Erfolg; Abbruch = alles weg. Perplexity ergänzt ein
+  Loadout-Kit (max. 2), ChatGPT warnt davor (→ „Loadout-Steuer", Pionier wird
+  Pflicht).
+- **Dauer ~8–12 s** ununterbrochen. Der Skill ist NICHT die Taste halten,
+  sondern sich das Fenster **schaffen** (Umgebung säubern, Horde weglocken,
+  Barrikade setzen).
+- **Solo vs. Koop:** Dauer + Kosten **gleich** (kein „schneller mit mehr
+  Spielern"). Was skaliert: der ausgelöste Gegenangriff (mehr Gegner pro
+  nahem Spieler). Erzeugt Rollen: „ich setze instand, haltet mir die Bresche
+  frei." Max. ~25 % Bonus für einen zweiten Helfer.
+- **Start = lauter Aggro-Reiz** → Mini-Horde aus dem Hinterland. Instand
+  setzen ist gefährlicher als Halten.
+- **Anti-„absichtlich fallen lassen":** (1) der Fall verursacht
+  **irreversible Schäden** (Depot weg, nächster Fall schneller, 2. Reparatur
+  teurer), (2) Spawn steht danach vorn → die Werkstelle muss **erkämpft**
+  werden, (3) begrenzte Wiederholbarkeit — **Start-Test: 1 volle
+  Instandsetzung pro Skirmish**, (4) kurze Schutzphase (~15–20 s).
+- **KRITISCH (ChatGPT + Gemini unabhängig):** die „Uhr läuft schneller"-Regel
+  gegenprüfen. Wenn „schneller" heißt, der Spieler kommt **früher** ans
+  gewonnene Home-Line-Finale, ist das ein Speedrun-Exploit — unabhängig von
+  Instand setzen. **Grundregel: ein freiwilliger Frontverlust darf nie mehr
+  Fortschritt pro Minute erzeugen als erfolgreiches Halten.** Frontverlust
+  muss den Skirmish *gefährlicher/ineffizienter* machen, nicht kürzer.
+
+**Frage 3 — Nacht-Roaming:**
+- **Gruppen bewegen, nicht Einzelne würfeln.** 2–4 Roaming-Gruppen im Sektor
+  (je 2–5 Tote), können sich an Reizen vereinen; außerhalb der Wellen ≤1
+  wirklich alarmierte Gruppe. „Selten leer, aber kein belangloser Zweikampf
+  alle 20 s."
+- **4 Gruppenzustände:** Wandern → Untersuchen (bewegt sich zum **Ort des
+  Reizes**, nicht magisch zum Spieler) → Alarmiert → Abklingen. Über Audio +
+  Animation lesbar. Ein Toter, der nach einem fernen Schuss exakt weiß, wo der
+  Spieler ist, zerstört das System.
+- **Reize = Stärke × Reichweite × Dauer** + **Erinnerungszeit** (Gruppe
+  bleibt einige Sekunden bei ihrem Reiz, dreht nicht bei jedem Geräusch um).
+- **Lärm ist ein Werkzeug, keine Strafe** — „Raumkontrolle durch
+  Aufmerksamkeit", kein Schleichspiel. **Aber: Ablenken löscht keine Gegner** —
+  10 Tote nach links gezogen sind danach *links* (weiter im Budget) → „ich
+  löse mein aktuelles Problem, baue ein späteres". Interessanter als ein
+  Decoy mit 10 s Crowd-Control.
+- **KRITISCH: Roamer + reguläre Wellen dürfen nicht unabhängig eskalieren.**
+  Gemeinsames **Intensitätsbudget** — bei Wellenbeginn schließen sich nahe
+  Roaming-Gruppen an, während des Peaks kaum neue Ambient-Gruppen, danach
+  fällt die Aktivität. „Die Horde, die im Hinterland wanderte, hat den Kampf
+  gehört und kommt dazu" vs. „zwei Spawn-Systeme haben zufällig gleichzeitig
+  ausgelöst".
+- **Drei Spannungszustände:** Ruhe → Unsicherheit → Eskalation → danach muss
+  Ruhe wieder möglich sein. „Grabenhorror braucht Leere."
+- **Keine billigen Spawntricks** — Roamer nie sichtbar hinter dem Spieler;
+  nur aus Spawnlöchern / Niemandsland / okkludierten Grabenenden.
+- **Werkzeug: Leuchtkugel/Signalrakete** (kein Fantasy-Decoy) — Licht =
+  Information + Aufmerksamkeit, passt zum Ton. Nacht zuerst OHNE speziellen
+  Decoy testen.
+
+**ChatGPTs stärkster Satz:** „Der Spieler sollte nicht dafür verantwortlich
+sein, überall gleichzeitig zu verteidigen. Er sollte dafür verantwortlich
+sein, zu erkennen, welcher lokale Zusammenbruch als Nächstes die gesamte
+Stellung gefährdet — und mit Vorbereitung, Bewegung und Aufmerksamkeit genau
+diesen Zusammenbruch zu verhindern."
+
+**Divergenzen:** Perplexity hält an Integritäts-Zonen fest (weiche A/B/C),
+die anderen wollen physische Bresche-Punkte. Instand-Setzen-Werkzeug:
+Loadout-Kit (Perplexity/Gemini) vs. nur Nachschub + Material vor Ort
+(ChatGPT). Zahlen variieren, aber alle im selben Rahmen (8–12 s, ~1 Reparatur/
+Skirmish, 15–20 s Schutz).
+
+**Planer-Konsequenz für die Tickets:** AP6-02b (aktuell „maxDruck-Aggregation →
+Linie fällt") muss auf das **Bresche → Durchbruch → Linienfall**-Modell
+umgeschrieben werden — genau das, wovor alle drei warnen. Die „Uhr schneller"-
+Regel (KONZEPT §3/§6) ist vor AP6-02b/03 zu klären. AP6-04 (Instand setzen)
+und AP6-05 (Roam) können von „offen" auf „Richtung beschlossen" — Details
+unten in der Design-Runde.
+
+---
+
+ChatGPT
+# Runde 3 — Frontlinie halten, Instand setzen, Nacht-Roaming
+
+## Kurzposition vorweg
+
+Die neue „eine durchgehende Frontlinie“-Variante kann funktionieren. Ich würde aber **nicht** modellieren:
+
+> An mehreren Haltepunkten sammelt sich unsichtbarer Druck; die Summe überschreitet einen Wert; die gesamte Linie fällt.
+
+Das ist für Solo zu schwer zu lesen und produziert genau das Gefühl von hilflosem Löcherstopfen.
+
+Meine zentrale Änderung wäre:
+
+> **Lokaler Druck öffnet Breschen. Die Frontlinie fällt erst, wenn Gegner eine geöffnete Bresche physisch ausnutzen und sich hinter der Linie festsetzen.**
+
+Damit wird aus einem abstrakten Wartungsproblem ein First-Person-Problem: Der Spieler sieht und hört, wo etwas bricht, und bekommt nach dem Bruch noch eine letzte Reaktionschance.
+
+Beim „Instand setzen“ sollte die Linie außerdem **nicht auf den Zustand vor dem Fall zurückgesetzt werden**. Man gewinnt die Position zurück, aber der Fall hinterlässt bleibende Kosten. Sonst entsteht fast zwangsläufig die Strategie „fallen lassen, bequem hinten kämpfen, später reparieren“.
+
+---
+
+# 1 — Wie fühlt sich „eine Frontlinie halten“ gut an?
+
+## Hält der aktuelle Haltepunkte-Ansatz?
+
+**Teilweise.**
+
+Mehrere lokale Druckpunkte entlang einer etwa 70 m langen Linie sind sinnvoll. Sie geben dem Director Stellen, auf die er Angriffe konzentrieren kann.
+
+Problematisch ist nur die globale Verlustbedingung:
+
+> genug ungedeckter Druck irgendwo → ganze Linie fällt.
+
+Das kann schnell passieren, während der Spieler 40 Meter entfernt gerade erfolgreich kämpft. Aus seiner Perspektive lautet das dann:
+
+> „Ich habe meinen Kampf gewonnen, aber irgendeine unsichtbare Zahl am anderen Ende der Karte hat entschieden, dass wir verloren haben.“
+
+Das ist nicht fair genug.
+
+## Empfehlung: Bresche → Durchbruch → Linienfall
+
+Ich würde jeden Haltepunkt nicht als kleines Stück Besitz behandeln, sondern als **mögliche Bresche in derselben Frontlinie**.
+
+Ein lokaler Angriff durchläuft ungefähr diese Zustände:
+
+**Hält → unter Druck → Bresche offen → Gegner im Graben → Durchbruch**
+
+Wichtig ist der Unterschied zwischen „Bresche offen“ und „Front gefallen“.
+
+Eine offene Bresche ist zunächst eine Krise, keine Niederlage.
+
+Erst wenn Gegner durch sie hindurchkommen und einen kleinen Bereich **hinter** der Front für beispielsweise 10–15 Sekunden behaupten, kollabiert die Gesamtstellung.
+
+Das erzeugt einen sehr guten dramatischen Ablauf:
+
+1. Angriff wird angekündigt.
+2. Haltepunkt gerät unter Druck.
+3. Draht/Barrikade/Bresche fällt.
+4. Gegner strömen tatsächlich in den Graben.
+5. Spieler bekommt eine letzte Warnung: **DURCHBRUCH**.
+6. Schafft er es, den Einbruch auszuräumen, hält die Linie.
+7. Schafft er es nicht, folgt der Rückzug.
+
+Damit ist der Fall der Linie ein **sichtbares Ereignis im Raum**, keine Buchhaltung.
+
+---
+
+## Wie viele Haltepunkte?
+
+Für etwa 70 m Front würde ich mit **4–5 möglichen Druckpunkten** anfangen.
+
+Aber:
+
+**Nicht alle dürfen gleichzeitig echte Krisen sein.**
+
+Der Director sollte mit Spielerzahl skalieren.
+
+### Solo
+
+Normalerweise:
+
+* 1 primärer Angriffspunkt;
+* eventuell 1 zweiter Punkt mit leichtem Druck;
+* an den restlichen Stellen nur atmosphärische Gegner.
+
+Ein zweiter ernsthafter Durchbruch sollte Solo eher ein besonderes Eskalationsereignis sein.
+
+### Vier Spieler
+
+Dann können durchaus:
+
+* 2 primäre Angriffe;
+* 1 Nebendruck;
+* einzelne Roamer
+
+parallel existieren.
+
+Die 70 Meter selbst müssen also nicht kleiner werden. Entscheidend ist, wie viele Meter davon **gleichzeitig relevant** sind.
+
+---
+
+# „Wo brennt es?“ muss dreifach kommuniziert werden
+
+Ich würde niemals nur HUD oder nur Audio verwenden.
+
+## Stufe 1 — Frühwarnung
+
+Noch bevor die Stellung wirklich gefährdet ist:
+
+* Rufe aus der Stellung;
+* Signalpfeife;
+* vereinzelte Schüsse;
+* charakteristisches Untoten-Geräusch;
+* beim Nachtmodus eventuell Signallicht oder flackernde Lampe.
+
+Der Spieler hört:
+
+> „Da passiert etwas.“
+
+## Stufe 2 — Richtungsinformation
+
+Im HUD-Kompass erscheint kein abstrakter Balken, sondern beispielsweise:
+
+**BRESCHE — PANZERWRACK**
+
+oder:
+
+**DRUCK — UNTERSTAND**
+
+Die Haltepunkte sollten deshalb **Landmark-Namen** besitzen, keine A/B/C-Sektoren:
+
+* Panzerwrack
+* Pumpenstand
+* Mörserbucht
+* Unterstand
+* Telefonposten
+
+Das hilft später massiv im Koop:
+
+> „Wrack bricht!“
+
+ist ein natürlicher Callout.
+
+## Stufe 3 — tatsächlicher Durchbruch
+
+Wenn Gegner hinter der Front sind, muss das Spiel unmissverständlich eskalieren:
+
+**DURCHBRUCH — 12 SEK.**
+
+Dazu andere Musik-/Audiolage, Alarm, Frontstatus.
+
+Das ist einer der wenigen Punkte, an denen ich eine klare UI-Warnung nicht für zu spielig halte. Der Spieler muss verstehen:
+
+> Wenn ich jetzt nichts tue, verlieren wir die Front.
+
+---
+
+# Wie verhindert man Solo-Löcherstopfen?
+
+Der wichtigste Hebel ist **nicht** mehr Laufgeschwindigkeit oder mehr Schaden.
+
+Der wichtigste Hebel ist:
+
+> Der Spieler muss beeinflussen können, **wo er für einige Zeit nicht persönlich sein muss**.
+
+Dafür sehe ich drei gute Werkzeuge.
+
+## Option A — vorbereitete Verzögerung
+
+Der Spieler kann vor oder zwischen Wellen einen Haltepunkt verstärken:
+
+* Draht erneuern;
+* Barrikade aufstellen;
+* Stolper-/Alarmdraht;
+* Leuchtmittel;
+* Sandsäcke;
+* eventuell später Minen/Sprengmittel.
+
+Diese Dinge sollen eine Stelle nicht alleine gewinnen.
+
+Sie sollen Zeit kaufen.
+
+Beispiel:
+
+Ungesicherte Bresche hält ohne Spieler vielleicht 10–15 Sekunden ernsthaften Druck aus.
+
+Vorbereitete Bresche:
+
+20–30 Sekunden.
+
+Dann hat Vorbereitung einen klaren Zweck:
+
+> „Ich sichere links stärker, weil ich selbst rechts stehen will.“
+
+Das ist Handlungsmacht.
+
+## Option B — begrenzte KI-Sicherung
+
+Falls KI-Trupps ohnehin geplant sind, ist genau hier ihr sinnvollster Einsatz.
+
+Nicht:
+
+> „KI-Soldat macht DPS.“
+
+Sondern:
+
+> „Dieser Posten kann für eine begrenzte Zeit ohne mich arbeiten.“
+
+Ein kleiner Sicherungstrupp könnte einen Haltepunkt beispielsweise gegen normalen Druck stabilisieren, aber gegen einen großen Angriff irgendwann brechen.
+
+Nachteil: deutlich mehr KI-/Präsentationsaufwand.
+
+Für AP6 würde ich deshalb **zunächst ohne KI-Trupp** testen.
+
+## Option C — Spieler manipuliert den Angriff
+
+Das wird besonders nachts interessant.
+
+Wenn Lärm und Licht tatsächlich Gegner lenken, kann der Spieler aktiv bestimmen:
+
+> „Ich ziehe die nächste Gruppe nach links, weil dort die Stellung vorbereitet ist.“
+
+Dann wird Frontverteidigung nicht:
+
+> „Wo spawnt das Spiel jetzt Gegner?“
+
+sondern:
+
+> „Wo will ich, dass sie kämpfen?“
+
+Das wäre für „Halt die Linie“ ein sehr starkes System.
+
+---
+
+# Was ich von Referenzspielen übernehmen würde
+
+## Left 4 Dead
+
+Nicht die Zombies, sondern den **Director-Gedanken**.
+
+Eine gute Horde entsteht nicht dadurch, dass überall gleichzeitig Gegner erscheinen. Der Director erzeugt gezielt Intensität und lässt anschließend wieder Luft.
+
+Für eure Front heißt das:
+
+> Nicht fünf gleichberechtigte Probleme erzeugen. Ein bis zwei erkennbare Krisen erzeugen.
+
+## Deep Rock Galactic
+
+Übertragbar ist vor allem die Kombination aus:
+
+* angekündigter Eskalation;
+* kurzer Vorbereitungszeit;
+* Werkzeugen, die Positionen verändern;
+* Spieler entscheidet selbst, wo er den kommenden Angriff annehmen will.
+
+Eine DRG-Schwarmwarnung fühlt sich gefährlich an, aber selten völlig willkürlich.
+
+## GTFO
+
+GTFO ist eine gute Referenz dafür, wie stark **Vorbereitung der Kampfzone** sein kann.
+
+Spieler entscheiden vor einem Alarm:
+
+* welche Tür;
+* welche Route;
+* welches Werkzeug;
+* welcher Kill-Zone.
+
+Das würde ich stärker übernehmen als klassische Tower-Defense-Mechaniken.
+
+## CoD Zombies — eher als Warnung
+
+Die klassischen Fenster zeigen das Gegenbeispiel:
+
+Wenn mehrere Stellen ständig kleine Reparaturen verlangen, wird Verteidigung schnell zur Hausmeisterarbeit.
+
+„Haltepunkte“ dürfen deshalb nicht primär Objekte sein, an denen der Spieler regelmäßig einen Balken wieder auffüllt.
+
+---
+
+# Empfehlung für Frage 1
+
+**4–5 mögliche Breschen, aber solo höchstens eine echte Hauptkrise gleichzeitig.**
+
+Lokaler Druck darf eine Bresche öffnen.
+
+Die Gesamtfront fällt aber erst durch einen **sichtbaren physischen Durchbruch hinter die Linie**.
+
+Der Spieler bekommt Handlungsmacht durch:
+
+1. vorbereitete Verzögerung,
+2. beeinflussbare Feindbewegung,
+3. später eventuell KI-Sicherung.
+
+So verteidigt er eine Linie, statt fünf Wartungsbalken zu betreuen.
+
+---
+
+# 2 — „Instand setzen“
+
+Hier würde ich zwischen **Rückeroberung** und **Reset** sehr strikt unterscheiden.
+
+> Instand setzen darf die taktische Position zurückgeben. Es darf den Fall der Linie nicht rückwirkend ungeschehen machen.
+
+Das ist die wichtigste Regel des ganzen Systems.
+
+---
+
+## Womit?
+
+### Option A — nur Zeit
+
+Spieler erreicht den Punkt und hält Interaktion für zehn Sekunden.
+
+**Vorteile:**
+
+* sehr klar;
+* kein zusätzliches System;
+* einfach zu verstehen.
+
+**Problem:**
+
+Es ist kostenlos.
+
+Damit wird Instandsetzen in jeder ruhigen Phase automatisch richtig. Es gibt praktisch keine strategische Entscheidung.
+
+**Würde ich nicht nehmen.**
+
+---
+
+## Option B — spezielles mitgebrachtes Werkzeug
+
+Beispielsweise ein Feldbaukasten.
+
+**Vorteile:**
+
+* sehr physisch;
+* gut lesbar;
+* man muss die Möglichkeit vorher einplanen.
+
+**Probleme:**
+
+* wird schnell zur Loadout-Steuer;
+* besonders bei Solo problematisch;
+* Pionier droht Pflichtklasse zu werden.
+
+Als Klassenbonus okay, als Voraussetzung schlecht.
+
+---
+
+## Option C — Nachschub + exponierte Interaktion
+
+**Meine Empfehlung.**
+
+Am festen Instandsetzungspunkt befinden sich die nötigen Materialien grundsätzlich vor Ort beziehungsweise werden abstrakt aus dem Nachschub bezahlt.
+
+Der Spieler braucht keine bestimmte Klasse.
+
+Ablauf:
+
+> Punkt erreichen → Nachschub investieren → mehrere Sekunden exponiert arbeiten → Gegner reagieren darauf → Erfolg.
+
+Der Pionier darf dabei beispielsweise:
+
+* 20–25 % schneller arbeiten;
+* oder 20 % weniger Nachschub benötigen.
+
+Aber jeder Soldat kann es.
+
+Das erfüllt die Solo-Anforderung deutlich besser.
+
+---
+
+## Option D — KI-Trupp losschicken
+
+Interessant als spätere Alternative.
+
+Der Spieler könnte einen Pioniertrupp bezahlen, der selbst zum Punkt läuft und dort arbeitet.
+
+Das erzeugt einen schönen Escort-/Verteidigungsmoment.
+
+Als Basissystem würde ich es trotzdem nicht verwenden: Die eigentliche dramatische Handlung sollte zunächst beim Spieler liegen.
+
+---
+
+# Wie lange?
+
+Ich würde für den ersten Test mit **8–10 Sekunden ununterbrochener Arbeit** anfangen.
+
+Kürzer als etwa fünf Sekunden wird schnell zu:
+
+> hinrennen → E drücken → erledigt.
+
+15–20 Sekunden dagegen sind Solo extrem schwierig, wenn die Aktion Gegner anzieht.
+
+Wichtig:
+
+Der eigentliche Skill soll nicht sein, zehn Sekunden lang eine Taste zu halten.
+
+Der Skill ist:
+
+> **Kann ich mir ein Zehn-Sekunden-Fenster schaffen?**
+
+Also vorher:
+
+* Umgebung säubern;
+* Horde weglocken;
+* Barrikade setzen;
+* Leuchtkörper woanders platzieren;
+* im Koop einen Kameraden absichern lassen.
+
+Dann beginnt die Interaktion.
+
+---
+
+# Sollte die Dauer mit Spielerzahl skalieren?
+
+**Nein beziehungsweise nur sehr wenig.**
+
+Ich würde keine Regel bauen wie:
+
+> Solo 8 Sekunden, vier Spieler 24 Sekunden.
+
+Das wirkt künstlich.
+
+Die Arbeit dauert im Wesentlichen gleich lang.
+
+Der Unterschied:
+
+### Solo
+
+Der Spieler muss sich **vorher** ein sicheres Zeitfenster schaffen.
+
+### Koop
+
+Einer arbeitet, die anderen verteidigen.
+
+Dafür darf der ausgelöste Gegenangriff mit Spielerzahl skalieren.
+
+Das erzeugt echtes Rollenverhalten:
+
+> „Ich setze instand, haltet mir die Bresche frei.“
+
+wesentlich besser als:
+
+> „Vier Leute halten gleichzeitig E, dann geht der Balken viermal so schnell.“
+
+Ich würde höchstens einen kleinen Mehrspielerbonus erlauben, etwa:
+
+* ein zweiter Helfer beschleunigt um 25 %;
+* weitere Spieler bringen nichts.
+
+Dann bleibt das Verteidigen meistens wertvoller als vier Mann am selben Interaktionspunkt.
+
+---
+
+# Wie teuer?
+
+Nicht in absoluten Zahlen festlegen, bevor die Nachschubökonomie steht.
+
+Aber der Zielwert sollte ungefähr sein:
+
+> **Ein Instandsetzungsversuch kostet so viel wie eine bedeutende taktische Ausgabe.**
+
+Zum Beispiel den Gegenwert von:
+
+* einer starken Stellung;
+* einem KI-Trupp;
+* mehreren wichtigen Verbrauchsgegenständen.
+
+Als erste Balancegröße:
+
+**ungefähr 20–30 % des Nachschubs, den ein Solospieler bis zum typischen ersten Frontfall verfügbar hat.**
+
+Ein fehlgeschlagener Versuch muss weh tun.
+
+Er darf aber nicht bedeuten:
+
+> „Run vorbei, weil ich bei Sekunde 7 getroffen wurde.“
+
+Ich würde deshalb eher einen **Teil des Preises bereits beim Start verbrauchen**.
+
+Beispiel:
+
+* 30 % des Preises beim Beginnen;
+* 70 % bei erfolgreichem Abschluss.
+
+Abbruch:
+
+* Fortschritt komplett verloren;
+* Startkosten ebenfalls verloren.
+
+Damit kostet jeder Versuch tatsächlich etwas, aber ein einziger Treffer zerstört nicht die komplette Ökonomie.
+
+---
+
+# Ganz wichtig: Instandsetzen darf kein vollständiger Reset sein
+
+Nach erfolgreichem Instandsetzen:
+
+### Zurück kommt
+
+* Frontlinie gilt wieder als gehalten;
+* reguläre Spawns rücken wieder nach vorn;
+* Frontposition kann wieder benutzt werden;
+* kurze Schutz-/Neuordnungsphase.
+
+### Nicht zurück kommt
+
+* zerstörte Befestigungen;
+* verbrauchter Nachschub;
+* verlorene Munitions-/Versorgungsbestände;
+* bereits verlorene Frontressourcen;
+* eventuell ein Teil der ursprünglichen Widerstandsfähigkeit.
+
+Das ist der **Narben-Effekt**.
+
+Die Linie steht wieder.
+
+Aber jeder sieht:
+
+> Sie ist nicht mehr dieselbe Linie wie vorher.
+
+---
+
+# Wie verhindert man „absichtlich fallen lassen“?
+
+Dafür braucht es mehrere Sicherungen gleichzeitig.
+
+## 1. Der Fall verursacht irreversible Schäden
+
+Beispielsweise:
+
+* Frontdepot verloren;
+* vorhandener Draht zerstört;
+* eine befestigte Stellung permanent beschädigt;
+* nächster Fall erfolgt schneller;
+* zweite Instandsetzung kostet deutlich mehr.
+
+Damit kann Fallenlassen nie neutral sein.
+
+## 2. Die Rückeroberung muss wirklich eine Rückeroberung sein
+
+Der Spieler darf nicht gemütlich an einem sicheren Punkt hinter der Front einen Reparaturknopf drücken.
+
+Er muss:
+
+> bis zur alten Front vorstoßen → Bereich säubern → dort exponiert arbeiten.
+
+Sobald die Linie gefallen ist, spawnt der Gegner weiter vorn.
+
+Der Spieler muss also **gegen den neuen Spawnraum anarbeiten**.
+
+Das allein verhindert schon viel Missbrauch.
+
+## 3. Instandsetzen sollte nur begrenzt wiederholbar sein
+
+Ich würde für einen normalen 12–18-Minuten-Skirmish zunächst maximal:
+
+**1 volle Instandsetzung**
+
+testen.
+
+Falls das zu hart ist:
+
+zweite Instandsetzung möglich, aber beispielsweise **doppelte Kosten**.
+
+Drei, vier oder fünf Wiederherstellungen würden das zentrale Ereignis entwerten.
+
+## 4. Die Schutzphase ist kurz
+
+Etwa **15–20 Sekunden** ohne neuen Großangriff auf die restaurierte Linie.
+
+Genug für:
+
+* Nachladen;
+* Stellung beziehen;
+* eventuell ein Stück Draht setzen.
+
+Nicht genug, um gemütlich die gesamte Front neu aufzubauen.
+
+## 5. Der Missionsfortschritt darf Fallenlassen nicht belohnen
+
+Hier würde ich die genaue Bedeutung eurer „Uhr läuft schneller“-Regel nochmals sehr kritisch prüfen.
+
+Falls „schneller“ bedeutet:
+
+> Nach einem Frontfall kommt der Spieler schneller zum erfolgreichen Home-Line-Finale,
+
+dann habt ihr unabhängig vom Instandsetzen bereits einen möglichen Speedrun-Exploit.
+
+Ein Frontverlust darf den Skirmish **gefährlicher beziehungsweise ineffizienter** machen, nicht den Weg zum Erfolg verkürzen.
+
+Grundregel:
+
+> Ein freiwilliger Frontverlust darf niemals mehr Fortschritt pro Minute erzeugen als erfolgreiches Halten.
+
+---
+
+# Meine konkrete Startversion für „Instand setzen“
+
+Für einen ersten Balance-Test:
+
+**Voraussetzung:** Linie gefallen, Werkstelle an der alten Front freigekämpft.
+
+**Kosten:** ungefähr Wert einer großen taktischen Anschaffung.
+
+**Interaktion:** 8–10 Sekunden ununterbrochen.
+
+**Abbruch:** Fortschritt weg, Startkosten weg.
+
+**Reaktion:** Beginn erzeugt einen starken Lärm-/Aggroreiz.
+
+**Solo:** Gegner brauchen genügend Anmarschzeit, dass ein gut vorbereitetes Zeitfenster tatsächlich reichen kann.
+
+**Koop:** ein Spieler arbeitet, Rest verteidigt.
+
+**Erfolg:** Spawn zurück zur Feindseite, 15–20 Sekunden Neuordnungsphase.
+
+**Bleibender Schaden:** zerstörte Frontinfrastruktur bleibt zerstört.
+
+**Häufigkeit:** zunächst eine Instandsetzung pro Skirmish.
+
+Das wäre für mich der beste Startpunkt.
+
+---
+
+# 3 — Nacht-Roaming
+
+Hier steckt möglicherweise eines der stärksten Systeme des Spiels.
+
+Es kann aber ebenso leicht alles ruinieren.
+
+Wenn Roamer einfach zufällig durch Spawnwürfe überall auftauchen, entsteht nicht:
+
+> „Die Gräben leben.“
+
+sondern:
+
+> „Das Spiel nervt mich permanent mit Kleingegnern.“
+
+Der wichtigste Unterschied ist deshalb:
+
+> **Roamer sollten als Gruppen einen nachvollziehbaren Zustand und ein Ziel haben.**
+
+---
+
+# Nicht einzelne Zombies würfeln — Gruppen bewegen
+
+Ich würde das Nachtleben hauptsächlich aus **kleinen wandernden Gruppen** bauen.
+
+Beispiel für Solo als erster Test:
+
+* 2–4 Roaming-Gruppen gleichzeitig im größeren Sektor;
+* je etwa 2–5 normale Tote;
+* Gruppen können sich durch Reize kurzzeitig vereinigen;
+* außerhalb regulärer Wellen normalerweise höchstens eine wirklich alarmierte Gruppe gleichzeitig.
+
+Damit ist die Karte selten völlig leer.
+
+Aber der Spieler führt nicht alle zwanzig Sekunden einen belanglosen Zweikampf.
+
+---
+
+# Zustände einer Roaming-Gruppe
+
+Vier Zustände reichen wahrscheinlich.
+
+## 1. Wandern
+
+Langsam durchs Grabennetz oder Niemandsland.
+
+Keine konkrete Kenntnis vom Spieler.
+
+## 2. Untersuchen
+
+Ein Reiz wurde wahrgenommen.
+
+Die Gruppe bewegt sich zum **Ort des Reizes**, nicht magisch zum Spieler.
+
+## 3. Alarmiert
+
+Spieler gesehen / sehr nah / massiver Reiz.
+
+Jetzt aggressives Verhalten.
+
+## 4. Abklingen
+
+Spieler verloren.
+
+Gruppe sucht noch kurz, danach kehrt sie zum Wandern zurück.
+
+Diese Zustände müssen über Audio und Animation lesbar sein.
+
+Ein Toter, der plötzlich exakt weiß, wo der Spieler ist, obwohl nur irgendwo ein Schuss gefallen ist, zerstört das System.
+
+---
+
+# Reize
+
+Ich würde jedem Reiz drei Eigenschaften geben:
+
+**Stärke × Reichweite × Dauer**
+
+Keine komplizierte Simulation notwendig.
+
+Beispielhaft:
+
+| Reiz                     | Wirkung                                     |
+| ------------------------ | ------------------------------------------- |
+| einzelner Gewehrschuss   | kurzer, mittlerer Reiz                      |
+| mehrere schnelle Schüsse | deutlich stärker                            |
+| MG / Explosion           | großer Reiz                                 |
+| normale Taschenlampe     | nur lokal und richtungsabhängig             |
+| Leuchtkörper             | starker, länger anhaltender Reiz am Zielort |
+| Spieler sehr nah         | starker lokaler Reiz                        |
+| direkte Sicht            | sofortige Alarmierung                       |
+
+Wichtig ist eine **Erinnerungszeit**.
+
+Ein Pack darf nicht nach jedem neuen Geräusch um 180 Grad umdrehen.
+
+Hat es sich für einen Reiz entschieden, verfolgt es diesen beispielsweise einige Sekunden, sofern kein deutlich stärkerer Reiz erscheint.
+
+Sonst sieht die KI nervös und künstlich aus.
+
+---
+
+# Lärm muss ein Werkzeug sein, nicht nur eine Strafe
+
+Der spannende Teil beginnt, wenn der Spieler Reize bewusst erzeugen kann.
+
+Beispiel:
+
+Vor ihm befindet sich eine Roaming-Gruppe im Connector.
+
+Er könnte:
+
+1. sie direkt bekämpfen;
+2. warten, bis sie weiterzieht;
+3. einen Leucht-/Signalgeber in eine Seitenstellung setzen;
+4. dort Lärm verursachen und die Gruppe wegziehen.
+
+Dann wird „Stealth“ nicht zu einem eigenen Schleichspiel.
+
+Es wird zu **Raumkontrolle durch Aufmerksamkeit**.
+
+Das passt hervorragend zu eurem Nachtmodus.
+
+---
+
+# Aber: Ablenken darf Gegner nicht löschen
+
+Sehr wichtig.
+
+Wenn ich zehn Tote mit einem Geräusch nach links ziehe, sind sie anschließend **links**.
+
+Sie verschwinden nicht aus dem Director-Budget.
+
+Dadurch entsteht ein interessanter Preis:
+
+> Ich löse mein aktuelles Problem, baue aber möglicherweise ein späteres.
+
+Wenn mehrere Gruppen demselben Reiz folgen, kann daraus sogar eine größere Ansammlung entstehen.
+
+Der Spieler denkt dann:
+
+> „Ich habe sie vom Frontgraben weggezogen — aber beim Pumpenstand steht jetzt eine ganze Meute.“
+
+Das ist viel interessanter als ein klassischer Decoy-Gegenstand mit zehn Sekunden Crowd-Control.
+
+---
+
+# Roamer und reguläre Wellen dürfen nicht unabhängig voneinander eskalieren
+
+Das ist der wahrscheinlich wichtigste Balancepunkt.
+
+Wenn ihr zwei getrennte Systeme habt:
+
+* Wave-Director erzeugt eine schwere Welle;
+* Ambient-System würfelt gleichzeitig zufällig zwei Roamer-Gruppen;
+
+bekommt der Spieler gelegentlich einen massiven Schwierigkeitspeak, für den niemand verantwortlich ist.
+
+Ich würde deshalb ein gemeinsames **Intensitätsbudget** benutzen.
+
+Wenn eine reguläre Welle beginnt:
+
+* nahe Roaming-Gruppen dürfen sich der Welle anschließen;
+* dafür entstehen während des Peaks kaum neue Ambient-Gruppen;
+* nach der Welle fällt die Aktivität bewusst wieder ab.
+
+So wirkt die Welt zusammenhängend:
+
+> Die Horde, die eben im Hinterland herumwanderte, hat den Kampf gehört und kommt dazu.
+
+anstatt:
+
+> Zwei Spawn-Systeme haben zufällig gleichzeitig ausgelöst.
+
+Das ist exakt die Art Director-Logik, die Left 4 Dead stark macht.
+
+---
+
+# „Nie ganz leer“ bedeutet nicht „ständig kämpfen“
+
+Ich würde drei Spannungszustände anstreben:
+
+### Ruhe
+
+Man hört irgendwo etwas.
+
+Vielleicht sieht man eine Silhouette.
+
+Keine unmittelbare Bedrohung.
+
+### Unsicherheit
+
+Geräusche kommen näher.
+
+Eine Gruppe untersucht etwas.
+
+Spieler entscheidet, ob er reagiert.
+
+### Eskalation
+
+Gruppe wird alarmiert / vereinigt sich mit anderer Gruppe / reguläre Welle beginnt.
+
+Danach muss wieder Ruhe möglich sein.
+
+Grabenhorror braucht Leere.
+
+Wenn immer etwas angreift, verschwindet Horror und übrig bleibt nur DPS-Arbeit.
+
+---
+
+# Sehr wichtig: keine billigen Spawntricks
+
+Roamer sollten niemals sichtbar direkt hinter dem Spieler entstehen.
+
+Neue Gruppen nur:
+
+* aus bekannten Spawnlöchern;
+* aus dem Niemandsland;
+* aus okkludierten Grabenenden;
+* aus Bereichen, in denen plausibel bereits Tote waren.
+
+Idealerweise fühlt es sich so an, als wären sie **schon vorher Teil der Karte gewesen**.
+
+Auch wenn technisch im Hintergrund abstrahiert wird, sollte ihre räumliche Geschichte konsistent bleiben.
+
+---
+
+# Ein besonders passendes Werkzeug: Leucht-/Signalkörper als Lockmittel
+
+Ich würde das Nacht-System zunächst sogar **ohne speziellen Fantasy-Decoy** testen.
+
+Ein vorhandenes, thematisch passendes Werkzeug kann beide Funktionen erfüllen:
+
+**Leuchtkörper / Signalrakete**
+
+Nutzen:
+
+* Bereich beleuchten;
+* Gegner sichtbar machen;
+* gleichzeitig starken Reiz erzeugen.
+
+Damit entsteht sofort ein Trade-off:
+
+> Licht gibt Information, aber Aufmerksamkeit.
+
+Und:
+
+> Ich kann das Licht bewusst dort platzieren, wo ich die Toten haben will.
+
+Das ist mechanisch klar und passt wesentlich besser zum Ton als eine moderne elektronische Ablenkungsgranate.
+
+---
+
+# Empfehlung für Frage 3
+
+Roamer als **wenige persistente Gruppen**, nicht als konstant neu gewürfelte Einzelgegner.
+
+Jede Gruppe:
+
+* wandert;
+* untersucht konkrete Reize;
+* kann alarmiert werden;
+* kann den Spieler wieder verlieren.
+
+Lärm und Licht wirken auf **Orte**, nicht direkt als Aggro auf den Spieler.
+
+Der Spieler kann diese Reize bewusst manipulieren.
+
+Reguläre Wellen und Roaming teilen sich ein Intensitätsbudget, damit keine zufälligen Doppel-Peaks entstehen.
+
+Und ganz wichtig:
+
+> Die Karte darf nachts häufig gefährlich wirken, ohne häufig tatsächlich anzugreifen.
+
+---
+
+# Meine drei wichtigsten Entscheidungen für AP6
+
+## 1. Frontfall physisch machen
+
+Nicht:
+
+> unsichtbare Drucksumme überschritten.
+
+Sondern:
+
+> Bresche entsteht → Gegner dringen ein → klar telegraphierter Durchbruch → erst dann fällt die Gesamtlinie.
+
+Das löst den größten Fairnesskonflikt der 70-m-Front.
+
+## 2. Instandsetzen gewinnt Raum zurück, löscht aber die Niederlage nicht
+
+Gemeinsamer Nachschub + etwa 8–10 Sekunden exponierte Interaktion.
+
+Keine Pflichtklasse.
+
+Seltene Nutzung.
+
+Der Fall hinterlässt dauerhafte Schäden.
+
+Damit bleibt die Entscheidung interessant und kann nicht zuverlässig exploitet werden.
+
+## 3. Nacht-Roaming über Aufmerksamkeit statt Zufall bauen
+
+Wenige Gruppen mit nachvollziehbaren Zielen.
+
+Schuss, Licht und Nähe erzeugen Reize an einem Ort.
+
+Der Spieler kann diese Aufmerksamkeit bewusst verschieben.
+
+Wenn dieses System trägt, habt ihr mit nur einem einfachen Untoten-Typ bereits einen Nachtmodus, der deutlich mehr kann als „Wave läuft zum Spieler“.
+
+---
+
+## Mein stärkster Design-Satz für diese Runde
+
+**Der Spieler sollte nicht dafür verantwortlich sein, überall gleichzeitig zu verteidigen. Er sollte dafür verantwortlich sein, zu erkennen, welcher lokale Zusammenbruch als Nächstes die gesamte Stellung gefährdet — und mit Vorbereitung, Bewegung und Aufmerksamkeit genau diesen Zusammenbruch zu verhindern.**
+
+Das ist für mich die Version von „eine Frontlinie halten“, die sowohl Solo als auch später im Koop funktionieren kann.
+
+
+Perplexity
+
+FRAGE 1 — Wie fühlt sich „eine Frontlinie halten" GUT an?
+Aktueller Plan: Halte-Punkte an Breschen
+Der Ansatz (Gegner bauen lokal Druck auf, Spieler entlastet, zu viel ungedeckter Druck irgendwo → ganze Linie fällt) ist grundsätzlich solide, aber es gibt drei Probleme:
+
+„Ganze Linie fällt auf einmal" ist zu binär. Spieler verlieren alle Boni/Deckung auf einen Schlag — das fühlt sich frustrierend an, nicht wie ein organischer Rückzug.
+
+70 m für einen Spieler sind zu viel, selbst mit Halte-Punkten. Wenn 3–4 Halte-Punkte gleichzeitig unter Druck geraten, kann ein Solo-Spieler nicht überall sein.
+
+Kommunikation „wo brennt's" fehlt noch. Ohne klare Signale tappt der Spieler im Dunkeln.
+
+Konkrete Vorschläge
+A. Halte-Punkte mit „Integritäts-Balken" pro Abschnitt
+Wie: Die Frontlinie ist in 3–4 Abschnitte unterteilt (nicht A/B/C wie früher, sondern unsichtbare Zonen). Jeder Abschnitt hat einen Integritäts-Wert (0–100%). Gegnerangriffe reduzieren lokal die Integrität. Spieler in der Nähe verlangsamen den Verlust (passiver Bonus). Fällt ein Abschnitt auf 0%, ist er „gefallen" (Gegner spawnen dahinter, Uhr läuft schneller), aber die restlichen Abschnitte halten weiter. Erst wenn alle Abschnitte gefallen sind → Frontlinie komplett gefallen.
+
+Vorteile:
+
+Spieler sehen konkret, wo der Druck ist (Integritäts-Balken im HUD).
+
+Es fühlt sich organisch an, nicht binär.
+
+Solo-Spieler kann Prioritäten setzen („Abschnitt 2 ist bei 30% — ich muss da hin").
+
+Nachteile:
+
+Mehr UI-Arbeit (Balken, Farbcodierung).
+
+Balance: Wie schnell fällt Integrität ohne Spieler? Wie stark ist der Spieler-Bonus?
+
+Referenz: Helldivers 2 Defense-Missionen nutzen ähnliche „Gate Integrity"-Mechaniken — Tore haben HP, Spieler müssen sie verteidigen, bis sie brechen.
+
+B. „Brennpunkt"-Indikatoren (Audio + Visuell)
+Wie: Abschnitte unter starkem Druck bekommen drei Signale:
+
+Rote Partikel-Effekte am Boden (Staub wirbelt auf, wo Einschläge sind).
+
+Audio-Cues (MG-Feuer, Schreie, Artillerie-Einschläge aus der Richtung).
+
+HUD-Kompass zeigt rote Pfeile für Abschnitte <50% Integrität.
+
+Vorteile:
+
+Spieler hören/sehen den Druck, bevor sie hinschauen müssen.
+
+Fühlt sich dynamisch an, nicht wie ein abstrakter Balken.
+
+Nachteile:
+
+Audio-Design-Aufwand (Richtungssound muss präzise sein).
+
+Kann überladen wirken, wenn zu viele Signale gleichzeitig kommen.
+
+Referenz: Left 4 Dead nutzt Audio-Cues für Horde-Angriffe (infiziertes Kreischen aus der Richtung). Spieler hören die Gefahr, bevor sie sie sehen.
+
+C. Aktive Werkzeuge für Handlungsmacht (Solo)
+Wie: Gib dem Solo-Spieler drei Optionen, um Druck zu entlasten, ohne überall sein zu müssen:
+
+Werkzeug	Wirkung	Cooldown/Kosten
+Signalrakete	Lockt Gegner für 15 s in eine andere Richtung (zieht Aggro von einem Abschnitt weg)	2 pro Einsatz
+MG-Stellung (aufstellbar)	Automatisches Feuer auf einen Abschnitt (reduziert Druck für 30 s)	1 pro Einsatz
+Draht-Reparatur	Stellt 20% Integrität eines Abschnitts sofort wieder her	3 min Cooldown
+Vorteile:
+
+Spieler fühlen sich nicht hilflos — sie haben Werkzeuge, um zu reagieren.
+
+Erzwingt Positionierungs-Entscheidungen („Wo stelle ich das MG auf?").
+
+Nachteile:
+
+Balance: Zu stark → Spieler können Druck komplett negieren. Zu schwach → Werkzeuge fühlen sich nutzlos an.
+
+Mehr UI (Cooldowns anzeigen).
+
+Referenz: Helldivers 2 nutzt Stratagems (MG-Turrets, Mörser) für defensive Entlastung. Spieler können priorisieren, wo sie Hilfe brauchen.
+
+D. Verbündete-KI (Solo-Bots)
+Wie: Solo-Spieler bekommt 2 KI-Soldaten, die automatisch Abschnitte verteidigen. Sie sind dumm (laufen nicht zwischen Abschnitten hin und her), aber sie halten einen Abschnitt stabil, solange sie leben. Spieler kann ihnen Befehle geben („Verteidige Abschnitt 2").
+
+Vorteile:
+
+Reduziert das „Löcher-Stopfen"-Gefühl — Spieler müssen nicht überall sein.
+
+KI gibt Grundschutz, Spieler kann aktiv werden, wo es brennt.
+
+Nachteile:
+
+KI-Pathing-Aufwand (müssen zuverlässig Abschnitte verteidigen).
+
+Risiko: Spieler verlassen sich zu sehr auf KI, fühlen sich nicht selbst wirksam.
+
+Referenz: Deep Rock Galactic Solo-Modus gibt Spielern KI-Dwarves, die helfen, aber nicht alles tragen .
+
+Empfehlung
+Kombiniere A + B + C:
+
+Integritäts-Balken pro Abschnitt (visuelles Feedback).
+
+Audio/Visuelle Brennpunkt-Signale (dynamisches Feedback).
+
+2–3 aktive Werkzeuge (Signalrakete, MG-Stellung, Draht-Reparatur).
+
+Warum? Das gibt dem Spieler Information (wo brennt's), Werkzeuge (was kann ich tun), und Handlungsmacht (ich kann die Lage beeinflussen). Solo fühlt sich nicht hilflos an, aber der Druck bleibt.
+
+Nicht empfehlen: Nur KI-Bots ohne Werkzeuge. Das nimmt dem Spieler zu viel Kontrolle.
+
+FRAGE 2 — „Instand setzen": Gefallene Linie zurückerobern
+Aktueller Stand
+Beschlossen: Exponierte, mehrere Sekunden dauernde Interaktion an festem Punkt. Zieht Gegner an, Abbruch = Fortschritt weg, kein ständiges Hin-und-Her. Erfolg → Linie steht wieder, Spawn rückt zurück, kurze Schutzphase.
+
+Offen: Womit? Wie lange? Wie teuer? Solo vs. Koop? Wie verhindert man „absichtlich fallen lassen"?
+
+Konkrete Vorschläge
+A. Womit? — Verbrauchbare Ressource + Werkzeug
+Option 1: Bloße Zeit (nur Interaktion)
+
+Vorteile: Einfach, keine Ressourcen-Balance nötig.
+
+Nachteile: Fühlt sich zu billig an — Spieler können es „nebenher" machen.
+
+Option 2: Verbrauchbare Ressource (z.B. „Pionier-Material")
+
+Vorteile: Echte Entscheidung — „Lohnt sich dieser Versuch?".
+
+Nachteile: Ressourcen-Farmen könnte trivial sein.
+
+Option 3: Mitgebrachtes Werkzeug (z.B. „Graben-Reparatur-Kit")
+
+Vorteile: Loadout-Entcheidung — „Nehme ich Reparatur oder mehr Munition?".
+
+Nachteile: Solo-Spieler haben nur 1 Kit — zu limitierend?
+
+Option 4: KI-Trupp hinschicken
+
+Vorteile: Koop-Spieler können sich aufteilen (einer repariert, andere decken).
+
+Nachteile: KI-Pathing-Aufwand, kann zu „Bot schickt's allein" degenerieren.
+
+Empfehlung: Kombination aus Option 2 + 3:
+
+Spieler brauchen 1× Reparatur-Kit (im Loadout wählbar, max. 2 pro Einsatz).
+
+Zusätzlich 50 Nachschub (verbraucht bei Erfolg, nicht bei Abbruch).
+
+Warum? Das macht es zu einer echten Entscheidung: „Habe ich ein Kit dabei? Habe ich genug Nachschub? Lohnt sich dieser Abschnitt?"
+
+Referenz: Helldivers 2 nutzt Stratagem-Limits (max. 1× MG-Turret pro Spieler) für ähnliche Entscheidungen.
+
+B. Wie lange, wie teuer?
+Dauer: 8–12 Sekunden (langsam genug, dass Gegner kommen können; schnell genug, dass es nicht unerträglich ist).
+
+Kosten:
+
+1 Reparatur-Kit (im Loadout, max. 2 pro Einsatz).
+
+50 Nachschub (bei Erfolg verbraucht, bei Abbruch zurückerstattet).
+
+Schutzphase nach Erfolg: 15 Sekunden (keine Gegner-Spawns im reparierten Abschnitt, Spieler können sich neu formieren).
+
+Warum diese Zahlen? 8–12 s ist lang genug für Spannung (Gegner kommen, Spieler müssen decken), aber kurz genug, dass es sich machbar anfühlt. 50 Nachschub ist spürbar, aber nicht prohibitiv (ein Einsatz bringt ~200–300 Nachschub).
+
+Referenz: Helldivers 2 Defense-Missionen nutzen ähnliche „Hold for X seconds"-Phasen nach Reparatur.
+
+C. Solo vs. Koop — Skalierung
+Solo:
+
+Dauer: 10 s.
+
+Kosten: 1 Kit + 50 Nachschub.
+
+Gegner-Anziehung: 3–4 Gegner kommen während der Interaktion.
+
+Koop (2–4 Spieler):
+
+Dauer: 10 s (bleibt gleich — kein „schneller mit mehr Spielern").
+
+Kosten: 1 Kit + 50 Nachschub (bleibt gleich).
+
+Gegner-Anziehung: 3–4 Gegner pro Spieler in der Nähe (mehr Spieler = mehr Gegner, aber auch mehr Deckung).
+
+Warum? Dauer und Kosten gleich zu halten verhindert, dass Koop sich wie „leichter Modus" anfühlt. Mehr Gegner bei mehr Spielern hält den Druck hoch.
+
+Referenz: Deep Rock Galactic skaliert Gegnerzahl mit Spielern, aber nicht Missionsdauer .
+
+D. Verhindern: „Frontlinie absichtlich fallen lassen, dann in Ruhe reparieren"
+Problem: Wenn Spieler die Frontlinie absichtlich fallen lassen, um dann sicher zu reparieren, ist die Mechanik kaputt.
+
+Lösungen:
+
+Methode	Wie	Trade-off
+Reparatur nur möglich, solange Linie <50% gefallen	Wenn >50% der Abschnitte gefallen sind, kann man nicht mehr reparieren.	+ Verhindert absichtliches Fallenlassen. – Kann frustrierend sein, wenn Spieler „zu spät" kommen.
+Reparatur-Kosten steigen mit gefallenen Abschnitten	1 Abschnitt gefallen = 50 Nachschub · 3 Abschnitte = 150 Nachschub.	+ Macht spätes Reparieren teurer. – Mehr Balance-Aufwand.
+„Uhr" läuft viel schneller bei gefallener Linie	Gefallene Abschnitte = 2× Uhr-Geschwindigkeit. Spieler haben weniger Zeit zum Reparieren.	+ Natürlicher Druck — zögern kostet. – Kann Solo überfordern.
+Reparatur nur von der Home-Line aus möglich	Spieler müssen zur Home-Line laufen, um Reparatur zu starten (wie „Instand setzen"-Quest).	+ Erzwingt Rückzug. – Fühlt sich umständlich an.
+Empfehlung: Kombination aus Methode 1 + 3:
+
+Reparatur nur möglich, solange ≤2 Abschnitte gefallen (bei 4 Abschnitten).
+
+Uhr läuft 2× schneller pro gefallenem Abschnitt.
+
+Warum? Das macht absichtliches Fallenlassen unattraktiv (Uhr läuft zu schnell, Reparatur wird unmöglich), ohne es zu verbieten.
+
+Referenz: Helldivers 2 Defense-Missionen: Wenn zu viele Tore brechen, wird die Mission unwinnable — Spieler müssen früh verteidigen.
+
+Empfehlung (Zusammenfassung)
+Womit: 1× Reparatur-Kit (Loadout) + 50 Nachschub (verbraucht bei Erfolg).
+
+Dauer: 10 s, Gegner-Anziehung (3–4 pro Spieler).
+
+Solo vs. Koop: Dauer/Kosten gleich, Gegnerzahl skaliert mit Spielern.
+
+Verhindern von Missbrauch: Reparatur nur ≤2 gefallene Abschnitte + Uhr läuft 2× schneller pro gefallenem Abschnitt.
+
+FRAGE 3 — Nacht-Roaming, das sich lebendig statt zufällig anfühlt
+Aktueller Plan
+Tote wandern im Niemandsland/Hinterland, sammeln sich an Reizen (Schüsse, Leuchtkugeln, Spielernähe), brechen dann als Gruppe los. Zusätzlich zu regulären Wellen.
+
+Offen: Wie dosieren? Welche Reiz-/Gruppen-Mechanik macht es lesbar/ausnutzbar?
+
+Konkrete Vorschläge
+A. Reiz-System: „Lärm-Level" pro Abschnitt
+Wie: Jeder Graben-Abschnitt hat ein Lärm-Level (0–100). Aktionen erhöhen es:
+
+Schüsse: +10–20 pro Schuss (MG: +5 pro Sekunde).
+
+Leuchtkugeln: +30 sofort.
+
+Spieler läuft durch: +1 pro Sekunde.
+
+Explosionen: +50 sofort.
+
+Lärm-Level verfällt um 5 pro Sekunde (wenn keine neuen Reize).
+
+Gegner-Reaktion:
+
+Lärm-Level >50 → 2–3 Gegner wandern zum Abschnitt.
+
+Lärm-Level >80 → 5–7 Gegner + 1 Elite (Heuler/Koloss).
+
+Lärm-Level >100 → Mini-Horde (10–15 Gegner).
+
+Vorteile:
+
+Spieler verstehen die Regel (laut = mehr Gegner).
+
+Sie können bewusst Lärm machen, um Gegner woanders zu locken.
+
+Nachteile:
+
+Balance: Wie schnell verfällt Lärm? Wie viele Gegner pro Level?
+
+UI: Lärm-Level anzeigen oder verstecken?
+
+Referenz: Left 4 Dead Common Infected reagieren auf Lärm (Schüsse, Alarme). Left 4 Dead's AI Director nutzt „Player Intensity" für ähnliche Dynamik.
+
+B. „Horde-Richtung" anzeigen (Audio + Visuell)
+Wie: Wenn sich eine Horde sammelt (Lärm-Level >80), gibt es drei Signale:
+
+Audio: Heulen/Kreischen aus der Richtung (3D-Sound).
+
+Visuell: Rote Partikel-Wolke am Himmel über dem Abschnitt.
+
+HUD: Kompass zeigt roten Pfeil für 5 s.
+
+Vorteile:
+
+Spieler wissen, wo die Gefahr ist, bevor sie kommt.
+
+Sie können vorbereiten (MG aufstellen, Draht reparieren).
+
+Nachteile:
+
+Audio-Design-Aufwand (Richtungssound muss präzise sein).
+
+Kann zu „UI-Crutch" werden — Spieler schauen nur auf Kompass, nicht auf die Welt.
+
+Referenz: Left 4 Dead nutzt Audio-Cues für Horde-Richtung (infiziertes Kreischen).
+
+C. Aktive Täuschung: „Lärm woanders machen"
+Wie: Gib Spielern Werkzeuge, um Lärm zu machen:
+
+Leuchtkugel (wirft rotes Licht, +30 Lärm, 10 s Dauer).
+
+Knallkörper (Explosion, +50 Lärm sofort, 5 s Dauer).
+
+Lockpfeife (kontinuierliches Geräusch, +10 Lärm/s, 15 s Dauer).
+
+Vorteile:
+
+Spieler können bewusst Gegner locken („Ich werfe eine Leuchtkugel nach links, dann gehen wir rechts").
+
+Fühlt sich taktisch an, nicht zufällig.
+
+Nachteile:
+
+Balance: Zu stark → Spieler können Gegner komplett manipulieren. Zu schwach → Werkzeuge fühlen sich nutzlos an.
+
+Mehr UI (Cooldowns anzeigen).
+
+Referenz: Left 4 Dead Pipe Bombs locken Infizierte an. Helldivers 2 nutzt Köder-Taktiken (Turrets woanders aufstellen).
+
+D. Dosierung: „Nie ganz leer, nie überfüllt"
+Wie: Nutze ein dynamisches Spawn-Budget:
+
+Basis-Spawns: 5–10 Gegner wandern immer im Niemandsland (unabhängig von Lärm).
+
+Lärm-Spawns: Bis zu 20 zusätzliche Gegner bei Lärm-Level >80.
+
+Wellen-Spawns: Reguläre Wellen (von der Feindseite) kommen unabhängig davon.
+
+Regel: Max. 30 Gegner gleichzeitig im Sektor (außer reguläre Wellen). Wenn 30 erreicht sind, keine Lärm-Spawns mehr.
+
+Vorteile:
+
+Gräben sind nie ganz leer (immer 5–10 Gegner).
+
+Aber auch nie überfüllt (max. 30 + Wellen).
+
+Spieler können Lärm-Spawns manipulieren, aber nicht komplett vermeiden.
+
+Nachteile:
+
+Balance: 30 Gegner — zu viel oder zu wenig?
+
+Performance: 30 Gegner im Browsergame — machbar mit Instancing?
+
+Referenz: Left 4 Dead nutzt AI Director für dynamische Gegnerzahl (basierend auf Spieler-Intensität). Helldivers 2 Defense-Missionen haben feste Wellen + ambient Spawns.
+
+Empfehlung (Zusammenfassung)
+Reiz-System: Lärm-Level pro Abschnitt (0–100), verfällt um 5/s.
+
+Gegner-Reaktion: >50 = 2–3 Gegner, >80 = 5–7 + Elite, >100 = Mini-Horde (10–15).
+
+Anzeige: Audio (Heulen) + Visuell (rote Wolke) + HUD (Kompass-Pfeil für 5 s).
+
+Täuschung: Leuchtkugel (+30 Lärm), Knallkörper (+50 Lärm), Lockpfeife (+10 Lärm/s).
+
+Dosierung: 5–10 Basis-Spawns + bis zu 20 Lärm-Spawns, max. 30 gleichzeitig.
+
+Warum? Das macht Nacht-Roaming lesbar (Spieler verstehen die Regeln), ausnutzbar (sie können Lärm manipulieren), und spannend (nie ganz leer, nie überfüllt).
+
+3 wichtigste Korrekturen / Empfehlungen
+Frontlinie nicht binär fallen lassen — nutze Integritäts-Balken pro Abschnitt (3–4 Abschnitte). Spieler müssen sehen, wo der Druck ist, und Prioritäten setzen können.
+
+Instand setzen = echte Entscheidung — 1× Reparatur-Kit (Loadout) + 50 Nachschub, 10 s Dauer, nur ≤2 gefallene Abschnitte möglich. Verhindert Missbrauch, fühlt sich gewichtig an.
+
+Nacht-Roaming = Lärm-System — Lärm-Level pro Abschnitt (0–100), Gegner reagieren dynamisch, Spieler können mit Leuchtkugeln/Knallkörpern manipulieren. Macht es lesbar und taktisch.
+
+Grundsatz: Alle drei Systeme (Frontlinie halten, Instand setzen, Nacht-Roaming) brauchen klare Regeln, die der Spieler verstehen und ausnutzen kann. Nichts fühlt sich schlechter an als „zufälliges Scheitern" — alles muss nachvollziehbar sein.
+
+
+Gemini:
+Die Aufteilung in eine durchgehende Frontlinie, ein verwinkeltes Hinterland und eine Home-Line schärft die Dramatik im Vergleich zu zerstückelten Sektoren massiv. Hier sind die konkreten Analysen, Schwachstellen und Empfehlungen für deine drei Kernfragen.
+
+FRAGE 1 — Wie fühlt sich "eine Frontlinie halten" GUT an?
+
+Eine 70-Meter-Linie solo abzudecken birgt die Gefahr von Dauer-Stress ohne Spieltiefe (reines "Löcher-Stopfen"). Damit das Halten nicht frustriert, muss die Frontlinie über Verzögerung, Sichtachsen und Informationsfluss geführt werden – nicht über reine Laufarbeit.
+
+Lesbarkeit ("Wo brennt's?"):
+
+Akustisch & Visuell: Breschen dürfen nicht lautlos fallen. Jede Bresche braucht ein physisches Warnsystem: Wenn eine Barrikade Bedenkzeit verliert, steigen gelbe/rote Leuchtsignale auf, und Holz/Sandsäcke krachen hörbar.
+
+HUD/UI: Ein minimalistisches Kompass-Widget oder ein schematischer Front-Status am Bildrand (z. B. 3 Breschen-Knoten: Grün / Gelb / Blinkend Rot).
+
+Handlungsmacht für Solo-Spieler:
+
+Passive Verzögerung (Draht & Fallen): Der Spieler muss Breschen nicht mit seinem Körper sichern, sondern mit Vorbereitung. Ein Stacheldraht-Hindernis tötet Gegner nicht, kauft aber 10–15 Sekunden Zeit, um auf die andere Seite zu laufen.
+
+Erhöhte Laufstiege / Erhöhte Sichtachse: Ein leicht erhöhter Laufsteg knapp unter der Grabenoberkante an der Rückseite des Grabenrands erlaubt es, über die Front zu blicken und 2 von 3 Breschen aus einer zentralen Position einzusehen.
+
+Taktische Aufgabe statt Hilflosigkeit: Ein Solo-Spieler sichert nicht die komplette Linie, sondern managt die Breschen-Priorität.
+
+Referenzspiele:
+
+CoD Zombies (Barrikaden): Man steht nicht vor 4 Fenstern gleichzeitig, sondern hört/sieht, welche Barrikade nachgibt, repariert kurz und wechselt die Position.
+
+Helldivers 2 (Tor-Verteidigung): Statische Barrieren halten die Masse auf, während man die Spitzen bricht.
+
+FRAGE 2 — "Instand setzen": Die gefallene Linie zurückerobern (§9.5)
+
+Womit? (Mechanik):
+
+An einem zentralen Bau-Punkt der gefallenen Linie (Telegrafen- / Pionier-Kasten).
+
+Ressource + Zeit: Erfordert ein mitgebrachtes Pionier-Material (im Quartier/an der Home-Line gekauft) plus 8–10 Sekunden Interaktion vor Ort.
+
+Dauer, Kosten & Solo/Koop-Skalierung:
+
+Problem: 10 Sekunden festgewurzelt stehen ist im Koop trivial (3 Mann decken), solo aber ein Todesurteil.
+
+Lösung (Segmentierter Fortschritt / Deployable): Die Interaktion hat 3 Stufen (33% / 66% / 100%), die bei Unterbrechung nicht zurückfallen. Alternativ platziert man eine "Reparatur-Ladung", die nach der Aktivierung 15 Sekunden autonom arbeitet und währenddessen verteidigt werden muss.
+
+Anti-Meta ("Frontlinie absichtlich fallen lassen"):
+
+Doppelter Uhren-Tick: Solange die Frontlinie liegt, verfällt die feindliche "Angriffskraft" (eure Sieguhr) 50–100% schneller. Wer die Linie liegen lässt, verliert wertvolle Zeit für Beute/Skirmish-Fortschritt.
+
+Das Reparatur-Signal: Das Anwerfen des Instandsetzungs-Kastens zündet ein lautes Knall-Signal. Es löst eine temporäre Mini-Horde aus dem Hinterland aus. Die Reparatur durchzuführen ist also gefährlicher als das Halten.
+
+FRAGE 3 — Nacht-Roaming (Horde & Grabenhorror)
+
+Nacht-Roaming darf kein zufälliges Dauer-Spawnen sein. Es muss als ein dynamisches Ökosystem aus Gefahr und Steuerung verstanden werden.
+
+Dosierung & Druckventil:
+
+Die Untoten im Hinterland/Niemandsland befinden sich initial im Trägheits-Zustand (schlurfend, blind, leises Stöhnen). Sie blockieren Wege als physische Hindernisse.
+
+Sie reagieren auf drei Reize: Ungebündeltes Licht (Laternen), Lärm (Ungedämpfte Schüsse/Explosionen) und Proximity/Geruch (sehr nahes Vorbeilaufen).
+
+Lesbarkeit & Ausnutzbarkeit (Spieler-Manipulation):
+
+Ablenkungsmittel (Leuchtkugeln / Knallkörper): Eine geschossene Leuchtkugel ins Niemandsland zieht 80 % aller Roamer aus dem Hinterland ab. Der Spieler kann die Horde gezielt steuern, um sich den Rücken für eine Reparatur freizumachen.
+
+Licht-Dilemma: Lampe an = volle Sicht im verwinkelten Graben, zieht aber Untote an. Lampe aus = Schleichen an der Horde vorbei ist möglich, aber die Sicht ist minimal (Grabenhorror).
