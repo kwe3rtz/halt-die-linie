@@ -414,10 +414,18 @@ describe("golden replay", () => {
     expect(s.player.weapon.reserve).toBe(45);
     expect(s.wave.phase).toBe("welle");
     expect(s.wave.welle).toBe(1);
-    // AP5-04: Start-Angriffskraft 150 (vorher 60) und gestreuter Spawn-Takt —
-    // im 6-s-Fenster kommen 2 statt 3 Gegner (vorher 57 / 3).
-    expect(s.wave.angriffskraftRest).toBe(148);
-    expect(s.enemies.length).toBe(2);
+    // AP5-04: Start-Angriffskraft 150 (vorher 60) und gestreuter Spawn-Takt.
+    // AP5-06 (Neubaseline): die Klassenwahl zieht je geplantem Gegner einen
+    // Wert aus dem Director-Rng, dadurch fallen Spawnpunkt- und Jitter-Würfe
+    // anders — im 6-s-Fenster jetzt 3 Spawns (AP5-04: 2 → 148). Die Spieler-
+    // Werte oben sind unverändert (eigene Rng-Ströme, keine Sim-Regel geändert).
+    expect(s.wave.angriffskraftRest).toBe(147);
+    expect(s.enemies.length).toBe(3);
+    expect(s.enemies.map((e) => e.defId)).toEqual([
+      "linieninfanterie",
+      "linieninfanterie-schwer",
+      "linieninfanterie",
+    ]);
     expect(s.nachschub).toBe(0);
   });
 });
@@ -481,9 +489,22 @@ describe("golden replay — Sektor-Nav-Graph", () => {
       "anmarsch",
       "anmarsch",
     ]);
-    expect(nach[0]?.pos.x).toBeCloseTo(-2.946, 2);
-    expect(nach[0]?.pos.z).toBeCloseTo(34.918, 2);
-    expect(nach[3]?.pos.x).toBeCloseTo(-4.161, 2);
+    // AP5-06 (Neubaseline, begründet im Ticket-Bericht): die Klasse je Gegner
+    // kommt aus dem Director-Rng. Gegner 0 und 3 sind jetzt „schwer" (Tempo
+    // 0,65) — Nr. 0 steht nach 10 s weiter hinten (z 38,4 statt 34,9) — und der
+    // verschobene Rng-Strom wählt andere Spawnpunkte (x-Seite). Abschnitte
+    // (eigener Rng-Strom), Zielknoten, Angriffskraft (5 Spawns) und Spieler-
+    // Werte sind unverändert.
+    expect(nach.map((e) => e.defId)).toEqual([
+      "linieninfanterie-schwer",
+      "linieninfanterie-schnell",
+      "linieninfanterie",
+      "linieninfanterie-schwer",
+      "linieninfanterie",
+    ]);
+    expect(nach[0]?.pos.x).toBeCloseTo(0.935, 2);
+    expect(nach[0]?.pos.z).toBeCloseTo(38.424, 2);
+    expect(nach[3]?.pos.x).toBeCloseTo(-5.821, 2);
     expect(nach[3]?.pos.z).toBeCloseTo(43.1, 2);
 
     // Frontabschnitte (AP4-03): die Gegner sind noch im Anmarsch, die Linie hält.

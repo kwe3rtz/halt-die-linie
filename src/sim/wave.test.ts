@@ -3,6 +3,7 @@ import { createRng } from "./rng";
 import {
   BASIS_ANZAHL,
   createWaveState,
+  GEGNER_MISCHUNG,
   RESERVE_BASIS,
   RESERVE_ZUWACHS,
   SPAWN_BESCHLEUNIGUNG,
@@ -12,11 +13,14 @@ import {
   spawnIntervall,
   START_ANGRIFFSKRAFT,
   updateWave,
+  waehleGegner,
   wellenGroesse,
+  wellenHpFaktor,
   ZUWACHS,
   type WaveContext,
   type WaveState,
 } from "./wave";
+import { gegnerDefs, linieninfanterie } from "../data/gegner";
 
 const DT = 1 / 60;
 
@@ -354,5 +358,79 @@ describe("wave director — Eskalation (AP5-04)", () => {
     ]);
     expect(s.angriffskraft).toBe(0);
     expect(START_ANGRIFFSKRAFT).toBe(150);
+  });
+});
+
+// AP5-06: Gegner-Klassen — drei Statistik-Varianten der Linieninfanterie,
+// gewichtet aus dem Director-Rng gezogen (kein eigener Zufall).
+describe("wave director — Gegner-Klassen (AP5-06)", () => {
+  const summe = GEGNER_MISCHUNG.reduce((s, a) => s + a.gewicht, 0);
+
+  it("die Mischung nennt drei registrierte Klassen mit positiven Gewichten, die Basis bleibt die Mehrheit", () => {
+    expect(GEGNER_MISCHUNG).toHaveLength(3);
+    for (const a of GEGNER_MISCHUNG) {
+      expect(a.gewicht).toBeGreaterThan(0);
+      // Eine unbekannte Id würde `spawnEnemyById` still verwerfen — die Welle
+      // käme dann nie voll und der Director bliebe stehen.
+      expect(gegnerDefs[a.defId]).toBeDefined();
+    }
+    expect(new Set(GEGNER_MISCHUNG.map((a) => a.defId)).size).toBe(3);
+    const basis = GEGNER_MISCHUNG.find((a) => a.defId === linieninfanterie.id);
+    expect((basis?.gewicht ?? 0) / summe).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it("waehleGegner zieht gewichtet (6000 Ziehungen: Anteile ±3 %-Punkte) und deterministisch", () => {
+    const rng = createRng(11);
+    const n = 6000;
+    const zaehler = new Map<string, number>();
+    for (let i = 0; i < n; i += 1) {
+      const id = waehleGegner(rng);
+      zaehler.set(id, (zaehler.get(id) ?? 0) + 1);
+    }
+    expect(zaehler.size).toBe(GEGNER_MISCHUNG.length);
+    for (const a of GEGNER_MISCHUNG) {
+      const anteil = (zaehler.get(a.defId) ?? 0) / n;
+      expect(Math.abs(anteil - a.gewicht / summe)).toBeLessThan(0.03);
+    }
+    const a = createRng(5);
+    const b = createRng(5);
+    const folgeA = Array.from({ length: 200 }, () => waehleGegner(a));
+    const folgeB = Array.from({ length: 200 }, () => waehleGegner(b));
+    expect(folgeA).toEqual(folgeB);
+  });
+
+  it("Hauptwellen mischen: über die Wellen 1–3 spawnen alle drei Klassen, die Queues bleiben voll besetzt", () => {
+    const s = createWaveState();
+    const { ctx, spawns } = makeCtx(0);
+    runUntil(s, ctx, () => s.welle === 3 && s.phase === "pause", 20000);
+    expect(spawns.length).toBe(5 + 8 + 11);
+    expect([...new Set(spawns.map((x) => x.defId))].sort()).toEqual(
+      GEGNER_MISCHUNG.map((a) => a.defId).sort(),
+    );
+    expect(spawns.every((x) => gegnerDefs[x.defId] !== undefined)).toBe(true);
+  });
+
+  it("Reservewellen ziehen aus derselben Mischung; HP-Faktor eine Stufe über der letzten Hauptwelle", () => {
+    const s = createWaveState();
+    s.angriffskraft = 0;
+    s.phase = "reserve";
+    s.phaseTimer = 8;
+    s.welle = 5;
+    const { ctx, spawns } = makeCtx(0);
+    ctx.finale = true;
+    // Fünf Reservewellen à 6 Gegner (je 8 s Wartezeit + Spawn-Takt).
+    runUntil(s, ctx, () => spawns.length >= 30, 60 * 120);
+    expect(spawns.length).toBeGreaterThanOrEqual(30);
+    expect([...new Set(spawns.map((x) => x.defId))].sort()).toEqual(
+      GEGNER_MISCHUNG.map((a) => a.defId).sort(),
+    );
+    expect(spawns.every((x) => x.hpFaktor === wellenHpFaktor(6))).toBe(true);
+  });
+
+  it("wellenHpFaktor: Welle 1 = 1, je weitere Welle +12 %", () => {
+    expect(wellenHpFaktor(1)).toBe(1);
+    expect(wellenHpFaktor(0)).toBe(1); // defensiv wie wellenGroesse
+    expect(wellenHpFaktor(2)).toBeCloseTo(1.12, 9);
+    expect(wellenHpFaktor(4)).toBeCloseTo(1.36, 9);
   });
 });

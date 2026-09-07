@@ -277,8 +277,8 @@ export interface Sim {
 const PLAYER_RADIUS = 0.35;
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_EYE = 1.6;
-const WALK_SPEED = 4.5;
-const SPRINT_SPEED = 7.0;
+export const WALK_SPEED = 4.5;
+export const SPRINT_SPEED = 7.0;
 const JUMP_SPEED = 7.2;
 const LOOK_SENSITIVITY = 0.0022; // Radiant pro Maus-Pixel
 const PITCH_LIMIT = (89 * Math.PI) / 180;

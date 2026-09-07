@@ -19,6 +19,11 @@ import {
 import type { EnemyView, SimState, SektorMeta, ZonenId } from "../sim";
 import { brescheTag, zoneAt } from "../sim";
 import type { LevelBox, LevelData } from "../sim/collision";
+import {
+  linieninfanterie,
+  linieninfanterieSchnell,
+  linieninfanterieSchwer,
+} from "../data/gegner";
 
 const SHOT_EFFECT_MS = 50;
 const ENEMY_HIT_FLASH_MS = 90;
@@ -27,6 +32,20 @@ const BILLBOARD_ALL = 7;
 const EYE_HEIGHT = 1.6;
 const ENEMY_RADIUS = 0.35;
 const ENEMY_HEIGHT = 1.8;
+
+// Gegner-Klassen (AP5-06): dieselbe Kapsel (Hitbox = Sichtbares), nur die
+// Tönung unterscheidet die Klasse — dezent, Greybox-Niveau. Basis in
+// gesichtslosem Feldgrau, die schnelle Klasse heller und sandfarben, die
+// schwere dunkler und kühler. Unbekannte Ids fallen auf Feldgrau zurück.
+const ENEMY_FELDGRAU = new Color3(0.34, 0.36, 0.31);
+const ENEMY_KLASSEN_FARBE: ReadonlyMap<string, Color3> = new Map([
+  [linieninfanterie.id, ENEMY_FELDGRAU],
+  [linieninfanterieSchnell.id, new Color3(0.6, 0.54, 0.34)],
+  [linieninfanterieSchwer.id, new Color3(0.2, 0.21, 0.26)],
+]);
+// Im Angriff halb zur alten Rotbraun-Tönung hin gemischt: der Zustand bleibt
+// lesbar, die Klasse auch.
+const ENEMY_ANGRIFF_TON = new Color3(0.5, 0.32, 0.28);
 
 // Gegner-HP-Balken: Maße in Weltmetern, Höhe über dem Kopf.
 const BAR_W = 0.9;
@@ -180,6 +199,9 @@ export function createRenderer(
   interface EnemyVisual {
     body: Mesh;
     bodyMat: StandardMaterial;
+    /** Klassen-Tönung im Anmarsch bzw. im Angriff (AP5-06). */
+    farbe: Color3;
+    farbeAngriff: Color3;
     barBg: Mesh;
     barFill: Mesh;
     barFillMat: StandardMaterial;
@@ -192,9 +214,12 @@ export function createRenderer(
   enemyBarBgMat.disableLighting = true;
   enemyBarBgMat.emissiveColor = new Color3(0.05, 0.05, 0.05);
 
-  const makeEnemyVisual = (): EnemyVisual => {
+  const makeEnemyVisual = (defId: string): EnemyVisual => {
+    const farbe = ENEMY_KLASSEN_FARBE.get(defId) ?? ENEMY_FELDGRAU;
+    const farbeAngriff = Color3.Lerp(farbe, ENEMY_ANGRIFF_TON, 0.5);
     const bodyMat = new StandardMaterial("enemy", scene);
     bodyMat.specularColor = new Color3(0, 0, 0);
+    bodyMat.diffuseColor = farbe.clone();
     const body = MeshBuilder.CreateCapsule(
       "enemy",
       { radius: ENEMY_RADIUS, height: ENEMY_HEIGHT },
@@ -231,6 +256,8 @@ export function createRenderer(
     return {
       body,
       bodyMat,
+      farbe,
+      farbeAngriff,
       barBg,
       barFill,
       barFillMat,
@@ -253,7 +280,7 @@ export function createRenderer(
       alive.add(e.id);
       let v = enemyVisuals.get(e.id);
       if (!v) {
-        v = makeEnemyVisual();
+        v = makeEnemyVisual(e.defId);
         enemyVisuals.set(e.id, v);
       }
 
@@ -285,10 +312,10 @@ export function createRenderer(
         v.bodyMat.emissiveColor.set(0.9, 0.9, 0.9);
       } else if (e.zustand === "angriff") {
         v.bodyMat.emissiveColor.set(0.35, 0.12, 0.1);
-        v.bodyMat.diffuseColor.set(0.5, 0.32, 0.28);
+        v.bodyMat.diffuseColor.copyFrom(v.farbeAngriff);
       } else {
         v.bodyMat.emissiveColor.set(0, 0, 0);
-        v.bodyMat.diffuseColor.set(0.34, 0.36, 0.31); // gesichtsloses Feldgrau
+        v.bodyMat.diffuseColor.copyFrom(v.farbe); // Klassen-Tönung
       }
     }
 
@@ -489,7 +516,6 @@ export function createRenderer(
   const leitMeshes: Mesh[] = [];
   const leitMats: StandardMaterial[] = [];
   const leitTexturen: DynamicTexture[] = [];
-  const leitLinien: LinesMesh[] = [];
 
   const emissivMat = (
     name: string,
@@ -502,90 +528,11 @@ export function createRenderer(
     return m;
   };
 
-  const spineSymbol = (
-    typ: "dreieck" | "doppelstrich" | "kreis",
-    name: string,
-    mat: StandardMaterial,
-  ): Mesh => {
-    let m: Mesh;
-    if (typ === "dreieck") {
-      m = MeshBuilder.CreateDisc(
-        name,
-        { radius: 0.26, tessellation: 3 },
-        scene,
-      );
-    } else if (typ === "kreis") {
-      m = MeshBuilder.CreateTorus(
-        name,
-        { diameter: 0.5, thickness: 0.12, tessellation: 18 },
-        scene,
-      );
-    } else {
-      // Doppelstrich: zwei kurze Balken.
-      const a = MeshBuilder.CreateBox(
-        `${name}_a`,
-        { width: 0.5, height: 0.09, depth: 0.04 },
-        scene,
-      );
-      const b = MeshBuilder.CreateBox(
-        `${name}_b`,
-        { width: 0.5, height: 0.09, depth: 0.04 },
-        scene,
-      );
-      a.position.y = 0.09;
-      b.position.y = -0.09;
-      b.parent = a;
-      m = a;
-    }
-    m.material = mat;
-    m.isPickable = false;
-    m.renderingGroupId = GROUP_WORLD;
-    return m;
-  };
-
   if (meta) {
-    // Spine je Route: Polylinie (Farbe) + Pfosten + Leitsymbole an jedem Punkt.
-    for (const route of meta.spineRouten) {
-      const farbe = new Color3(route.farbe[0], route.farbe[1], route.farbe[2]);
-      const pts = route.punkte.map((p) => new Vector3(p.x, p.y, p.z));
-      const linie = MeshBuilder.CreateLines(
-        `spine_${route.id}`,
-        { points: pts },
-        scene,
-      );
-      linie.color = farbe;
-      linie.isPickable = false;
-      linie.renderingGroupId = GROUP_WORLD;
-      leitLinien.push(linie);
-
-      const symMat = emissivMat(`spineMat_${route.id}`, route.farbe);
-      const pfostenMat = emissivMat(`spinePfosten_${route.id}`, [
-        route.farbe[0] * 0.4,
-        route.farbe[1] * 0.4,
-        route.farbe[2] * 0.4,
-      ]);
-      route.punkte.forEach((p, i) => {
-        const pfosten = MeshBuilder.CreateBox(
-          `spineP_${route.id}_${i}`,
-          { width: 0.09, height: 1.0, depth: 0.09 },
-          scene,
-        );
-        pfosten.position.set(p.x, p.y - 0.5, p.z);
-        pfosten.material = pfostenMat;
-        pfosten.isPickable = false;
-        pfosten.renderingGroupId = GROUP_WORLD;
-        leitMeshes.push(pfosten);
-
-        const sym = spineSymbol(
-          route.symbol,
-          `spineS_${route.id}_${i}`,
-          symMat,
-        );
-        sym.position.set(p.x, p.y + 0.3, p.z);
-        sym.billboardMode = BILLBOARD_ALL;
-        leitMeshes.push(sym);
-      });
-    }
+    // Leit-„Spines" (AP4-05: Polylinie + Pfosten + Symbole je Route) werden
+    // seit AP5-05 nicht mehr gezeichnet — im Spieltest wirkten die Linien wie
+    // Stricke, die Pfosten „stehen im Boden", und Symbole allein schwebten
+    // in der Luft. `meta.spineRouten` bleibt als Datenmodell bestehen.
 
     // Abschnittsschilder A/B/C an der Grabenlinie (Y-Billboard, immer lesbar).
     for (const ab of meta.frontAbschnitte) {
@@ -765,9 +712,6 @@ export function createRenderer(
       }
       frontVisuals.clear();
       truemmerMat?.dispose();
-      for (const m of leitLinien) {
-        m.dispose();
-      }
       for (const m of leitMeshes) {
         m.dispose();
       }

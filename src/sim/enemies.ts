@@ -68,7 +68,8 @@ export const ENEMY_HEIGHT = 1.8;
 export const NAHKAMPF_REICHWEITE = 1.6;
 export const NACHSCHUB_PRO_KILL = 5;
 
-const BASIS_TEMPO = 2.6; // m/s bei EnemyDef.tempo = 1 (Platzhalter)
+/** m/s bei `EnemyDef.tempo = 1` (Platzhalter); Klassen skalieren darauf. */
+export const BASIS_TEMPO = 2.6;
 /** Tempo-Streuung je Gegner: Faktor 1 ± dieser Anteil (AP5-04, Platzhalter). */
 export const TEMPO_STREUUNG = 0.15;
 const ANGRIFF_INTERVALL = 1.1; // s zwischen Nahkampftreffern
