@@ -1,9 +1,8 @@
 # AP6-01b — Sektor-Neubau: echtes Grabensystem (kein Box-Labyrinth)
 
-**Status:** ENTWURF — Design-Runde durch (Layout-Beschlüsse + konkrete
-Jank-Beobachtungen unten). Planer schreibt den Kickoff, sobald AP6-06 durch
-ist. Wird nach AP6-06 gebaut, **vor** AP6-02b. Worker `/clear` davor (großer
-Brocken).
+**Status:** BEREIT — Design-Runde durch (Layout-Beschlüsse + Jank-Beobachtungen
+unten), Kickoff an den Worker gegeben. Wird nach AP6-06 gebaut, **vor** AP6-02b.
+Worker `/clear` davor (großer Brocken).
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** 4. Spieltest 2026-09-08 — Nutzer: die Map ist „zu abstrakt" (gerade
 Box-Korridore als Gräben, dünne Wände, leere Flächen — liest sich als
@@ -89,29 +88,33 @@ Bresche-Nischen. Nav-Wissen bleibt in den Rollen-Feldern von `SektorMeta`
 
 ## Jank-Pass (der „kaputt"-Teil)
 
-**Konkrete Spieltest-Beobachtungen (2026-09-08, 2 Screenshots, Einsatz nach
-Home-Line-Fall verloren, Spieler fliegt danach frei umher):**
+**Konkrete Spieltest-Beobachtungen (2026-09-08, 2 Screenshots vom Nutzer,
+Einsatz nach Home-Line-Fall verloren, Spieler fliegt danach frei umher — die
+Screenshots liegen nicht im Repo, die Positionen unten sind aus dem
+Debug-Overlay abgelesen):**
 
 - **Schwebende / zusammenhanglose Geometrie.** Boxen und Balken hängen in der
-  Luft, nichts darunter (Screenshot 1: Box oben links; Screenshot 2: Balken
-  oben rechts frei in der Luft). Vermutlich Umland-Füllquader / Feindseiten-
-  Silhouette / Ruinen aus schrägem Blickwinkel gegen den schwarzen Hintergrund
-  — liest sich als kaputt. Im Neubau: keine freistehenden Quader ohne sichtbare
-  Verankerung im begehbaren Bereich; Kulissen-Geometrie klar als Masse lesbar.
-- **Man steht auf der Brustwehr.** Screenshot 1: Spieler bei x −7 / **y 0,55**
-  / z −31 — das ist die Parapet-Oberkante (`PARAPET_OBERKANTE`). Die Brustwehr
+  Luft, nichts darunter (an einer Stelle eine Box hoch oben, an anderer ein
+  freistehender Balken in der Luft). Vermutlich Umland-Füllquader /
+  Feindseiten-Silhouette / Ruinen aus schrägem Blickwinkel gegen den dunklen
+  Hintergrund — liest sich als kaputt. Im Neubau: keine freistehenden Quader
+  ohne sichtbare Verankerung im begehbaren Bereich; Kulissen-Geometrie klar als
+  Masse lesbar, nicht als einzelne schwebende Klötze.
+- **Man steht auf der Brustwehr.** Spieler-Overlay zeigte x −7 / **y 0,55** /
+  z −31 — das ist die Parapet-Oberkante (`PARAPET_OBERKANTE`). Die Brustwehr
   ist oben begehbar, man landet auf Wänden. Im Neubau: Parapet-Oberkanten nicht
   als Lauffläche (schmaler / abgeschrägt / höher), oder Kapsel-Steighöhe prüfen.
-- **Trümmer-Box wirkt verglitcht.** Die Bresche-Trümmer (`render` Box
-  2,6×1,3×1,7 an `parapetBreschen`) liest sich in der Greybox wie eine
+- **Trümmer-Box wirkt verglitcht.** Die Bresche-Trümmer (`src/render/index.ts`,
+  Box 2,6×1,3×1,7 an `parapetBreschen`) liest sich in der Greybox wie eine
   umgefallene / verdrehte Box. Dezenter / klarer als „Schutt".
-- **Stufen-Rampe endet im Leeren.** Screenshot 2: Ost-Flankenrampe (x ≈ 31,
-  z ≈ −28) — die 4 Stufen führen abwärts in einen schwarzen Bereich ohne
-  erkennbaren Boden. Prüfen ob dort wirklich Boden fehlt (Home-Graben-Kante
-  jenseits der Parapet-Enden) oder nur unbeleuchtet.
-- **Licht-Extreme** (ausgebrannt neben pechschwarz) → **AP6-06** (Renderer),
-  nicht hier. Aber im Neubau darauf achten, dass jede Zone eine Lichtquelle in
-  Reichweite hat.
+- **Stufen-Rampe endet im Leeren.** Ost-Flankenrampe (x ≈ 31, z ≈ −28) — die
+  Stufen führen abwärts in einen dunklen Bereich ohne erkennbaren Boden. **Das
+  ist AP6-06s Sohle-Loch** (Home-Grabensohle war x ±32, Rampe bis x ±33,5) —
+  in AP6-06 gefixt (Sohle auf volle Breite), im Neubau von vornherein
+  vermeiden: jede Rampe endet auf tragendem Boden.
+- **Licht-Extreme** (ausgebrannt neben pechschwarz) → in **AP6-06** behoben
+  (Renderer). Im Neubau nur darauf achten: jede Zone hat eine Lichtquelle
+  (`meta.lichter`) in Reichweite.
 
 **Sicherheitsnetz-Checks:**
 
@@ -121,6 +124,12 @@ Home-Line-Fall verloren, Spieler fliegt danach frei umher):**
   klemmen; unter Gegnerdruck gegenchecken.
 - **`navgraph-begehbarkeit.test.ts`** auf den neuen Graphen: jede Kante
   beidseitig per echter `moveCapsule`, Ist-Zustand **und** „alles offen".
+- **AP6-06-Funde, die hier landen:** (a) Gegner überschießen `home-ziel` am
+  zentralen Laufgraben-Mund (x ±2 / Parapet-Gap x ±4) und klumpen — das neue
+  Home-Layout so bauen, dass der Zielknoten sauber erreichbar ist ohne engen
+  Flaschenhals dahinter (KI-seitig ggf. AP6-05). (b) Der Front-Graben hat
+  dieselbe „Sohle x ±32 vs. Sektorbreite x ±34"-Lücke wie die Home-Sohle vor
+  AP6-06 — im Neubau alle Grabensohlen bis an tragenden Boden führen.
 
 ## Golden-Anker
 
@@ -130,7 +139,7 @@ baselinieren** mit Begründung direkt am Test + Gegenprobe wie AP6-01
 0 Despawns). Die Sim-**Regeln** ändern sich nicht. Inline-Testlevel-Anker
 (eigene `LevelData`) bleibt unberührt.
 
-## Akzeptanzkriterien (Entwurf)
+## Akzeptanzkriterien
 
 - `npm run dev`: man bewegt sich nachts durch ein **erkennbares Grabensystem** —
   gezähnter Feuergraben mit Traversen, Zickzack-Verbindungsgräben nach hinten,
@@ -154,13 +163,12 @@ baselinieren** mit Begründung direkt am Test + Gegenprobe wie AP6-01
    Marge einen vollen Raum nicht hergibt: als `// TODO(Rückfrage)` festhalten
    und den flachsten Verbau wählen, der noch klar „hinein" ist.
 3. **~30 % größer.** Grob x ±44 (Breite ~88), z −60…92 (Tiefe ~152) — im
-   Ticket-Feintuning festzurren. Nav-Graph wächst auf ~80–100 Knoten; der
+   Feintuning festzurren. Nav-Graph wächst auf ~80–100 Knoten; der
    Begehbarkeits-Test wird entsprechend teurer (in Kauf genommen — er ist das
    Sicherheitsnetz). Runback trotz Zickzack + Größe für Solo machbar halten
    (Zielwert ~20–25 s ohne Feinddruck).
-
 4. **Der Jank** — Nutzer-Screenshots ausgewertet, konkrete Punkte im Abschnitt
-   „Jank-Pass" unten.
+   „Jank-Pass" oben.
 
 ## Ausdrücklich NICHT
 
