@@ -722,7 +722,7 @@ in `tickets/`.
 | Nr | Ticket | Status |
 |---|---|---|
 | AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
-| AP6-01b | Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ENTWURF — Design-Runde läuft |
+| AP6-01b | Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ erledigt/ (`e9aaeca`) |
 | AP6-02 | Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung, kein Verhaltenswechsel) | ✅ erledigt/ (f427ef1) |
 | AP6-02b | Bresche → Durchbruch → Linienfall (physisch, telegraphiert) + Uhr-Regel (Golden-Rebaseline hier) | offen (nach AP6-01b) |
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
@@ -739,9 +739,10 @@ zuerst) + **AP6-01b** (Sektor als echtes Grabensystem neu, Design-Runde läuft).
 AP6-02b wartet bis der neue Sektor steht (Halte-Punkte/Breschen/Nav hängen am
 Layout).
 
-**Reihenfolge wichtig:** AP6-06 (Reibung raus) ✅ → **AP6-01b** (Map-Neubau,
-als Nächstes) → AP6-02 war schon vor AP6-02b (mechanische Bereinigung, Golden
-grün) — die Trennung isoliert den Golden-Rebaseline auf die eine echte
+**Reihenfolge wichtig:** AP6-06 (Reibung raus) ✅ → AP6-01b (Map-Neubau) ✅ →
+Spieltest des neuen Sektors → **AP6-02b** als Nächstes. AP6-02 war schon vor
+AP6-02b (mechanische Bereinigung, Golden grün) — die Trennung isoliert den
+Golden-Rebaseline auf die eine echte
 Semantik-Änderung (Copilot-Spec-Review 2026-09-07). AP6-02b/03/04/05 setzen
 auf dem neuen Sektor + der stabilen Linien-Referenz auf. Der unabhängige Audit
 `AUDIT-2026-09-07-ap5.md` (2026-09-07, vor AP6-02) ist in die Tickets

@@ -1,8 +1,8 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-08 (AP6-01/02/06 erledigt · 4. Spieltest: Map ist zu
-abstrakt + jank → **AP6-01b** (Sektor-Neubau) als Nächstes, wartet auf
-Nutzer-„geht weiter" · AP6-02b danach)
+**Stand:** 2026-09-08 (AP6-01/01b/02/06 erledigt · Sektor als echtes
+Grabensystem neu gebaut, **wartet auf Spieltest** · dann **AP6-02b**
+(Bresche → Durchbruch))
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -45,15 +45,17 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     Spielpfad), Rampen glatt (10 Stufen) + Sohle-Loch gefixt (Gegner fielen
     an der Home-Flankenrampe durch die Welt), Nacht-Licht neu abgestimmt
     (kein Washout, kein reines Schwarz). Golden-Anker bit-identisch.
-  - **AP6-01b** (als Nächstes, ENTWURF — wartet auf Nutzer-„geht weiter"):
-    Sektor als **echtes Grabensystem** neu. Layout beschlossen: gezähnter
-    Feuergraben + Home-Line (Nischen + Traversen), Hinterland lockerer · echte
-    Unterstände (Raum unter Flur) · ~30 % größer (~x±44, z−60…92, Nav ~80–100
-    Knoten). Jank-Beobachtungen im Ticket (schwebende Geometrie, man steht auf
-    der Brustwehr, Rampe ins Leere). Planer-Kickoff auf „geht weiter", Worker
-    `/clear`.
-  - **AP6-02b** (wartet auf AP6-01b — Halte-Punkte/Breschen/Nav hängen am
-    Layout): Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
+  - **AP6-01b erledigt** (`e9aaeca`): Sektor als **echtes Grabensystem** neu.
+    Gezähnter Feuergraben (5 Nischen + 4 Erd-Traversen + Laufgang), begehbare
+    Alt-Frontlinie + 2 Sap-Köpfe im Niemandsland, 3 Verbindungsgräben (Mitte =
+    Express-Laufgraben) + Stütz-/Reservegraben statt leerem Feld, gezähnte
+    Home-Line mit 3 begehbaren Unterständen. Durchgehender Sohle-Auffangboden.
+    ~30 % größer (x±44, z−60…92), Nav 72 Knoten. Golden-Anker neu (Uhr-Regel
+    bitgleich). 303 Tests. **Offen an den Nutzer:** `unterstand()` ist der
+    flache Fallback, nicht der gewählte „Raum unter Flur" (Jank-Risiko, Worker
+    begründet) — eigenes Ticket oder Art-Pass?
+  - **AP6-02b** (als Nächstes — wartet auf Spieltest des neuen Sektors):
+    Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
   - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
     Perf-Broadphase.
 
@@ -61,12 +63,13 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
 
 `npm run dev`. Auf `main` (bis AP6 gemergt ist) der alte Greybox-Sektor „H"
 mit A/B/C-Front + Verbindungsgraben. Auf `arbeitspaket-6` der neue **Nacht-
-Sektor**: eine durchgehende Frontlinie, Niemandsland davor, Hinterland mit
-zentralem Laufgraben + 2 Seitenrouten, durchgehende Home-Line; dunkel, enger
-Dunst, statische Leuchtfeuer, FRONT/HOME-Schilder. Seit AP6-06: Start mit der
-automatischen Sturm-MP 18, glattere Rampen, ausgewogeneres Nacht-Licht. Gegner folgen dem Nav-
-Graphen an die Front, reißen Parapet-Breschen auf; fällt die Front, öffnet
-sich der Weg ins Hinterland. Jeder Kill zermürbt die Angriffskraft
+Sektor** (seit AP6-01b ein echtes Grabensystem): gezähnter Feuergraben mit
+Erd-Traversen + Laufgang, begehbare Alt-Frontlinie + Sap-Köpfe im Niemandsland,
+3 Verbindungsgräben (Mitte = Express-Laufgraben) + Stütz-/Reservegraben,
+gezähnte Home-Line mit 3 begehbaren Unterständen; Nacht, enger Dunst, statische
+Leuchtfeuer, FRONT/HOME-Schilder. Start mit der automatischen Sturm-MP 18.
+Gegner folgen dem Nav-Graphen an die Front, reißen Parapet-Breschen auf; fällt
+die Front, öffnet sich der Weg ins Hinterland. Jeder Kill zermürbt die Angriffskraft
 (zonengewichtet) → Zeit-Finale an der Home-Line → extrahieren (`E`) oder
 verlängern (`Q`). Tasten: F3 Debug · M Lagekarte · T Ton · E/Q.
 Preview (main): <https://kwe3rtz.github.io/halt-die-linie/>
@@ -86,23 +89,27 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **AP6-01b (Map-Neubau)** — Layout + konkrete Jank-Beobachtungen stehen im
-   Ticket (`tickets/AP6-01b-sektor-neubau-grabensystem.md`). **Wartet auf
-   Nutzer-„geht weiter"** (großer Brocken, er pausiert gern). Dann schreibt
-   der Planer den Kickoff, Worker `/clear` vorher. Sektor als echtes
-   Grabensystem, noch Greybox. Worker `ki-game-e6` steht bereit.
-2. **AP6-02b** — erst wenn der neue Sektor steht. Bresche → Durchbruch →
+1. **Anspielen fällig:** der neue Sektor (`arbeitspaket-6`, AP6-01b) ist
+   ungespielt. Quer durch: Feuergraben (zickt man wirklich um die Traversen?)
+   → Express-Laufgraben → Hinterland-Verbindungsgräben (kein leeres Feld mehr?)
+   → Home-Line → Unterstand rein. Prüfen: Nacht-Helligkeit auf echter GPU,
+   Grabensystem-Gefühl, kein Jank mehr.
+2. **`unterstand()`-Entscheid** (aus dem AP6-01b-Review): der gebaute flache
+   Verbau statt „Raum unter Flur" — eigenes Mini-Ticket für einen echten
+   abgesenkten Dugout, oder auf den Art-Pass warten?
+3. **AP6-02b** — nach dem Spieltest + `/clear`. Bresche → Durchbruch →
    Linienfall (Halte-Punkte je Bresche, lokaler Druck öffnet die Bresche
    physisch, Gegner hinter der Linie → „DURCHBRUCH" → Fall) + Uhr-Regel
    (Frontfall = gefährlicher, nicht schneller). Golden-Anker hier bewusst neu +
    Stub-Gegenprobe. Spec fertig (inkl. Copilot-Härtung):
-   `tickets/AP6-02b-bresche-durchbruch-linienfall.md`.
-3. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
+   `tickets/AP6-02b-bresche-durchbruch-linienfall.md`. Planer schreibt den
+   Kickoff, Worker `/clear` vorher (großer Brocken).
+4. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
    Design-Runde davor mit `SPARRING-ANTWORTEN.md` Runde 3) → AP6-05 (Roam +
    Perf-Broadphase, Audit H1/M5/M6). **„Gegner-KI deutlich besser" (Spieltest)**
    fällt hierunter: heute laufen alle stur auf `front-front` und klumpen (auch
    am Laufgraben-Mund, AP6-06-Fund) — AP6-05 + ggf. eigenes Ticket.
-4. Ende AP6: PR `arbeitspaket-6` → `main`.
+5. Ende AP6: PR `arbeitspaket-6` → `main`.
 
 ## Offene Fäden — nicht vergessen
 
@@ -128,6 +135,19 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
 
+- **2026-09-08** — **AP6-01b erledigt** (`e9aaeca`, reviewed, 303 Tests, CI
+  grün). Sektor als echtes WW1-Grabensystem neu: gezähnter Feuergraben (5
+  Nischen + 4 Erd-Traversen + Laufgang), begehbare Alt-Frontlinie + 2 Sap-Köpfe,
+  3 Verbindungsgräben (Mitte = Express-Laufgraben) + Stütz-/Reservegraben statt
+  leerem Feld, gezähnte Home-Line + 3 begehbare Unterstände, durchgehender
+  Sohle-Auffangboden, ~30 % größer (x±44, z−60…92), Nav 72 Knoten. Neue Module
+  `traverse`/`sap`/`geschuetzstellung`. `PARAPET_OBERKANTE` 0,55→0,62 (Krone
+  nicht mehr begehbar). Golden-Anker neu baseliniert — **Uhr-Regel bitgleich**
+  (148/149), Gegenprobe Determinismus + Seed 1/2/7 gewonnen 0 Despawns.
+  **Offen an den Nutzer:** `unterstand()` = flacher Fallback statt „Raum unter
+  Flur" (Worker: Sohle-Auffangplatte nicht durchbrechen = Jank-Risiko) →
+  eigenes Ticket oder Art-Pass? Und: Nacht-Helligkeit auf echter GPU prüfen
+  (Headless-Screenshots dunkel = Swiftshader).
 - **2026-09-08** — **AP6-06 erledigt** (`a17e734`, reviewed, 303 Tests).
   Automatische Testwaffe (`sturmMp18`, nur Spielpfad — `standardWaffe` +
   Golden-Anker unberührt) · Rampen glatt (4→10 Stufen) · dabei ein echter Bug

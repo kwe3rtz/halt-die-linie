@@ -12,6 +12,30 @@ begehbares WW1-Grabennetz, Feind-Spawn folgt der vordersten gehaltenen Linie,
 „Instand setzen" als Rückeroberung, Nacht zuerst mit roamenden Toten. Branch
 `arbeitspaket-6` von `main`.
 
+- **AP6-01b** · `e9aaeca` · **Sektor-Neubau: echtes Grabensystem.** Der AP6-01-
+  Bau war funktional, aber „zu abstrakt" (gerade Box-Korridore + leere Flächen)
+  und mit Jank (4. Spieltest). `src/data/sektor.ts` **komplett neu** als
+  WW1-Grabensystem: **gezähnter Feuergraben** (5 Feuernischen + 4 Erd-Traversen
+  + durchgehender Laufgang dahinter — Zickzack-Bewegung), begehbare quer
+  laufende **Alt-Frontlinie** + 2 **Sap-Köpfe** im Niemandsland, **3
+  Verbindungsgräben** vorn↔hinten (Mitte = Express-Laufgraben) + **Stütz-/
+  Reservegraben** statt offenem Feld, **gezähnte Home-Line** mit **3 begehbaren
+  Unterständen**, **ein durchgehender Sohle-Auffangboden** unter dem ganzen
+  Sektor. ~30 % größer (x ±44 · z −60…92). Nav-Graph 72 Knoten / 96 Kanten /
+  14 Engstellen. `src/data/module.ts`: neue Module `traverse` / `sap` /
+  `geschuetzstellung`, `unterstand()` neu (niedriger gedeckter Raum am
+  Grabenniveau — `TODO(Rückfrage)` zum echten „Raum unter Flur"),
+  `PARAPET_OBERKANTE` 0,55 → 0,62 (lag bündig mit dem Feld = `STEP_HEIGHT`, war
+  oben begehbar), Feuertritt als 3 flache Stufen. `src/render/index.ts`:
+  Bresche-Trümmer als flacher Schutthaufen. **Golden-Anker „Nav-Graph" + „die
+  Uhr" bewusst neu baseliniert** (neuer Sektor, andere Positionen; Begründung
+  am `expect()`) — **Uhr-Werte −2/−1 bitgleich** (148/149), Regeln unverändert;
+  Gegenprobe Determinismus-Doppellauf + Headless-Einsatz Seed 1/2/7 → gewonnen,
+  0 Despawns, Wellen 5·8·11·14·17. `collision-verbindungsgraben.test.ts` auf
+  den südlichen lückenlosen Abschnitt des Express-Laufgrabens umgezielt.
+  Begehbarkeits-Test grün (Ist + alles-offen). Runback Feuergraben → Home 17 s
+  Gehen / 11 s Sprint. Inline-Testlevel-Anker unberührt. 303/303 Tests.
+
 - **AP6-06** · `a17e734` · **Spieltest-Reibung: Testwaffe + glatte Rampen +
   Nacht heller.** Nach dem 4. Spieltest (Map „zu abstrakt + jank", Startwaffe
   zäh, Rampen-Stuck, Nacht zu dunkel), vor dem Map-Neubau (AP6-01b).

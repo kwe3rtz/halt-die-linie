@@ -336,3 +336,70 @@ als die 16,5 m des alten Bugs, reproduziert ihn also weiterhin.
 | `npm run build` | grün (~6,92 MiB roh, unverändertes Babylon-Budget) |
 
 CI-Status → separat an ki-game-f1 nach dem Push.
+
+---
+
+## Review — ki-game-f1 (2026-09-08)
+
+**Grünes Licht.** `e9aaeca` auf `arbeitspaket-6`, CI-Workflow „CI" = success
+(npm ci · typecheck · lint · format:check · test:coverage · build). Scope
+deckt sich mit dem Ticket (21 Dateien: 8 Code/Test, 12 Screenshots, Ticket).
+Der Skills-Tooling-Kram (`.agents/`, `.claude/`, `skills-lock.json`) aus einem
+verunglückten `npx skills`-Aufruf ist **nicht** mitcommittet — Worker hat
+einzeln gestaged.
+
+**Geprüft:**
+
+- **Golden-Anker-Rebaseline (der kritische Teil):** beide positionsabhängigen
+  Anker in `sim.test.ts` neu, Begründung direkt am `expect()`. **Uhr-Regel
+  bitgleich:** `angriffskraftRest` 148 (stehende Front, −2) / 149 (gefallene
+  Front, −1) / `nachschub` 5 — unverändert; nur die Gegner-Setup-Position
+  wanderte (−10,15 → −16,19), weil der Seed-1-Spawn jetzt in der West-Nische
+  liegt. Nav-Anker: `angriffskraftRest` 145, Wellenkurve, Klassenmix,
+  `s.front` = ["front"]/["stabil"] unverändert — nur `player.pos`/`nach[0].pos`
+  wandern mit dem neuen Sektor. Gegenprobe adäquat: Determinismus-Doppellauf +
+  voller Headless-Einsatz Seed 1/2/7 → gewonnen, 0 Despawns, Wellen
+  5·8·11·14·17. Inline-Testlevel-Anker unberührt. Das ist die AP5-04/06-
+  Disziplin sauber umgesetzt.
+- **`src/data/sektor.ts` (Neubau):** Zonen als lückenlose Z-Bänder über die
+  volle Breite (`sektor.test.ts` erzwingt es). `frontLinie.hintenKanten` = 3
+  parallele Parados→Verbindungsgraben-Kanten. `homeLinie.bounds` bewusst enger
+  als das Zonen-Band (z −53…−42) — die Unterstände dahinter zählen nicht als
+  „Linie". `brescheZugang` = zentrale Nische („Pumpenstand"), West-Nische
+  („Panzerwrack") = reines Loch (M7 → AP7, wie AP6-01). 12 `lichter`, je Zone
+  ≥ 1 in Reichweite. Nav-Graph 72 Knoten (Worker am unteren Rand der Spanne
+  geblieben, jede Kante im Begehbarkeits-Test — vertretbar, aufstocken
+  jederzeit möglich).
+- **`src/data/module.ts`:** `traverse` / `sap` / `geschuetzstellung` sauber,
+  alles achsenparallel im Box-Modell. `PARAPET_OBERKANTE` 0,55 → 0,62 mit
+  ausführlicher STEP_HEIGHT-Marge-Begründung (alter TODO(Rückfrage) damit
+  gelöst) — Krone keine Lauffläche mehr, ein bewusster Sprung erreicht sie
+  noch (exponiert, akzeptiert). `unterstand()` → siehe unten.
+- **Jank-Pass:** Punkt für Punkt mit Repro/Ursache/Fix in der Tabelle
+  (Brustwehr-Steighöhe, schwebende Geometrie → Silhouette als Bodenmasse,
+  Trümmer flacher, durchgehender Sohle-Auffangboden, Licht je Zone,
+  `home-ziel` ohne Flaschenhals). AP6-06-Funde (a) + (b) eingearbeitet.
+- **`collision-verbindungsgraben.test.ts`:** auf den südlichen ~24-m-Abschnitt
+  des Express-Laufgrabens umgezielt (länger als der 16,5-m-Bug von AP5-01,
+  reproduziert ihn weiter). Sally-Ports sind neu und bewusst ausgespart.
+- **Runback** Feuergraben → Home 17 s Gehen / 11 s Sprint — im Zielband.
+
+**Offen — an den Nutzer:**
+
+1. **`unterstand()` ist nicht der gewählte „Raum unter Flur, Treppe hinab".**
+   Der Nutzer hatte in der Design-Runde genau diese Option gewählt; der Worker
+   hat den ticket-erlaubten Fallback gebaut („flachster hinein-Verbau", Raum
+   auf Grabenniveau) mit stichhaltiger Begründung (die EINE durchgehende
+   Sohle-Auffangplatte für einen abgesenkten Boden zu durchbrechen = Jank-
+   Risiko, das der Jank-Pass gerade beheben soll). Screenshot 11 bestätigt: es
+   liest sich eher als „im Home-Graben" denn als „im Dugout". **Für AP6-01b
+   akzeptiert** (Greybox, in-Scope-erlaubt). Ob ein echter abgesenkter Dugout
+   (lokale Sohle-Aussparung + Absturz-Test) ein eigenes kleines Ticket wird
+   oder auf den Art-Pass wartet → Nutzer-Entscheid.
+2. **Beleuchtung im Headless-Screenshot dunkel** (Swiftshader rendert dunkler
+   als eine echte GPU). Der „jede Zone hat ein Licht ≤ 17 m"-Skript-Check des
+   Workers trägt, aber der echte Eindruck kommt erst beim Anspielen auf GPU.
+
+**Merkposten für den Spieltest:** Grabensystem-Gefühl (zickt man wirklich
+durch?), Hinterland nicht mehr „leeres Feld", Unterstände, Nacht-Helligkeit
+auf echter GPU, Runback-Gefühl mit Feinddruck.

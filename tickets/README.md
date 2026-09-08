@@ -83,7 +83,7 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 | Ticket | Status |
 |---|---|
 | AP6-01 Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung | ✅ `erledigt/` (`c4d21f5`) |
-| AP6-01b Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ENTWURF — Design-Runde |
+| AP6-01b Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ `erledigt/` (`e9aaeca`) |
 | AP6-02 Eine Frontlinie/Home-Line: A/B/C-Verdrahtung raus (Bereinigung) | ✅ `erledigt/` (`f427ef1`) |
 | AP6-02b Bresche → Durchbruch → Linienfall + Uhr-Regel | offen (nach AP6-01b) |
 | AP6-03 Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
@@ -93,10 +93,10 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 
 **Reihenfolge:** AP6-01 → AP6-02 (Bereinigung, Golden-Anker grün). Dann
 **4. Spieltest (2026-09-08)**: Map zu abstrakt + jank, Startwaffe zu zäh →
-**AP6-06** ✅ (schnelle Reibungs-Fixes) → **AP6-01b** (Sektor als echtes
-Grabensystem neu — als Nächstes) → AP6-02b (Bresche→Durchbruch, Golden bricht
-bewusst) → 03 → 04 → 05. AP6-02-Split + Audit-Einarbeitung nach
-Copilot-Spec-Review + `AUDIT-2026-09-07-ap5.md`.
+**AP6-06** ✅ (Reibungs-Fixes) → **AP6-01b** ✅ (Sektor als echtes Grabensystem
+neu) → Spieltest → AP6-02b (Bresche→Durchbruch, Golden bricht bewusst) → 03 →
+04 → 05. AP6-02-Split + Audit-Einarbeitung nach Copilot-Spec-Review +
+`AUDIT-2026-09-07-ap5.md`.
 
 ## Arbeitspaket 7+
 
