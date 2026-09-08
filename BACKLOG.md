@@ -104,6 +104,9 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
 - Justierbare Kamera / Zoom-Optionen.
 - Waffen-Aufsätze und -Varianten in die Tiefe.
 - Grabenschilder mit generierten Namen, Sektor-Lore.
+- **Echtes Petroleum-/Sturmlaternen-Modell** — AP6-01d ersetzt den Licht-Würfel
+  nur durch eine 4-Box-Greybox-Laterne; ein echtes Modell + Textur (warmes
+  Glas, Ruß, leichtes Flackern) ist Art-Politur.
 
 ## Aus Sparring Runde 4 (2026-09-09) — nach dem Kern
 

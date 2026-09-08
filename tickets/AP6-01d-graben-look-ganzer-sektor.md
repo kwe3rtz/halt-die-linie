@@ -1,7 +1,7 @@
 # AP6-01d — Graben-Look: ganzer Sektor + geschrumpfter Grundriss
 
-**Status:** offen — **erst nach Nutzer-Spieltest + grünem Licht für die
-AP6-01c-Probe-Ecke.** Kickoff schreibt der Planer dann.
+**Status:** offen — **AP6-01c-Probe vom Nutzer abgenommen** (2026-09-09,
+„genau so kanns sein"), 4 Korrekturen unten eingearbeitet. Kickoff-bereit.
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **`/clear` vor dem Start:** ja (großer Brocken, Golden-Anker, ganzer Sektor).
 
@@ -20,8 +20,38 @@ AP6-01c hat den Baukasten (Tiefe, Verkleidung, Material, Laufrost, echter
 Abstiegs-Unterstand) gebaut und an einer isolierten `?probe`-Szene belegt (Code
 `41635d9`, reviewed). Dieses Ticket **baut den ganzen Sektor damit neu** — im
 neuen Look **und** im geschrumpften, „schlanke Front"-Grundriss aus der Grill-
-Runde 2026-09-09. Der Kickoff kommt erst, wenn der Nutzer die Probe-Ecke
-angespielt und den Look abgenommen hat (ggf. mit Zielvorlage-Korrekturen).
+Runde 2026-09-09.
+
+## Korrekturen aus dem AP6-01c-Spieltest (2026-09-09)
+
+Der Nutzer hat `?probe` angespielt: **„das ist sehr gut so, genau so kanns
+sein"** — Look, Tiefe, Holzverkleidung, gezähnte Bewegung abgenommen. Vier
+Nachbesserungen, hier verbindlich:
+
+1. **Verkleidung + Sandsack-Krone kollidieren nicht mehr.** Im Probe-Bau sind
+   die Formdetail-Boxen (Pfosten 0,12 m / Bohlen 0,06 m vorstehend, Sandsäcke)
+   echte Kollider → man „glitcht" beim Entlanglaufen an den Kanten. **Lösung:**
+   ein neues `LevelBox`-Flag `nurRender?: boolean` (Analogon zu `unsichtbar` =
+   Kollider-ohne-Mesh; `nurRender` = Mesh-ohne-Kollider). `createCollisionWorld`
+   filtert `nurRender`-Boxen raus. Alle `verkleidung()`- / `sandsackKrone()`- /
+   Laterne- / `laufrost`-Querstege-Boxen kriegen `nurRender: true`. Der
+   **Kollider ist die Erd-Basiswand**, und ihre grabenseitige Fläche liegt
+   **bündig mit der Verkleidungs-Vorderkante** (Basiswand ~0,12 m weiter in den
+   Graben, damit Sicht-Wand = Lauf-Wand). Reine Daten-Durchreiche, goldene
+   Regel bleibt.
+2. **Gänge etwas breiter.** Lichte Weite an der Sohle: Feuernische + Laufgang
+   **~2,4 m** (statt 2,0), Seiten-Verbindungsgräben **~2,6 m**, Express-
+   Laufgraben Mitte **~2,0 m** (bleibt der engste). Im Spieltest justierbar.
+3. **Abstieg flacher.** Die 8 Stufen über 2,2 m waren zu steil (Verhältnis
+   ~0,9). Neu: **~12 Stufen, Anstieg ~0,20 m, Auftritt ~0,30 m** → längerer
+   Treppenschacht (`US_SCHACHT_T` ~3,6 statt 2,4).
+4. **Mehr Kopffreiheit im Unterstand.** Lichte Raumhöhe **~2,3 m** (statt 2,0):
+   `US_TIEFE` 2,2 → **2,5** (Raumboden −5,2), `US_KOPF` 2,0 → **2,3**
+   (Deckenunterkante −2,9, Auge −3,6 → ~0,7 m Luft über dem Auge).
+
+`abstiegUnterstand()` + die Verkleidungs-Helfer in `module.ts` entsprechend
+anpassen (weiter additiv nutzbar — die Probe-Szene darf mitwandern oder
+eingefroren bleiben, egal, sie ist Dev-only).
 
 ## Auftrag — der ganze Sektor
 
@@ -40,11 +70,18 @@ Module ziehen und die alten Werte ersetzen.
 - `PARADOS`-Krone → **0,30** (`PARADOS_KRONE_TIEF`).
 - `verkleidung()` / `sandsackKrone()` / `laufrost()` in `grabengerade` /
   `parapet` / die Nischen-Komposita einziehen — **jede** Grabenwand verkleidet.
-  `laufrost` **ohne** Querstege-Kollider (nur Render-Detail, AP6-01c-Fund).
+  **Alle Formdetail-Boxen `nurRender: true`** (Korrektur 1) — Kollider ist die
+  bündig gesetzte Erd-Basiswand. `laufrost`-Querstege ebenfalls `nurRender`.
+- **Nacht-Licht (Korrektur 2 aus dem Spieltest):** die „Feuertonne" (0,5-m-
+  Würfel im Renderer) → eine **einfache Petroleum-/Sturmlaterne als Greybox**:
+  ~4 Boxen (Fuß-Tank + Glaszylinder emissiv + Deckel + Bügel), auf einem Pfosten
+  oder an der Wand hängend, ~0,25 × 0,5 m. Noch Greybox, keine Textur (echtes
+  Laternen-Modell → Backlog). Im Renderer, nicht als Kollider.
 - `unterstand()` → auf `abstiegUnterstand()` umstellen (echter Abstieg steht
   schon, nur noch nicht im Sektor verdrahtet — das ist der AP6-01b-Rückstand).
-  Die 3 Home-Unterstände brauchen je eine `abstiegUnterstandLoch()`-Aussparung
-  im Sohle-Auffangboden.
+  **Mit den Spieltest-Korrekturen 3+4** (flachere Treppe ~12 Stufen, Raumhöhe
+  ~2,3 m). Die 3 Home-Unterstände brauchen je eine `abstiegUnterstandLoch()`-
+  Aussparung im Sohle-Auffangboden.
 - Nav-`IN_GRABEN` / Spawn-Y / Rampen folgen der neuen Sohle (−2,7).
 
 ### 2. Geschrumpfter Grundriss (`src/data/sektor.ts` — Neubau)
@@ -135,6 +172,12 @@ Krone keine Lauffläche.
 - `VG_ANZAHL` ist ein Parameter — mit `= 2` gesetzt baut der Sektor sauber 2
   Verbindungsgräben (Nav + Mündungen folgen). Im Bericht kurz gezeigt, dann
   wieder auf 3.
+- **Kein Glitchen an der Verkleidung:** Test — Kapsel läuft an einer verkleideten
+  Wand entlang (Pfosten + Bohlen), bleibt an keiner Formdetail-Kante hängen
+  (`nurRender`-Boxen nicht im Kollider; Basiswand bündig). Unter Gegnerdruck
+  gegenchecken.
+- **Abstieg:** ~12 Stufen, Anstieg ≤ ~0,22 m; Raumhöhe ≥ 2,25 m (Auge clippt
+  klar nicht in die Decke). Sim-Test wie AP6-01c.
 - Kein sichtbarer Jank. Begehbarkeits-Test grün (Ist + alles-offen).
 - Headless-Einsatz Seed 1/2/7 bis „gewonnen", 0 Despawns.
 - Runback Feuergraben → Home-Line für Solo ~15–22 s Gehen ohne Feinddruck
@@ -144,8 +187,9 @@ Krone keine Lauffläche.
 
 ## Ausdrücklich NICHT in AP6-01d
 
-- Echte Texturen / Normal-Maps / PBR (`KONZEPT.md` §9.10) · der Seed-/
-  Schwierigkeits-Schalter für `VG_ANZAHL` (Backlog) · MG-Stände + Front-
-  Wandkammern (Backlog) · Stützgraben (Backlog) · Bresche→Durchbruch (AP6-02b)
-  · Spawn-Verlagerung (AP6-03) · „Instand setzen" (AP6-04, hier nur Marker) ·
-  Roam (AP6-05) · Gegner-KI-Verhalten (eigene Design-Runde nach diesem Ticket).
+- Echte Texturen / Normal-Maps / PBR (`KONZEPT.md` §9.10) · **echtes Laternen-
+  Modell** (hier nur die 4-Box-Greybox — Backlog) · der Seed-/Schwierigkeits-
+  Schalter für `VG_ANZAHL` (Backlog) · MG-Stände + Front-Wandkammern (Backlog) ·
+  Stützgraben (Backlog) · Bresche→Durchbruch (AP6-02b) · Spawn-Verlagerung
+  (AP6-03) · „Instand setzen" (AP6-04, hier nur Marker) · Roam (AP6-05) ·
+  Gegner-KI-Verhalten (eigene Design-Runde nach diesem Ticket).

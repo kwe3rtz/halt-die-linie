@@ -1,9 +1,8 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-09 (AP6-01/01b/02/06 + **AP6-01c erledigt** — Graben-Look-
-Baukasten + isolierte `?probe`-Szene, reviewed, Golden bit-identisch. **Nutzer
-spielt jetzt `npm run dev` → `?probe` an** — sein Urteil formt den AP6-01d-
-Kickoff, Worker wartet)
+**Stand:** 2026-09-09 (AP6-01/01b/02/06 + **AP6-01c erledigt**. Nutzer hat
+`?probe` angespielt: **„genau so kanns sein"** — Look abgenommen, 4 Korrekturen
+in die **AP6-01d**-Spec eingearbeitet. AP6-01d ist kickoff-bereit)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -111,16 +110,14 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **Nutzer spielt `npm run dev` → `http://localhost:5173/?probe` an** — die
-   isolierte Graben-Look-Probe-Ecke (AP6-01c). Beurteilen: fühlt sich der Graben
-   *tief + eng* an? Trägt die Verkleidung (Holz/Sandsack/Laufrost)? Funktioniert
-   der Abstieg in den Unterstand flüssig (Kamera treppab)? Nacht-Helligkeit auf
-   echter GPU (headless war warm-orange). Screenshots in
-   `tickets/erledigt/AP6-01c-screenshots/`.
-2. **AP6-01d — ganzer Sektor** im neuen Look + geschrumpfter Grundriss
+1. **AP6-01d — ganzer Sektor** im neuen Look + geschrumpfter Grundriss
    („schlanke Front", Home = Bunker, 3 gewundene Verbindungsgräben mit
-   parametrisierter Anzahl, kein Stützgraben). Golden-Anker brechen bewusst
-   (Uhr-Regel bitgleich, Gegenprobe wie AP6-01b). `/clear` vorher.
+   parametrisierter Anzahl, kein Stützgraben). **+ 4 Korrekturen aus dem
+   AP6-01c-Spieltest:** Verkleidung `nurRender` (kein Glitchen), Gänge etwas
+   breiter (~2,4 m), Abstieg flacher (~12 Stufen), mehr Kopffreiheit (~2,3 m),
+   Licht-Würfel → Greybox-Laterne. Golden-Anker brechen bewusst (Uhr-Regel
+   bitgleich, Gegenprobe wie AP6-01b). Merge je Material ist Pflicht. `/clear`
+   vorher. **Kickoff-bereit — wartet nur auf das „los" vom Nutzer.**
 3. **Gegner-KI-Design-Runde** — eigene Runde wie die Grill-Runde, Input
    `SPARRING-ANTWORTEN.md` Runde 3 (wenige persistente Roam-Gruppen, 4 Zustände,
    gemeinsames Intensitäts-Budget mit dem Wave-Director). Ergebnis: aktualisierte
@@ -179,8 +176,11 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   Erd-Brustwehr 0,58 + Sandsack-Krone 0,70 · 0,7-m-Vestibül am Treppenfuß ·
   `laufrost`-Querstege ohne Kollider). **Der AP6-01b-`unterstand()`-Rückstand
   ist gelöst.** Perf-Anker: Probe 164 Boxen, Schätzung Sektor 700–900 →
-  **Merge je Material ist in AP6-01d Pflicht.** Visuelle Abnahme: Nutzer-
-  Spieltest `?probe`.
+  **Merge je Material ist in AP6-01d Pflicht.** **Nutzer-Spieltest `?probe`
+  (2026-09-09): Look abgenommen** („genau so kanns sein"). 4 Korrekturen →
+  AP6-01d: Verkleidung `nurRender` (Glitch beim Entlanglaufen), Gänge ~2,4 m,
+  Abstieg flacher (~12 Stufen), Kopffreiheit ~2,3 m, Licht-Würfel → Greybox-
+  Petroleumlaterne (echtes Modell → Backlog).
 
 - **2026-09-09** — **Grill-Runde: Graben-Look zuerst.** Spieltest des AP6-01b-
   Sektors + strukturierte Design-Baum-Runde (`grilling`-Skill, 5 Runden, mit
