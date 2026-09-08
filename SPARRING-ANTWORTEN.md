@@ -2716,7 +2716,7 @@ seltenes Depot, 1 optionaler Auftrag, Extraktion/Verlängerung, Gefechtsbericht.
 - **Top-5:** AI-Director-Pacing · Feld-Upgrades · Spezialgegner-Mechaniken ·
   tägl./wöch. Herausforderungen · Audio-Horror Nacht.
 
-## Gemini — interaktive Grabenwerkzeuge (Antwort im Nutzer-Chat bei ~50k abgeschnitten)
+## Gemini — interaktive Grabenwerkzeuge
 
 - **Interaktive Graben-Fallen:** Gas-/Brand-Ventile (10 s tödliche Zone, aber
   vernebelt eigene Sicht, kostet Nachschub); Signalfackel-Mörser an der
@@ -2736,8 +2736,14 @@ seltenes Depot, 1 optionaler Auftrag, Extraktion/Verlängerung, Gefechtsbericht.
   Signature-Sounds je Elite (Koloss Kettengerassel + Zischen; Sturmtrupp
   Granaten-Klacken; Heuler Schrei vor dem Losbrechen); Umgebungs-Resonanz
   (enger Betonunterstand klingt anders als offener Holzgraben).
-- **3 Sofort-Fixes (Gemini):** Stolperdraht-Warnsysteme an Breschen · [Rest
-  abgeschnitten — Nutzer kann nachreichen].
+- **3 Sofort-Fixes (Gemini):**
+  1. **Stolperdraht-Warnsysteme an den Breschen** — löst das Solo-
+     Orientierungsproblem sofort, ohne komplexes Minimap-UI.
+  2. **Köder-Prinzip (Licht/Lärm) verankern** — der Nacht-Modus braucht
+     zwingend ein Werkzeug, mit dem der Spieler die Horde aktiv weglockt, um
+     die mehrsekündige Instandsetzung überhaupt zu überleben.
+  3. **Ressourcen an Niemandsland-Scavenging koppeln** — verhindert Camping an
+     der Home-Line, zwingt zu kalkulierten Vorstößen ins Feld.
 
 ---
 
@@ -2803,6 +2809,13 @@ Licht als taktisches System / „zweite Waffe" (#26) · Schwierigkeit über
 Parallelität statt HP (#27, für späteren Koop) · Stolperdraht-/Glocken-Warnung
 an Breschen (Gemini) · Audio-Signaturen je Elite (Gemini). Der Design-Runden-
 Brief muss diese Liste explizit aufgreifen.
+
+**Gemini schärft zwei Kopplungen:** (a) das **Köder-Werkzeug (Licht/Lärm) ist
+Voraussetzung dafür, dass „Instand setzen" solo überhaupt überlebbar ist** —
+nicht bloß ein nettes Extra; die Design-Runde muss Lockmittel + Instandsetzen
+zusammen denken (betrifft AP6-04). (b) **Niemandsland-Scavenging als
+Anti-Camping-Hebel** — ein Grund, die Home-Line-Deckung in Feuerpausen zu
+verlassen; koppelt an die Ruhephasen (#24) und das seltene Depot (#6).
 
 ### D — Später (§7–§9, nach AP6). Hier geparkt, Backlog-Eintrag folgt
 
