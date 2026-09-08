@@ -198,7 +198,7 @@ Krone keine Lauffläche.
 ## Bericht — AP6-01d
 
 COMMIT: `caa554c` (Branch `arbeitspaket-6`)
-CI: <steht nach dem Push> / Pages <steht nach dem Push>
+CI: **success** (Workflow "CI") / **success** (Workflow "Pages Preview") auf `def6bca`
 TODO(Rückfrage): keine im Code. Fünf Entscheidungen unten (1–5) an den Planer.
 
 Checks: typecheck / lint / format:check / test:coverage / build — **alle grün**
