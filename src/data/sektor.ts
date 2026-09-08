@@ -1,16 +1,32 @@
-// Der handgebaute Greybox-Sektor — der Nacht-Sektor aus KONZEPT.md §3 (neu
-// gefasst 2026-09-07) als reine Daten. Ein größeres, frei begehbares,
-// verzweigtes WW1-Grabennetz mit EINER durchgehenden Frontlinie und EINER
-// Home-Line. EINE Quelle für Render-Meshes (`src/render`) und Sim-Collider
-// (`src/sim/collision`).
+// Der handgebaute Greybox-Sektor — der Nacht-Sektor aus KONZEPT.md §3 als reine
+// Daten, in AP6-01b als **echtes WW1-Grabensystem** neu gebaut (der AP6-01-Bau
+// war zu schematisch: gerade Box-Korridore statt Gräben, leere Flächen). Noch
+// Greybox, keine Art. EINE Quelle für Render-Meshes (`src/render`) und
+// Sim-Collider (`src/sim/collision`).
 //
 // Von der Feindseite nach hinten (KONZEPT.md §3):
 //   Feindseite → Niemandsland → Frontlinie → Hinterland → Home-Line.
-// Alle Maße sind Greybox-Startwerte (Ticket AP6-01), im Spieltest justiert.
+//
+// Aufbau (AP6-01b, Layout beschlossen 2026-09-08):
+//  - **Gezähnter Feuergraben**: 5 Feuernischen (z 20…30) mit dicken Erd-
+//    Traversen dazwischen (der „Zahn"), ein durchgehender Laufgang dahinter
+//    (z 12…20) — man bewegt sich im Zickzack: Nische → um die Traverse →
+//    nächste Nische.
+//  - **Niemandsland**: Trichterfeld + eine quer laufende verfallene Alt-
+//    Frontlinie (begehbare flache Rinne) + 2 Sap-Köpfe (Stichgräben nach vorn,
+//    Horchposten, zugleich Anmarsch-Schleuse).
+//  - **Hinterland**: kein offenes Feld — 3 Verbindungsgräben vorn↔hinten (der
+//    mittlere gerade = Express-Laufgraben, lichte Breite ±1,8), ein Stützgraben
+//    quer, ein Reservegraben dahinter, dazwischen Geländeinseln mit
+//    Geschützstellungen + Baracken-Ruinen als Deckung.
+//  - **Home-Line**: die stärkste Linie, ebenfalls gezähnt (3 Nischen, aligned
+//    mit den 3 Verbindungsgraben-Mündungen), 3 begehbare Unterstände (Raum
+//    unter Flur) an der Rückwand, offene Flanken.
+//  - **Ein durchgehender Sohle-Auffangboden** unter dem ganzen Sektor: keine
+//    Lücke, durch die eine Kapsel aus der Welt fällt (Jank-Pass).
+//
 // Der Sektor liefert genau EINE `frontLinie` (id "front") + EINE `homeLinie`
-// (id "home"). Die Rollen-Felder (`zielKnoten`, `reinfKnoten`, `brescheZugang`,
-// `hintenKanten`) tragen das Nav-Wissen, das früher in `index.ts` aus A/B/C-
-// Strings abgeleitet wurde (AP6-02, Audit H2).
+// (id "home"). Die Rollen-Felder tragen das Nav-Wissen (AP6-02).
 import type { Vec3 } from "../sim/math";
 import type { Aabb, LevelBox } from "../sim/collision";
 import type {
@@ -25,6 +41,7 @@ import { brescheTag } from "../sim/sektor";
 import {
   modul,
   GRABEN_SOHLE,
+  OBERFLAECHE,
   BRESCHE_BREITE,
   type ParapetLuecke,
 } from "./module";
@@ -34,25 +51,23 @@ function raw(center: Vec3, size: Vec3): LevelBox {
 }
 
 // --- Breschen (AP4-03/06): EINE Quelle für Geometrie (getaggte Parapet-
-//     Segmente) und Meta (`parapetBreschen`). Die Sim schaltet das Segment ab,
-//     sobald die Bresche offen ist — dann ist die Bresche ein echtes Loch.
-//     Reihenfolge = Tag-Index: [0] = Mitte (die Frontlinie hängt hier ihren
-//     `brescheZugang` ein — Nav-Knoten `bresche-front`), [1] = Flanke (nur
-//     physisches Loch, kein Nav-Knoten — Audit M7 → AP7). Die Home-Line hat
-//     gar keinen Bresche-Nav-Zugang. ---
+//     Segmente) und Meta (`parapetBreschen`). Reihenfolge = Tag-Index:
+//     [0] = zentrale Feuernische („Pumpenstand") — die Frontlinie hängt hier
+//          ihren `brescheZugang` ein (Nav-Knoten `bresche-front`),
+//     [1] = West-Nische („Panzerwrack") — nur physisches Loch, kein Nav-Knoten
+//          (Audit M7 → AP7). Die Home-Line hat gar keinen Bresche-Nav-Zugang. ---
 const BRESCHEN_FRONT: Vec3[] = [
-  { x: 0, y: -0.4, z: 17.5 },
-  { x: -20, y: -0.4, z: 17.5 },
+  { x: 0, y: -0.4, z: 30 },
+  { x: -32, y: -0.4, z: 30 },
 ];
 const BRESCHEN_HOME: Vec3[] = [
-  { x: 14, y: -0.4, z: -31 },
-  { x: -14, y: -0.4, z: -31 },
+  { x: 16, y: -0.4, z: -44 },
+  { x: -16, y: -0.4, z: -44 },
 ];
 
 /**
  * Eine Parapet-Lücke für `modul("parapet", at, 90, …)`: bei 90° zeigt die
- * lokale Längsachse nach −X (`drehXZ`), also `z_lokal = at.x − x_welt`. `linie`
- * ("front" | "home") + `tagIndex` bilden das Segment-Etikett (`brescheTag`).
+ * lokale Längsachse nach −X (`drehXZ`), also `z_lokal = at.x − x_welt`.
  */
 function luecke(
   linie: string,
@@ -72,23 +87,141 @@ function aabb(minX: number, minZ: number, maxX: number, maxZ: number): Aabb {
   return { minX, minY: -6, minZ, maxX, maxY: 10, maxZ };
 }
 
-const IN_GRABEN = GRABEN_SOHLE + 0.2; // Marker knapp über der Grabensohle
+const IN_GRABEN = GRABEN_SOHLE + 0.2; // Marker knapp über der Grabensohle (−1,6)
 const AUF_FELD = 0.2; // Marker knapp über der Geländeoberkante
-const FRONT_MIN_Z = 10;
-const FRONT_MAX_Z = 22;
-const HOME_MIN_Z = -41;
-const HOME_MAX_Z = -30;
 
-// Kartengrenze (unsichtbare Sperrwände, AP5-03): x = ±34, z = +72 / −46.
-const GRENZE_X = 34;
-const GRENZE_NORD = 72;
-const GRENZE_SUED = -46;
+// Zonen-Grenzen (lückenlose Z-Bänder, volle Breite).
+const FRONT_MIN_Z = 12;
+const FRONT_MAX_Z = 30;
+const NL_MIN_Z = 30;
+const NL_MAX_Z = 56;
+const HINTER_MIN_Z = -42;
+const HOME_MAX_Z = -42;
+
+// Kartengrenze (unsichtbare Sperrwände, AP5-03) — ~30 % größer als AP6-01.
+const GRENZE_X = 44;
+const GRENZE_NORD = 92;
+const GRENZE_SUED = -60;
+
+const WAND_TOP = OBERFLAECHE + 0.6; // Oberkante Erd-/Betonwand (> STEP_HEIGHT übers Feld)
+const WAND_UNTEN = GRABEN_SOHLE - 0.6;
+
+// ---------------------------------------------------------------------------
+// Geometrie-Helfer
+// ---------------------------------------------------------------------------
+
+/** Geländeplatte, Oberkante y = 0 (liegt über dem Sohle-Auffangboden). */
+function feld(cx: number, cz: number, sx: number, sz: number): LevelBox {
+  return raw({ x: cx, y: -1.0, z: cz }, { x: sx, y: 2.0, z: sz });
+}
+
+/**
+ * Niedrige Deckung / Trümmer / Trichterrand auf der Geländeoberfläche —
+ * Unterkante ~−0,3, Oberkante `top` (Greybox: hoch = echte Deckung, ≤ 0,45 =
+ * überschreitbar). Steht mit Abstand zu allen Nav-Kanten und den Parapets.
+ */
+function deckung(
+  cx: number,
+  cz: number,
+  sx: number,
+  sz: number,
+  top: number,
+): LevelBox {
+  const unten = -0.3;
+  return raw(
+    { x: cx, y: (unten + top) / 2, z: cz },
+    { x: sx, y: top - unten, z: sz },
+  );
+}
+
+/**
+ * Querwand (entlang X bei festem z) von `von` bis `bis`, mit Lücken (je
+ * `{ x, breite }`) für Grabenmündungen / Rampen. Reicht von WAND_UNTEN bis
+ * `top` (Default WAND_TOP), Dicke 0,5 m.
+ */
+function querwand(
+  zc: number,
+  von: number,
+  bis: number,
+  luecken: { x: number; breite: number }[] = [],
+  top = WAND_TOP,
+): LevelBox[] {
+  const kanten: number[] = [von];
+  for (const l of [...luecken].sort((a, b) => a.x - b.x)) {
+    kanten.push(l.x - l.breite / 2, l.x + l.breite / 2);
+  }
+  kanten.push(bis);
+  const out: LevelBox[] = [];
+  for (let i = 0; i < kanten.length; i += 2) {
+    const a = kanten[i]!;
+    const b = kanten[i + 1]!;
+    if (b - a > 0.05) {
+      out.push(
+        raw(
+          { x: (a + b) / 2, y: (WAND_UNTEN + top) / 2, z: zc },
+          { x: b - a, y: top - WAND_UNTEN, z: 0.5 },
+        ),
+      );
+    }
+  }
+  return out;
+}
+
+/**
+ * Längswand (entlang Z bei festem x) von `von` bis `bis`, mit Lücken (je
+ * `{ z, breite }`) für Quergraben-Kreuzungen. Grabenwand längs, Dicke 0,5 m.
+ */
+function laengswand(
+  xc: number,
+  von: number,
+  bis: number,
+  luecken: { z: number; breite: number }[] = [],
+  top = WAND_TOP,
+): LevelBox[] {
+  const kanten: number[] = [von];
+  for (const l of [...luecken].sort((a, b) => a.z - b.z)) {
+    kanten.push(l.z - l.breite / 2, l.z + l.breite / 2);
+  }
+  kanten.push(bis);
+  const out: LevelBox[] = [];
+  for (let i = 0; i < kanten.length; i += 2) {
+    const a = kanten[i]!;
+    const b = kanten[i + 1]!;
+    if (b - a > 0.05) {
+      out.push(
+        raw(
+          { x: xc, y: (WAND_UNTEN + top) / 2, z: (a + b) / 2 },
+          { x: 0.5, y: top - WAND_UNTEN, z: b - a },
+        ),
+      );
+    }
+  }
+  return out;
+}
 
 // ---------------------------------------------------------------------------
 // Geometrie
 // ---------------------------------------------------------------------------
 
+// Feuergraben: vier Erd-Traversen zwischen fünf Feuernischen (x −32/−16/0/16/32).
+const TRAVERSEN_X = [-24, -8, 8, 24];
+// Home-Line: zwei Traversen zwischen drei Nischen (x −24/0/24).
+const HOME_TRAVERSEN_X = [-12, 12];
+// Verbindungsgräben im Hinterland: x-Zentren (Mitte = Express-Laufgraben).
+const VG_X = [-24, 0, 24];
+// Kreuzungs-Höhen der Quergräben (Stützgraben / Reservegraben).
+const STG_Z = -1;
+const RSV_Z = -22;
+
 const boxes: LevelBox[] = [
+  // === Sohle-Auffangboden — EINE durchgehende Platte unter dem ganzen Sektor
+  //     (Oberkante = GRABEN_SOHLE). Jeder Graben läuft darauf; keine Lücke, durch
+  //     die eine Kapsel aus der Welt fällt (Jank-Pass „durchgehender Boden"). ===
+  raw(
+    { x: 0, y: GRABEN_SOHLE - 0.5, z: (GRENZE_NORD + GRENZE_SUED) / 2 },
+    { x: 2 * GRENZE_X + 8, y: 1, z: GRENZE_NORD - GRENZE_SUED + 16 },
+  ),
+
   // === Kartengrenze — unsichtbare Sperrwände rundum (AP5-03) ================
   ...modul("kartengrenze", { x: -GRENZE_X, y: 0, z: GRENZE_SUED }, 0, {
     laenge: GRENZE_NORD - GRENZE_SUED,
@@ -104,143 +237,234 @@ const boxes: LevelBox[] = [
   }),
 
   // === Umland (AP5-03) — offenes, auslaufendes Gelände jenseits der Grenze,
-  //     Oberkante bündig mit y = 0, so weit, dass der Nacht-Dunst die Außen-
-  //     kante schluckt. Unerreichbar (die Kartengrenze sperrt davor). =========
-  raw({ x: -160, y: -1.5, z: 13 }, { x: 250, y: 3, z: 640 }), // West
-  raw({ x: 160, y: -1.5, z: 13 }, { x: 250, y: 3, z: 640 }), // Ost
-  raw({ x: 0, y: -1.5, z: 232 }, { x: 70, y: 3, z: 320 }), // Nord (ab z = 72)
-  raw({ x: 0, y: -1.5, z: -206 }, { x: 70, y: 3, z: 320 }), // Süd (ab z = −46)
+  //     Oberkante bündig mit y = 0, bis in den Nacht-Dunst. Unerreichbar. =====
+  raw({ x: -190, y: -1.5, z: 16 }, { x: 300, y: 3, z: 760 }), // West
+  raw({ x: 190, y: -1.5, z: 16 }, { x: 300, y: 3, z: 760 }), // Ost
+  raw({ x: 0, y: -1.5, z: 292 }, { x: 96, y: 3, z: 400 }), // Nord (ab z = 92)
+  raw({ x: 0, y: -1.5, z: -260 }, { x: 96, y: 3, z: 400 }), // Süd (ab z = −60)
   // Flache Trichterränder / Erdhaufen im Umland (≤ 1,1 m — keine Wand).
-  raw({ x: -46, y: 0.4, z: 30 }, { x: 8, y: 0.8, z: 6 }),
-  raw({ x: -52, y: 0.5, z: -14 }, { x: 9, y: 1.0, z: 7 }),
-  raw({ x: 44, y: 0.4, z: 26 }, { x: 7, y: 0.8, z: 6 }),
-  raw({ x: 50, y: 0.55, z: -20 }, { x: 10, y: 1.1, z: 7 }),
-  raw({ x: -14, y: 0.4, z: 86 }, { x: 9, y: 0.8, z: 6 }),
-  raw({ x: 18, y: 0.35, z: 92 }, { x: 7, y: 0.7, z: 5 }),
-  raw({ x: -10, y: 0.35, z: -60 }, { x: 7, y: 0.7, z: 5 }),
-  raw({ x: 22, y: 0.5, z: -66 }, { x: 8, y: 1.0, z: 6 }),
+  raw({ x: -54, y: 0.4, z: 34 }, { x: 8, y: 0.8, z: 6 }),
+  raw({ x: -60, y: 0.5, z: -16 }, { x: 9, y: 1.0, z: 7 }),
+  raw({ x: 55, y: 0.4, z: 28 }, { x: 7, y: 0.8, z: 6 }),
+  raw({ x: 60, y: 0.55, z: -22 }, { x: 10, y: 1.1, z: 7 }),
+  raw({ x: -16, y: 0.4, z: 104 }, { x: 9, y: 0.8, z: 6 }),
+  raw({ x: 20, y: 0.35, z: 110 }, { x: 7, y: 0.7, z: 5 }),
+  raw({ x: -12, y: 0.35, z: -78 }, { x: 7, y: 0.7, z: 5 }),
+  raw({ x: 24, y: 0.5, z: -84 }, { x: 8, y: 1.0, z: 6 }),
 
-  // === Feindseite — feindliches Grabenstück + Anmarschwege (KONZEPT.md §3:
-  //     „Der Feind spawnt hier, solange die Frontlinie steht"). Für den
-  //     Spieler nicht betretbar: eine unsichtbare Sperrwand bei z = 53 sperrt
-  //     alles nördlich der Spawn-Punkte (z ≈ 49–51).
-  raw({ x: 0, y: -0.5, z: 62 }, { x: 60, y: 1, z: 22 }), // Feindseiten-Boden (z 51..73)
-  { ...raw({ x: 0, y: 2, z: 53 }, { x: 62, y: 8, z: 0.6 }), unsichtbar: true },
-  // Feind-Grabenlinie + Silhouette (nur Kulisse, nördlich der Sperrwand) —
-  // verdeckt die Spawn-Punkte von der Frontlinie aus.
-  raw({ x: -22, y: 1, z: 55 }, { x: 9, y: 2, z: 3 }),
-  raw({ x: 0, y: 1, z: 55 }, { x: 11, y: 2, z: 3 }),
-  raw({ x: 22, y: 1, z: 55 }, { x: 9, y: 2, z: 3 }),
-  raw({ x: 0, y: -0.9, z: 62 }, { x: 60, y: 1.8, z: 3.6 }),
-  raw({ x: 0, y: 0.6, z: 64.2 }, { x: 60, y: 2.4, z: 0.5 }),
+  // === Feindseite (z 56…92) — feindliches Grabenstück + Anmarschwege. Für den
+  //     Spieler nicht betretbar: unsichtbare Sperrwand bei z = 64 (nördlich der
+  //     Spawn-Punkte z ≈ 58–60). =============================================
+  feld(0, 76, 2 * GRENZE_X + 4, 40), // Feindseiten-Feld (z 56…96)
+  {
+    ...raw({ x: 0, y: 2, z: 64 }, { x: 2 * GRENZE_X + 4, y: 8, z: 0.6 }),
+    unsichtbar: true,
+  },
+  // Feind-Grabenlinie + Silhouette — EINE zusammenhängende Masse am Boden (keine
+  // einzelnen schwebenden Klötze, Jank-Pass): Brustwehr-Berm + Kronen-Silhouette
+  // + geerdete Unterstands-Hügel.
+  raw({ x: 0, y: -0.7, z: 68 }, { x: 74, y: 2.2, z: 4 }),
+  raw({ x: 0, y: 0.9, z: 70.4 }, { x: 74, y: 2.8, z: 0.8 }),
+  raw({ x: -26, y: 1.0, z: 74 }, { x: 12, y: 3.0, z: 4 }),
+  raw({ x: 2, y: 1.0, z: 74 }, { x: 14, y: 3.0, z: 4 }),
+  raw({ x: 28, y: 1.0, z: 74 }, { x: 12, y: 3.0, z: 4 }),
 
-  // === Niemandsland — Trichterfeld, Drahtreste, Ruinen. Verzweigt, viel
-  //     Deckung — aber alle Ruinen ≤ 1,8 m und in den Taschen ZWISCHEN den
-  //     Nav-Bahnen (x ±22 / x 0 vertikal, z ≈ 44 / z ≈ 32 quer). =============
-  // Boden stößt an die Frontgraben-Nordkante (z 18,5) — durchgehender Boden
-  // Niemandsland ↔ Frontgraben, ohne Loch zwischen den beiden Flächen.
-  raw({ x: 0, y: -0.5, z: 35.5 }, { x: 64, y: 1, z: 34 }), // Boden Niemandsland (z 18,5..52,5)
-  // Landmark — Beobachtungsturm-Ruine (schmal + hoch), in der West-Tasche.
-  raw({ x: -8, y: 3, z: 39 }, { x: 2.6, y: 8, z: 2.6 }),
-  // Ruinen-Cluster in den vier Taschen (Deckung, klar abseits der Bahnen).
-  raw({ x: -13, y: 0.9, z: 38 }, { x: 6, y: 1.8, z: 4 }),
-  raw({ x: 13, y: 0.9, z: 38 }, { x: 6, y: 1.8, z: 4 }),
-  raw({ x: -13, y: 0.7, z: 26 }, { x: 5, y: 1.4, z: 3 }),
-  raw({ x: 13, y: 0.7, z: 26 }, { x: 5, y: 1.4, z: 3 }),
-  // Deckung für den verdeckten Verstärkungs-Knoten (nördlich davon).
-  raw({ x: -7, y: 0.85, z: 29 }, { x: 5, y: 1.7, z: 2.5 }),
-  // Drahtreste / Trichter (reine Deckung, ≤ 0,9 m — blocken keine Kapsel).
-  raw({ x: -18, y: 0.4, z: 37 }, { x: 3, y: 0.8, z: 3 }),
-  raw({ x: 18, y: 0.4, z: 37 }, { x: 3, y: 0.8, z: 3 }),
-  raw({ x: 4, y: 0.4, z: 27 }, { x: 3, y: 0.8, z: 3 }),
+  // === Niemandsland (z 30…56) — Trichterfeld, Draht, Ruinen + eine quer
+  //     laufende verfallene Alt-Frontlinie (begehbar). =======================
+  feld(0, 43, 2 * GRENZE_X + 4, NL_MAX_Z - NL_MIN_Z), // Niemandsland-Feld (z 30…56)
+  // Verfallene Alt-Frontlinie: flache begehbare Rinne quer (z ≈ 45…49, ~0,6 m
+  // tief — ohne Sprung hinein/heraus), niedrige gebrochene Brustwehr mit Lücken
+  // für die drei Anmarsch-Bahnen (x ≈ −22 / 0 / +22).
+  raw({ x: 0, y: -0.8, z: 47 }, { x: 84, y: 0.6, z: 4.2 }), // Rinnensohle (Oberkante −0,5)
+  // Verfallene Brustwehr, Oberkante 0,4 (überall überschreitbar — man bewegt
+  // sich frei durch die Alt-Frontlinie), mit Lücken an den drei Anmarsch-Bahnen.
+  raw({ x: -33, y: -0.15, z: 49.6 }, { x: 18, y: 1.1, z: 0.6 }),
+  raw({ x: -10, y: -0.15, z: 49.6 }, { x: 16, y: 1.1, z: 0.6 }),
+  raw({ x: 13, y: -0.15, z: 49.6 }, { x: 16, y: 1.1, z: 0.6 }),
+  raw({ x: 34, y: -0.15, z: 49.6 }, { x: 16, y: 1.1, z: 0.6 }),
+  raw({ x: -30, y: -0.25, z: 44.6 }, { x: 24, y: 1.0, z: 0.6 }),
+  raw({ x: 0, y: -0.25, z: 44.6 }, { x: 22, y: 1.0, z: 0.6 }),
+  raw({ x: 30, y: -0.25, z: 44.6 }, { x: 24, y: 1.0, z: 0.6 }),
+  // Landmark — Beobachtungsturm-Ruine (schmal + hoch), westlich der Mittelbahn.
+  raw({ x: -10, y: 3.6, z: 42 }, { x: 2.6, y: 9, z: 2.6 }),
+  // Ruinen-Cluster + Trichter (Deckung, in den Taschen ZWISCHEN Bahnen/Kanten).
+  deckung(-30, 38, 7, 5, 1.6),
+  deckung(30, 38, 7, 5, 1.6),
+  deckung(-30, 53, 7, 5, 1.4),
+  deckung(30, 53, 7, 5, 1.4),
+  deckung(8, 52, 6, 5, 1.5),
+  // Deckung, hinter der der verdeckte `reinforcement-front`-Knoten liegt.
+  deckung(-11, 37, 5, 4, 1.6),
+  // Draht / flache Trichter (≤ 0,45 m — überschreitbar, dürfen auf Bahnen).
+  deckung(-22, 43, 4, 3, 0.4),
+  deckung(22, 43, 4, 3, 0.4),
+  deckung(0, 36, 4, 3, 0.4),
+  // Zwei Sap-Köpfe (Stichgräben nach vorn, Horchposten): vom Feuergraben durch
+  // die Parapet-Lücken bei x = ±16 nach Norden in den Trichterbereich.
+  ...modul("sap", { x: -16, y: 0, z: NL_MIN_Z }, 0, { laenge: 7, breite: 3 }),
+  ...modul("sap", { x: 16, y: 0, z: NL_MIN_Z }, 0, { laenge: 7, breite: 3 }),
 
-  // === Frontlinie — EINE durchgehende Grabenlinie über die Sektorbreite ====
-  raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: 15 }, { x: 64, y: 1, z: 7 }), // Grabensohle
-  // Parapet, drei Segmente mit zwei ~5-m-Sap-Lücken (x ±5..±10) dazwischen.
-  // Bresche [0] in der Mitte (Nav-Knoten), Bresche [1] im Westsegment (Loch).
-  ...modul("parapet", { x: 30, y: 0, z: 17.5 }, 90, { laenge: 20 }), // Ost x 10..30
-  ...modul("parapet", { x: 5, y: 0, z: 17.5 }, 90, {
-    laenge: 10,
-    luecken: [luecke("front", 5, BRESCHEN_FRONT[0]!, 0)],
-  }), // Mitte x −5..5
-  ...modul("parapet", { x: -10, y: 0, z: 17.5 }, 90, {
-    laenge: 20,
-    luecken: [luecke("front", -10, BRESCHEN_FRONT[1]!, 1)],
-  }), // West x −10..−30
-  // Parados (Rückwand) — Lücken für 2 Rampen (x ±16) + die Laufgraben-Mündung (x 0).
-  raw({ x: -25, y: -0.6, z: 11.5 }, { x: 14, y: 2.4, z: 0.5 }),
-  raw({ x: -8, y: -0.6, z: 11.5 }, { x: 12, y: 2.4, z: 0.5 }),
-  raw({ x: 8, y: -0.6, z: 11.5 }, { x: 12, y: 2.4, z: 0.5 }),
-  raw({ x: 25, y: -0.6, z: 11.5 }, { x: 14, y: 2.4, z: 0.5 }),
-  // Rampen Hinterland → Frontgraben (ohne Sprung begehbar).
-  ...modul("rampe", { x: -16, y: 0, z: 10.8 }, 0, { laenge: 4, breite: 4 }),
-  ...modul("rampe", { x: 16, y: 0, z: 10.8 }, 0, { laenge: 4, breite: 4 }),
-
-  // === Hinterland — großer frei begehbarer Bereich. Ein zentraler gedeckter
-  //     Laufgraben (Mitte, x ±1,8) teilt den Bereich; zwei offene Seiten-
-  //     routen (West / Ost) laufen über die Fläche. Drei verbundene Wege
-  //     vorn↔hinten. =========================================================
-  // Boden endet an der Home-Graben-Nordkante (z −29,5) — jenseits der
-  // Parapet-Enden fällt der Feind hier 1,8 m in den Home-Graben.
-  raw({ x: -18, y: -0.5, z: -9 }, { x: 32, y: 1, z: 41 }), // Boden West (x −34..−2, z −29,5..11,5)
-  raw({ x: 18, y: -0.5, z: -9 }, { x: 32, y: 1, z: 41 }), // Boden Ost (x 2..34, z −29,5..11,5)
-  // Zentraler Laufgraben (gedeckt, gerade) — Sohle z −32..12, Wände z −31..9.
-  raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: -10 }, { x: 3.6, y: 1, z: 44 }),
-  raw({ x: -2.0, y: -0.55, z: -11 }, { x: 0.4, y: 2.5, z: 40 }),
-  raw({ x: 2.0, y: -0.55, z: -11 }, { x: 0.4, y: 2.5, z: 40 }),
-  // Flankenrampen Hinterland → Home-Graben (2-Wege, jenseits der Parapet-Enden).
-  ...modul("rampe", { x: -31, y: 0, z: -29.5 }, 180, { laenge: 4, breite: 5 }),
-  ...modul("rampe", { x: 31, y: 0, z: -29.5 }, 180, { laenge: 4, breite: 5 }),
-  // Baracken-Ruinen / Geschützstellungen (Deckung, in den Taschen der
-  // Seitenrouten — nicht auf x ±18..±30 / x 0).
-  raw({ x: -12, y: 0.7, z: -18 }, { x: 5, y: 1.4, z: 4 }),
-  raw({ x: 12, y: 0.7, z: -18 }, { x: 5, y: 1.4, z: 4 }),
-  raw({ x: -31, y: 0.9, z: -6 }, { x: 5, y: 1.8, z: 4 }),
-  raw({ x: 31, y: 0.9, z: -6 }, { x: 5, y: 1.8, z: 4 }),
-  raw({ x: -12, y: 0.9, z: 6 }, { x: 5, y: 1.8, z: 4 }),
-  raw({ x: 12, y: 0.9, z: 6 }, { x: 5, y: 1.8, z: 4 }),
-
-  // === Home-Line — durchgehende befestigte rückwärtige Linie ================
-  // Grabensohle über die volle Sektorbreite (x ±34, bis an die unsichtbare
-  // Kartengrenze). AP6-06: vorher x ±32 — die Ost-/West-Flankenrampen (x ±31,
-  // 5 m breit → bis x ±33,5) ragten über die Sohlenkante hinaus, eine Kapsel in
-  // der äußeren Rampenspur (x > 32) lief südlich der untersten Stufe ins Leere
-  // und fiel durch die Welt. Jetzt trägt die Sohle die ganze Rampe.
-  raw({ x: 0, y: GRABEN_SOHLE - 0.5, z: -35 }, { x: 68, y: 1, z: 11 }), // Grabensohle z −40,5..−29,5
-  // Nach Norden gerichtetes Parapet, zwei Segmente + Laufgraben-Lücke (x −4..4).
-  ...modul("parapet", { x: 28, y: 0, z: -31 }, 90, {
-    laenge: 24,
-    luecken: [luecke("home", 28, BRESCHEN_HOME[0]!, 0)],
-  }), // Ost x 4..28
-  ...modul("parapet", { x: -4, y: 0, z: -31 }, 90, {
-    laenge: 24,
-    luecken: [luecke("home", -4, BRESCHEN_HOME[1]!, 1)],
-  }), // West x −4..−28
-  // Jenseits der Parapet-Enden (x ±29..±33) bleibt die Grabenkante offen —
-  // der Feind steigt dort in den Home-Graben (wie an den Sap-Lücken vorn).
-  // Rückwand mit drei Lücken für die Unterstände (Munition / Verband / Kdr.).
-  raw({ x: -25, y: -0.6, z: -40.5 }, { x: 14, y: 2.4, z: 0.5 }),
-  raw({ x: -8, y: -0.6, z: -40.5 }, { x: 12, y: 2.4, z: 0.5 }),
-  raw({ x: 8, y: -0.6, z: -40.5 }, { x: 12, y: 2.4, z: 0.5 }),
-  raw({ x: 25, y: -0.6, z: -40.5 }, { x: 14, y: 2.4, z: 0.5 }),
-  // Drei begehbare Unterstände (dugouts hinter der Rückwand, z ≤ −40,5).
-  ...modul("unterstand", { x: -16, y: GRABEN_SOHLE, z: -40.5 }, 180, {
-    breite: 3.5,
-    laenge: 3.5,
+  // === Frontlinie (z 12…30) — gezähnter Feuergraben ========================
+  // Parapet (Nordwand, Blick nach Niemandsland) bei z = 30, in drei Segmenten
+  // mit zwei Sap-Lücken (x −17,5…−14,5 / 14,5…17,5) dazwischen. Bresche [0]
+  // „Pumpenstand" in der zentralen Nische (x = 0, Nav-Knoten), Bresche [1]
+  // „Panzerwrack" in der West-Nische (x = −32, reines Loch).
+  ...modul("parapet", { x: -17.5, y: 0, z: 30 }, 90, {
+    laenge: GRENZE_X - 17.5, // x −44 … −17,5
+    luecken: [luecke("front", -17.5, BRESCHEN_FRONT[1]!, 1)],
   }),
-  ...modul("unterstand", { x: 0, y: GRABEN_SOHLE, z: -40.5 }, 180, {
-    breite: 3.5,
-    laenge: 3.5,
+  ...modul("parapet", { x: 14.5, y: 0, z: 30 }, 90, {
+    laenge: 29, // x −14,5 … 14,5
+    luecken: [luecke("front", 14.5, BRESCHEN_FRONT[0]!, 0)],
   }),
-  ...modul("unterstand", { x: 16, y: GRABEN_SOHLE, z: -40.5 }, 180, {
-    breite: 3.5,
-    laenge: 3.5,
+  ...modul("parapet", { x: GRENZE_X, y: 0, z: 30 }, 90, {
+    laenge: GRENZE_X - 17.5, // x 17,5 … 44
   }),
+  // Vier Erd-Traversen zwischen den fünf Feuernischen: jede ragt von der
+  // Brustwehr (z 30) nach Süden bis z ≈ 20 in den Graben — der Laufgang dahinter
+  // (z 12…20) bleibt frei, der Weg zickt Nische↔Laufgang↔Nische.
+  ...TRAVERSEN_X.flatMap((x) =>
+    modul("traverse", { x, y: 0, z: 20 }, 0, { laenge: 11, breite: 5 }),
+  ),
+  // Parados (Südwand) bei z = 11,5 — Lücken für die drei Verbindungsgraben-
+  // Mündungen (x −24 / 0 / +24) + zwei Rampen ins Hinterland-Feld (x ±11).
+  ...querwand(11.5, -GRENZE_X, GRENZE_X, [
+    { x: -24, breite: 5.4 },
+    { x: -11, breite: 4 },
+    { x: 0, breite: 5.4 },
+    { x: 11, breite: 4 },
+    { x: 24, breite: 5.4 },
+  ]),
+  // Zwei Rampen Feuergraben-Laufgang ↔ Hinterland-Feld (x ±11, z 11,5…16).
+  ...modul("rampe", { x: -11, y: 0, z: 11.5 }, 0, { laenge: 4.5, breite: 4 }),
+  ...modul("rampe", { x: 11, y: 0, z: 11.5 }, 0, { laenge: 4.5, breite: 4 }),
+
+  // === Hinterland (z −42…12) — kein offenes Feld ===========================
+  // Drei Verbindungsgräben längs (x −24 / 0 / +24). Mitte lichte Breite ±1,8
+  // (Express-Laufgraben, gerade), West/Ost ±2,6. Wände z −44 … 11, Lücken an den
+  // Quergraben-Kreuzungen (Stützgraben z −1, Reservegraben z −22).
+  ...VG_X.flatMap((xc) => {
+    const halb = xc === 0 ? 1.8 : 2.6;
+    // Der mittlere Express-Laufgraben bekommt nur schmale Quergraben-Durchlässe
+    // (Sally-Ports) — der Rest bleibt eine lange durchgehende Wand (die
+    // AP5-01-Gegenprobe in `collision-verbindungsgraben.test.ts` braucht sie).
+    const breite = xc === 0 ? 3.4 : 6;
+    const luecken = [
+      { z: STG_Z, breite },
+      { z: RSV_Z, breite },
+    ];
+    return [
+      ...laengswand(xc - halb - 0.25, -44, 11, luecken),
+      ...laengswand(xc + halb + 0.25, -44, 11, luecken),
+    ];
+  }),
+  // Stützgraben quer bei z ≈ −1 (Sohle), x −25 … 25 — Nord-/Südwand, Lücken an
+  // den drei Verbindungsgräben.
+  ...querwand(
+    STG_Z + 2,
+    -25,
+    25,
+    VG_X.map((x) => ({ x, breite: 6.4 })),
+  ),
+  ...querwand(
+    STG_Z - 2,
+    -25,
+    25,
+    VG_X.map((x) => ({ x, breite: 6.4 })),
+  ),
+  // Reservegraben quer bei z ≈ −22 (Sohle), x −25 … 25.
+  ...querwand(
+    RSV_Z + 2,
+    -25,
+    25,
+    VG_X.map((x) => ({ x, breite: 6.4 })),
+  ),
+  ...querwand(
+    RSV_Z - 2,
+    -25,
+    25,
+    VG_X.map((x) => ({ x, breite: 6.4 })),
+  ),
+  // Geländeinseln (Oberkante y = 0) — füllen die Flächen zwischen den Gräben.
+  // Innentaschen (zwischen den Verbindungsgräben, gedeckt von Wänden — Deckung).
+  feld(-13, 5.5, 15, 10), // NW-Innentasche (x −20,5…−5,5, z 0,5…10,5)
+  feld(13, 5.5, 15, 10), // NE
+  feld(-13, -11.5, 15, 18), // MW-Innentasche (z −20,5…−2,5)
+  feld(13, -11.5, 15, 18),
+  feld(-13, -33, 15, 16), // SW-Innentasche (z −41…−25)
+  feld(13, -33, 15, 16),
+  // Flanken-Felder (x ±27…44, laufen die ganze Hinterland-Tiefe) — offene Route
+  // außen an den Gräben, mit Geschützstellungen; an den Home-Flankenrampen
+  // angebunden.
+  feld(-35, -15, 18, 54), // West-Flanke (x −44…−26, z −42…12)
+  feld(35, -15, 18, 54), // Ost-Flanke
+  // Zwei Rampen Feuergraben-Laufgang ↔ NW/NE-Innentasche liegen schon oben
+  // (Parados-Rampen x ±11).
+  // Geschützstellungen (Sandsackringe) + Baracken-Ruinen (Deckung, auf den
+  // Inseln — nicht in den Grabenlinien, mit Abstand zu den Nav-Kanten).
+  ...modul("geschuetzstellung", { x: -35, y: 0, z: 4 }, 0, { breite: 5 }),
+  ...modul("geschuetzstellung", { x: 35, y: 0, z: -14 }, 0, { breite: 5 }),
+  deckung(-13, 5, 6, 4, 1.6), // Baracken-Ruine NW-Insel
+  deckung(13, -12, 6, 4, 1.6), // Baracken-Ruine NE/ME-Insel
+  deckung(-13, -33, 6, 4, 1.4), // Trichter SW
+  deckung(13, -33, 6, 4, 1.4), // Trichter SE
+  deckung(-35, -33, 6, 5, 1.6), // West-Flanke Süd
+  deckung(35, 4, 6, 5, 1.6), // Ost-Flanke Nord
+
+  // === Home-Line (z −60…−42) — die stärkste Linie, gezähnt =================
+  // Parapet (Nordwand, Blick ins Hinterland) bei z = −44 — vier Segmente:
+  // permanente Lücken an den drei Verbindungsgraben-Mündungen (x −24 / 0 / +24),
+  // Breschen [0] Ost (x = 16) / [1] West (x = −16) je als getaggtes Segment,
+  // offene Flanken x < −32 / x > 32.
+  ...modul("parapet", { x: -26.5, y: 0, z: -44 }, 90, { laenge: 5.5 }), // x −32…−26,5
+  ...modul("parapet", { x: -2.5, y: 0, z: -44 }, 90, {
+    laenge: 19, // x −21,5…−2,5
+    luecken: [luecke("home", -2.5, BRESCHEN_HOME[1]!, 1)],
+  }),
+  ...modul("parapet", { x: 21.5, y: 0, z: -44 }, 90, {
+    laenge: 19, // x 2,5…21,5
+    luecken: [luecke("home", 21.5, BRESCHEN_HOME[0]!, 0)],
+  }),
+  ...modul("parapet", { x: 32, y: 0, z: -44 }, 90, { laenge: 5.5 }), // x 26,5…32
+  // Zwei Erd-Traversen zwischen den drei Home-Nischen (x ±12): ragen von der
+  // Brustwehr (z −44) nach Süden bis z ≈ −48.
+  ...HOME_TRAVERSEN_X.flatMap((x) =>
+    modul("traverse", { x, y: 0, z: -48 }, 0, { laenge: 4.5, breite: 5 }),
+  ),
+  // Rückwand (Süd) bei z = −52,5 — drei Lücken für die Unterstände (x −24/0/24).
+  ...querwand(-52.5, -GRENZE_X, GRENZE_X, [
+    { x: -24, breite: 4.6 },
+    { x: 0, breite: 4.6 },
+    { x: 24, breite: 4.6 },
+  ]),
+  // Drei begehbare Unterstände (Raum unter Flur) hinter der Rückwand:
+  // Munitionslager / Verbandsplatz / Feldkommandeur. `drehung 180` → der Raum
+  // liegt SÜDLICH der Rückwand (z < −52,5), die Öffnung zeigt nach Norden in den
+  // Home-Graben.
+  ...modul("unterstand", { x: -24, y: GRABEN_SOHLE, z: -52.5 }, 180, {
+    breite: 4,
+    laenge: 4,
+  }),
+  ...modul("unterstand", { x: 0, y: GRABEN_SOHLE, z: -52.5 }, 180, {
+    breite: 4,
+    laenge: 4,
+  }),
+  ...modul("unterstand", { x: 24, y: GRABEN_SOHLE, z: -52.5 }, 180, {
+    breite: 4,
+    laenge: 4,
+  }),
+  // Zwei Flankenrampen Hinterland-Flanke → Home-Graben (jenseits der Parapet-
+  // Enden, x ≈ ±38 — hier steigt auch der Feind ein).
+  ...modul("rampe", { x: -38, y: 0, z: -42 }, 180, { laenge: 5, breite: 6 }),
+  ...modul("rampe", { x: 38, y: 0, z: -42 }, 180, { laenge: 5, breite: 6 }),
 ];
 
 // ---------------------------------------------------------------------------
-// Nav-Graph (AP4-02) — handgepflegt entlang der begehbaren Route. Deutlich mehr
-// Knoten als der alte „H"-Sektor: größeres Netz, mehrere Wege vorn↔hinten.
+// Nav-Graph (AP4-02) — handgepflegt entlang der begehbaren Route. ~75 Knoten
+// (AP6-01b: +30 % Größe, gezähnter Feuergraben, Verbindungsgraben-Netz). Das
+// Nav-Netz deckt bewusst nur die Grabenrouten ab (die Feind-KI läuft darin);
+// die Geländeinseln sind Deckung/Roam-Raum (Roam-Nav → AP6-05). Jede Kante
+// schuldet dem Begehbarkeits-Test (`navgraph-begehbarkeit.test.ts`).
 // ---------------------------------------------------------------------------
 
 function nk(
@@ -259,59 +483,100 @@ function eng(k: NavKnoten): NavKnoten {
 }
 
 const navKnoten: NavKnoten[] = [
-  // --- Feindseite: Spawn-/Anmarschknoten (KONZEPT.md §3: verdeckt — die
-  //     Silhouette nördlich davon + die Distanz nehmen sie aus dem Sichtfeld)
-  nk("spawn-w", -22, 49, "feindseite"),
-  nk("spawn-m", 0, 50, "feindseite"),
-  nk("spawn-e", 22, 49, "feindseite"),
+  // --- Feindseite: Spawn-/Anmarschknoten (verdeckt hinter Silhouette + Distanz)
+  nk("spawn-w", -24, 59, "feindseite"),
+  nk("spawn-m", 0, 60, "feindseite"),
+  nk("spawn-e", 24, 59, "feindseite"),
 
-  // --- Niemandsland: drei Bahnen (x −22 / 0 / +22) + zwei Querreihen (z ≈ 44
-  //     / z ≈ 32). Die Ruinen stehen in den Taschen dazwischen.
-  nk("nm-w1", -22, 44, "niemandsland"),
-  nk("nm-w2", -22, 32, "niemandsland"),
-  nk("nm-m1", 0, 45, "niemandsland"),
-  nk("nm-m2", 0, 33, "niemandsland"),
-  nk("nm-e1", 22, 44, "niemandsland"),
-  nk("nm-e2", 22, 32, "niemandsland"),
-  // Verdeckter Verstärkungs-/Watchdog-Reloc-Knoten (KONZEPT.md §3: „materiali-
-  // sieren nie im Sichtfeld") — hinter der Deckungsruine bei (−7, 29).
-  nk("reinforcement-front", -7, 26, "niemandsland"),
+  // --- Niemandsland: drei Bahnen (x −22 / 0 / +22), die Alt-Frontlinie quer
+  //     (z ≈ 47, begehbar) und zwei Sap-Köpfe.
+  nk("nm-w1", -22, 53, "niemandsland"),
+  nk("nm-m1", 0, 53, "niemandsland"),
+  nk("nm-e1", 22, 53, "niemandsland"),
+  nk("cr-w", -33, 44, "niemandsland"), // Flanken-Trichter (verzweigte Route)
+  nk("cr-e", 33, 44, "niemandsland"),
+  nk("alt-w", -22, 47, "niemandsland"),
+  nk("alt-mw", -11, 47, "niemandsland"),
+  nk("alt-m", 0, 47, "niemandsland"),
+  nk("alt-me", 11, 47, "niemandsland"),
+  nk("alt-e", 22, 47, "niemandsland"),
+  nk("nm-w2", -22, 40, "niemandsland"),
+  nk("nm-m2", 0, 40, "niemandsland"),
+  nk("nm-e2", 22, 40, "niemandsland"),
+  // Verdeckter Verstärkungs-/Watchdog-Reloc-Knoten (nie im Sichtfeld) — hinter
+  // der Deckungsruine bei (−11, 37).
+  nk("reinforcement-front", -8, 35, "niemandsland"),
+  // Sap-Köpfe (Horchposten, vorn im Trichterbereich).
+  nk("sapkopf-w", -16, 37, "niemandsland"),
+  nk("sapkopf-e", 16, 37, "niemandsland"),
   // Direkt vor der Frontlinie (`vorfront` = `frontLinie.brescheZugang.davor`).
-  nk("vorfront-w", -16, 22, "niemandsland"),
-  nk("vorfront", 0, 22, "niemandsland"),
-  nk("vorfront-e", 16, 22, "niemandsland"),
+  nk("vorfront-w", -16, 33, "niemandsland"),
+  nk("vorfront", 0, 33, "niemandsland"),
+  nk("vorfront-e", 16, 33, "niemandsland"),
 
-  // --- Frontlinie: Sap-Lücken, Bresche-Kontakt, Grabenknoten, Parados-Rückwege
-  eng(nk("sap-w", -7.5, 18.5, "frontlinie")),
-  eng(nk("sap-e", 7.5, 18.5, "frontlinie")),
-  nk("front-w", -16, 14.5, "frontlinie", IN_GRABEN),
-  nk("front-front", 0, 14.5, "frontlinie", IN_GRABEN),
-  nk("front-e", 16, 14.5, "frontlinie", IN_GRABEN),
-  // Bresche-Kontaktknoten auf der Mittel-Bresche (x = 0) =
-  // `frontLinie.brescheZugang.bresche`. Die West-Bresche (x = −20) hat keinen
-  // eigenen Knoten — sie bleibt reines physisches Loch (Audit M7, volle
-  // Nav-Modellierung erst im AP7-Politur-Ticket „Sektor-Wissen aus der Sim").
-  eng(nk("bresche-front", 0, 17.5, "frontlinie")),
-  eng(nk("parados-w", -16, 10.5, "frontlinie")),
-  eng(nk("parados-e", 16, 10.5, "frontlinie")),
-  eng(nk("parados-m", 0, 9.5, "hinterland", IN_GRABEN)),
+  // --- Frontlinie: Sap-Lücken (eng), fünf Feuernischen, Laufgang, Bresche,
+  //     Parados-Mündungen (eng).
+  eng(nk("sap-w", -16, 30, "frontlinie")),
+  eng(nk("sap-e", 16, 30, "frontlinie")),
+  nk("front-fw", -32, 25, "frontlinie", IN_GRABEN),
+  nk("front-w", -16, 25, "frontlinie", IN_GRABEN),
+  nk("front-front", 0, 25, "frontlinie", IN_GRABEN),
+  nk("front-e", 16, 25, "frontlinie", IN_GRABEN),
+  nk("front-fe", 32, 25, "frontlinie", IN_GRABEN),
+  nk("rl-1", -32, 16, "frontlinie", IN_GRABEN),
+  nk("rl-2", -16, 16, "frontlinie", IN_GRABEN),
+  nk("rl-3", 0, 16, "frontlinie", IN_GRABEN),
+  nk("rl-4", 16, 16, "frontlinie", IN_GRABEN),
+  nk("rl-5", 32, 16, "frontlinie", IN_GRABEN),
+  // Traversen-Durchgänge (eng): der Weg zwängt sich im Laufgang an jeder Traverse
+  // vorbei — exakt durchlaufen, keine Ecke schneiden.
+  eng(nk("rl-a", -24, 16, "frontlinie", IN_GRABEN)),
+  eng(nk("rl-b", -8, 16, "frontlinie", IN_GRABEN)),
+  eng(nk("rl-c", 8, 16, "frontlinie", IN_GRABEN)),
+  eng(nk("rl-d", 24, 16, "frontlinie", IN_GRABEN)),
+  // Bresche-Kontaktknoten auf der zentralen Nische (x = 0) =
+  // `frontLinie.brescheZugang.bresche`. Die West-Bresche (x = −32) hat keinen
+  // Knoten — reines Loch (Audit M7 → AP7).
+  eng(nk("bresche-front", 0, 30, "frontlinie")),
+  eng(nk("parados-w", -24, 12, "frontlinie", IN_GRABEN)),
+  eng(nk("parados-m", 0, 12, "frontlinie", IN_GRABEN)),
+  eng(nk("parados-e", 24, 12, "frontlinie", IN_GRABEN)),
 
-  // --- Hinterland: zentraler gedeckter Laufgraben (Mitte) + zwei offene
-  //     Seitenrouten über die Fläche (West x ≈ −18…−30 / Ost x ≈ 18…30)
-  nk("hl-mitte", 0, -8, "hinterland", IN_GRABEN),
-  nk("hl-sued", 0, -24, "hinterland", IN_GRABEN),
-  nk("hl-w1", -18, 2, "hinterland"),
-  nk("hl-w2", -24, -12, "hinterland"),
-  nk("hl-w3", -30, -25, "hinterland"),
-  nk("hl-e1", 18, 2, "hinterland"),
-  nk("hl-e2", 24, -12, "hinterland"),
-  nk("hl-e3", 30, -25, "hinterland"),
+  // --- Hinterland: drei Verbindungsgräben (Mitte gerade = Express-Laufgraben),
+  //     Stützgraben quer (z −1), Reservegraben quer (z −22).
+  nk("vg-m1", 0, 7, "hinterland", IN_GRABEN),
+  nk("vg-m2", 0, -1, "hinterland", IN_GRABEN),
+  nk("vg-m3", 0, -12, "hinterland", IN_GRABEN),
+  nk("vg-m4", 0, -22, "hinterland", IN_GRABEN),
+  nk("vg-m5", 0, -34, "hinterland", IN_GRABEN),
+  nk("vg-w1", -24, 7, "hinterland", IN_GRABEN),
+  nk("vg-w2", -24, -1, "hinterland", IN_GRABEN),
+  nk("vg-w3", -24, -12, "hinterland", IN_GRABEN),
+  nk("vg-w4", -24, -22, "hinterland", IN_GRABEN),
+  nk("vg-w5", -24, -34, "hinterland", IN_GRABEN),
+  nk("vg-e1", 24, 7, "hinterland", IN_GRABEN),
+  nk("vg-e2", 24, -1, "hinterland", IN_GRABEN),
+  nk("vg-e3", 24, -12, "hinterland", IN_GRABEN),
+  nk("vg-e4", 24, -22, "hinterland", IN_GRABEN),
+  nk("vg-e5", 24, -34, "hinterland", IN_GRABEN),
+  nk("stg-w", -12, -1, "hinterland", IN_GRABEN),
+  nk("stg-e", 12, -1, "hinterland", IN_GRABEN),
+  nk("rsv-w", -12, -22, "hinterland", IN_GRABEN),
+  nk("rsv-e", 12, -22, "hinterland", IN_GRABEN),
 
-  // --- Home-Line (Feind kommt über die Flankenrampen bei x ±31 in den Graben)
-  nk("home-graben", 0, -33, "homeline", IN_GRABEN),
-  eng(nk("home-w", -31, -33.5, "homeline", IN_GRABEN)),
-  eng(nk("home-e", 31, -33.5, "homeline", IN_GRABEN)),
-  nk("home-ziel", 0, -37, "homeline", IN_GRABEN),
+  // --- Home-Line (Feind über die Flankenrampen x ±38 + die Mittel-Lücke +
+  //     die West/Ost-Verbindungsgraben-Mündungen)
+  nk("home-graben", 0, -43, "homeline", IN_GRABEN),
+  nk("hb-w", -24, -46, "homeline", IN_GRABEN),
+  nk("home-ziel", 0, -46, "homeline", IN_GRABEN),
+  nk("hb-e", 24, -46, "homeline", IN_GRABEN),
+  nk("hrl-w", -24, -50, "homeline", IN_GRABEN),
+  nk("hrl-m", 0, -50, "homeline", IN_GRABEN),
+  nk("hrl-e", 24, -50, "homeline", IN_GRABEN),
+  eng(nk("hrl-a", -12, -50, "homeline", IN_GRABEN)), // Home-Traversen-Durchgang
+  eng(nk("hrl-b", 12, -50, "homeline", IN_GRABEN)),
+  eng(nk("home-w", -38, -46, "homeline", IN_GRABEN)),
+  eng(nk("home-e", 38, -46, "homeline", IN_GRABEN)),
 ];
 
 const auf = (von: string, nach: string): NavKante => ({
@@ -332,20 +597,33 @@ const navKanten: NavKante[] = [
   auf("spawn-e", "nm-e1"),
   auf("spawn-m", "nm-w1"),
   auf("spawn-m", "nm-e1"),
-  // Niemandsland-Bahnen nach Süden + quer
-  auf("nm-w1", "nm-w2"),
-  auf("nm-e1", "nm-e2"),
-  auf("nm-m1", "nm-m2"),
-  auf("nm-w1", "nm-m1"),
-  auf("nm-e1", "nm-m1"),
+  // Niemandsland-Bahnen → Alt-Frontlinie (quer begehbar) → weiter nach Süden
+  auf("nm-w1", "alt-w"),
+  auf("nm-m1", "alt-m"),
+  auf("nm-e1", "alt-e"),
+  auf("nm-w1", "cr-w"),
+  auf("cr-w", "alt-w"),
+  auf("cr-w", "nm-w2"),
+  auf("nm-e1", "cr-e"),
+  auf("cr-e", "alt-e"),
+  auf("cr-e", "nm-e2"),
+  auf("alt-w", "alt-mw"),
+  auf("alt-mw", "alt-m"),
+  auf("alt-m", "alt-me"),
+  auf("alt-me", "alt-e"),
+  auf("alt-w", "nm-w2"),
+  auf("alt-m", "nm-m2"),
+  auf("alt-e", "nm-e2"),
   auf("nm-w2", "nm-m2"),
   auf("nm-e2", "nm-m2"),
-  auf("nm-w2", "vorfront-w"),
-  auf("nm-m2", "vorfront"),
-  auf("nm-e2", "vorfront-e"),
-  // Verstärkungs-Knoten als Spur an der Mittelbahn (verdeckt vom Süden).
+  // Niemandsland → Sap-Köpfe / reinforcement / vorfront
+  auf("nm-w2", "sapkopf-w"),
   auf("nm-m2", "reinforcement-front"),
+  auf("nm-e2", "sapkopf-e"),
+  auf("sapkopf-w", "vorfront-w"),
+  auf("sapkopf-e", "vorfront-e"),
   auf("reinforcement-front", "vorfront"),
+  auf("nm-m2", "vorfront"),
   auf("vorfront-w", "vorfront"),
   auf("vorfront-e", "vorfront"),
   // Niemandsland → Frontlinie (Sap-Lücken; immer offen)
@@ -354,37 +632,76 @@ const navKanten: NavKante[] = [
   auf("vorfront", "sap-e"),
   auf("vorfront-e", "sap-e"),
   auf("sap-w", "front-w"),
-  auf("sap-w", "front-front"),
-  auf("sap-e", "front-front"),
   auf("sap-e", "front-e"),
-  auf("front-w", "front-front"),
-  auf("front-front", "front-e"),
-  // Bresche-Kontakt (Mittel-Bresche x = 0): an den Graben gehängt; die Kante
+  // Feuernischen ↔ Laufgang (Zickzack um die Traversen — Nische und Laufgang
+  // liegen auf derselben x, die Traversen sitzen dazwischen)
+  auf("front-fw", "rl-1"),
+  auf("front-w", "rl-2"),
+  auf("front-front", "rl-3"),
+  auf("front-e", "rl-4"),
+  auf("front-fe", "rl-5"),
+  auf("rl-1", "rl-a"),
+  auf("rl-a", "rl-2"),
+  auf("rl-2", "rl-b"),
+  auf("rl-b", "rl-3"),
+  auf("rl-3", "rl-c"),
+  auf("rl-c", "rl-4"),
+  auf("rl-4", "rl-d"),
+  auf("rl-d", "rl-5"),
+  // Bresche-Kontakt (zentrale Nische x = 0): an die Nische gehängt; die Kante
   // ins Niemandsland ist zu und öffnet erst, wenn AP4-03 das Parapet aufreißt.
   auf("front-front", "bresche-front"),
   zu("bresche-front", "vorfront"),
+  // Laufgang → Parados-Mündungen
+  auf("rl-1", "parados-w"),
+  auf("rl-2", "parados-w"),
+  auf("rl-3", "parados-m"),
+  auf("rl-4", "parados-e"),
+  auf("rl-5", "parados-e"),
   // Frontlinie → Hinterland: starten zu; AP4-03 öffnet sie beim Linienfall
   // (`frontLinie.hintenKanten`). Drei parallele Rückwege.
-  zu("front-w", "parados-w"),
-  zu("front-front", "parados-m"),
-  zu("front-e", "parados-e"),
-  // Hinterland (Gelände immer begehbar) — drei getrennte Wege vorn↔hinten,
-  // die sich nur an der Frontlinie und an der Home-Line treffen.
-  auf("parados-w", "hl-w1"),
-  auf("parados-e", "hl-e1"),
-  auf("parados-m", "hl-mitte"),
-  auf("hl-w1", "hl-w2"),
-  auf("hl-w2", "hl-w3"),
-  auf("hl-e1", "hl-e2"),
-  auf("hl-e2", "hl-e3"),
-  auf("hl-mitte", "hl-sued"),
+  zu("parados-w", "vg-w1"),
+  zu("parados-m", "vg-m1"),
+  zu("parados-e", "vg-e1"),
+  // Hinterland — drei Verbindungsgräben (Gelände immer begehbar)
+  auf("vg-m1", "vg-m2"),
+  auf("vg-m2", "vg-m3"),
+  auf("vg-m3", "vg-m4"),
+  auf("vg-m4", "vg-m5"),
+  auf("vg-w1", "vg-w2"),
+  auf("vg-w2", "vg-w3"),
+  auf("vg-w3", "vg-w4"),
+  auf("vg-w4", "vg-w5"),
+  auf("vg-e1", "vg-e2"),
+  auf("vg-e2", "vg-e3"),
+  auf("vg-e3", "vg-e4"),
+  auf("vg-e4", "vg-e5"),
+  // Stützgraben quer verbindet die drei (bei z ≈ −1)
+  auf("vg-w2", "stg-w"),
+  auf("stg-w", "vg-m2"),
+  auf("vg-m2", "stg-e"),
+  auf("stg-e", "vg-e2"),
+  // Reservegraben quer verbindet die drei (bei z ≈ −22)
+  auf("vg-w4", "rsv-w"),
+  auf("rsv-w", "vg-m4"),
+  auf("vg-m4", "rsv-e"),
+  auf("rsv-e", "vg-e4"),
   // Hinterland → Home-Line
-  auf("hl-w3", "home-w"),
-  auf("hl-e3", "home-e"),
-  auf("hl-sued", "home-graben"),
+  auf("vg-w5", "hb-w"),
+  auf("vg-e5", "hb-e"),
+  auf("vg-m5", "home-graben"),
   auf("home-graben", "home-ziel"),
-  auf("home-w", "home-ziel"),
-  auf("home-e", "home-ziel"),
+  auf("hb-w", "hrl-w"),
+  auf("home-ziel", "hrl-m"),
+  auf("hb-e", "hrl-e"),
+  auf("hrl-w", "hrl-a"),
+  auf("hrl-a", "hrl-m"),
+  auf("hrl-m", "hrl-b"),
+  auf("hrl-b", "hrl-e"),
+  auf("home-w", "hb-w"),
+  auf("home-e", "hb-e"),
+  auf("home-w", "hrl-w"),
+  auf("home-e", "hrl-e"),
 ];
 
 const navGraph: NavGraph = { knoten: navKnoten, kanten: navKanten };
@@ -396,91 +713,103 @@ const navGraph: NavGraph = { knoten: navKnoten, kanten: navKanten };
 const meta: SektorMeta = {
   // Lückenlose Z-Bänder über die volle Breite (Feindseite nach hinten).
   zonen: [
-    { id: "feindseite", bounds: aabb(-GRENZE_X, 46, GRENZE_X, GRENZE_NORD) },
-    { id: "niemandsland", bounds: aabb(-GRENZE_X, 22, GRENZE_X, 46) },
+    {
+      id: "feindseite",
+      bounds: aabb(-GRENZE_X, NL_MAX_Z, GRENZE_X, GRENZE_NORD),
+    },
+    {
+      id: "niemandsland",
+      bounds: aabb(-GRENZE_X, NL_MIN_Z, GRENZE_X, NL_MAX_Z),
+    },
     {
       id: "frontlinie",
       bounds: aabb(-GRENZE_X, FRONT_MIN_Z, GRENZE_X, FRONT_MAX_Z),
     },
-    { id: "hinterland", bounds: aabb(-GRENZE_X, -30, GRENZE_X, FRONT_MIN_Z) },
-    { id: "homeline", bounds: aabb(-GRENZE_X, GRENZE_SUED, GRENZE_X, -30) },
+    {
+      id: "hinterland",
+      bounds: aabb(-GRENZE_X, HINTER_MIN_Z, GRENZE_X, FRONT_MIN_Z),
+    },
+    {
+      id: "homeline",
+      bounds: aabb(-GRENZE_X, GRENZE_SUED, GRENZE_X, HOME_MAX_Z),
+    },
   ],
-  // Genau EINE Frontlinie (`front`) + EINE Home-Line (`home`) — je ein Objekt,
-  // die `front.ts`-Maschine läuft je Linie. Die Rollen-Felder ersetzen die alte
-  // A/B/C-String-Ableitung in `index.ts`/`enemies.ts` (AP6-02, Audit H2).
   frontLinie: {
     id: "front",
     bounds: aabb(-GRENZE_X, FRONT_MIN_Z, GRENZE_X, FRONT_MAX_Z),
     parapetBreschen: BRESCHEN_FRONT,
     bauSlots: [
-      { x: -18, y: IN_GRABEN, z: 14 },
-      { x: 0, y: IN_GRABEN, z: 14 },
-      { x: 18, y: IN_GRABEN, z: 14 },
+      { x: -16, y: IN_GRABEN, z: 25 },
+      { x: 0, y: IN_GRABEN, z: 25 },
+      { x: 16, y: IN_GRABEN, z: 25 },
     ],
-    // Depot hinter dem Feuertritt an der Parados-Rückwand (aus der Schusslinie).
-    depot: { x: -4, y: IN_GRABEN, z: 12.5 },
-    // Anrückende Wellengegner steuern den Frontgraben-Mittelknoten an.
+    // Depot im Laufgang hinter der zentralen Nische (aus der Schusslinie).
+    depot: { x: -4, y: IN_GRABEN, z: 14 },
     zielKnoten: "front-front",
-    // Verdeckte Verstärkung/Watchdog-Reloc bei Linienfall (im Niemandsland).
     reinfKnoten: "reinforcement-front",
-    // Mittel-Bresche (x = 0) hat den Nav-Zugang; die West-Bresche bleibt reines
-    // Loch (Audit M7 → AP7-Politur).
     brescheZugang: { bresche: "bresche-front", davor: "vorfront" },
-    // Rückwege Frontlinie → Hinterland, die beim Fall aufgehen (drei parallel).
     hintenKanten: [
-      ["front-w", "parados-w"],
-      ["front-front", "parados-m"],
-      ["front-e", "parados-e"],
+      ["parados-w", "vg-w1"],
+      ["parados-m", "vg-m1"],
+      ["parados-e", "vg-e1"],
     ],
   },
   homeLinie: {
     id: "home",
-    bounds: aabb(-GRENZE_X, HOME_MIN_Z, GRENZE_X, HOME_MAX_Z),
+    // Enger als das Zonen-Band (z −60…−42): der eigentliche Home-Graben
+    // (Parapet z −44 … Rückwand z −53). Die Unterstände dahinter zählen nicht
+    // als „Linie" (Druck / „gehalten" / Gegner-an-Linie).
+    bounds: aabb(-GRENZE_X, -53, GRENZE_X, HOME_MAX_Z),
     parapetBreschen: BRESCHEN_HOME,
     bauSlots: [
-      { x: -12, y: IN_GRABEN, z: -33 },
-      { x: 12, y: IN_GRABEN, z: -33 },
+      { x: -12, y: IN_GRABEN, z: -47 },
+      { x: 12, y: IN_GRABEN, z: -47 },
     ],
-    depot: { x: -6, y: IN_GRABEN, z: -38 },
-    // Fällt die Front, fluten die Gegner zu diesem Knoten (letzte Linie).
+    depot: { x: -6, y: IN_GRABEN, z: -50 },
     zielKnoten: "home-ziel",
-    // Keine Infiltration / kein Weg hinter die Home-Line.
     reinfKnoten: "",
     hintenKanten: [],
   },
   feindAnmarsch: [
-    { x: -22, y: AUF_FELD, z: 49 },
-    { x: 0, y: AUF_FELD, z: 50 },
-    { x: 22, y: AUF_FELD, z: 49 },
+    { x: -24, y: AUF_FELD, z: 59 },
+    { x: 0, y: AUF_FELD, z: 60 },
+    { x: 24, y: AUF_FELD, z: 59 },
   ],
   homeZugaenge: [
-    { id: "mitte", pos: { x: 0, y: IN_GRABEN, z: -32 } },
-    { id: "west", pos: { x: -31, y: IN_GRABEN, z: -32 } },
-    { id: "ost", pos: { x: 31, y: IN_GRABEN, z: -32 } },
+    { id: "mitte", pos: { x: 0, y: IN_GRABEN, z: -44 } },
+    { id: "west", pos: { x: -38, y: IN_GRABEN, z: -45 } },
+    { id: "ost", pos: { x: 38, y: IN_GRABEN, z: -45 } },
   ],
-  landmark: { x: -8, y: 0, z: 39 },
-  // Instandsetzungs-Punkte (AP6-04): je Linie ein exponierter Marker. Hier nur
-  // Daten — die Interaktion baut AP6-04.
+  landmark: { x: -10, y: 0, z: 42 },
   instandPunkte: [
-    { linie: "front", pos: { x: 0, y: IN_GRABEN, z: 16 } },
-    { linie: "home", pos: { x: 0, y: IN_GRABEN, z: -33 } },
+    { linie: "front", pos: { x: 0, y: IN_GRABEN, z: 25 } },
+    { linie: "home", pos: { x: 0, y: IN_GRABEN, z: -47 } },
   ],
-  // Statische Orientierungs-Lichter für die Nacht (Feuertonnen / Leuchtfeuer).
+  // Statische Orientierungs-Lichter für die Nacht (Feuertonnen auf der
+  // Grabensohle bzw. dem Feld) — je Zone mindestens eins in Reichweite
+  // (Jank-Pass „Licht-Extreme": keine ganz dunkle Zone; y sitzt am Boden, keine
+  // schwebenden Glut-Klötze).
   lichter: [
-    { x: 0, y: 1.2, z: -35 }, // Home-Graben Mitte
-    { x: -20, y: 1.2, z: -34 }, // Home West
-    { x: 20, y: 1.2, z: -34 }, // Home Ost
-    { x: -4, y: -0.6, z: 13 }, // Frontgraben (Depot)
-    { x: 18, y: -0.6, z: 14 }, // Frontgraben Ost
-    { x: -8, y: 6, z: 39 }, // Landmark-Turm (Leuchtkugel)
+    { x: 0, y: -0.9, z: -46 }, // Home-Graben Mitte
+    { x: -22, y: -0.9, z: -47 }, // Home West
+    { x: 22, y: -0.9, z: -47 }, // Home Ost
+    { x: 0, y: -0.9, z: -22 }, // Reservegraben
+    { x: -24, y: -0.9, z: -6 }, // West-Verbindungsgraben (sonst dunkel)
+    { x: 24, y: -0.9, z: -6 }, // Ost-Verbindungsgraben
+    { x: 35, y: 0.5, z: -14 }, // Hinterland-Ost-Flanke (Geschützstellung)
+    { x: -4, y: -0.9, z: 15 }, // Feuergraben-Laufgang (Depot)
+    { x: -30, y: -0.9, z: 24 }, // Feuernische West (deckt die West-Bresche mit ab)
+    { x: 20, y: -0.9, z: 25 }, // Feuernische Ost
+    { x: -10, y: 8.4, z: 42 }, // Landmark-Turm (Leuchtkugel oben auf der Ruine)
+    { x: 0, y: 0.4, z: 47 }, // Alt-Frontlinie im Niemandsland
   ],
   // Leit-„Spines" (AP4-05) — seit AP5-05 nicht mehr gezeichnet (KONZEPT.md §10).
   spineRouten: [],
-  // Spawn im Frontgraben, klar zwischen den Rampen (x ±16) — auf der Sohle.
+  // Spieler-Startpunkte im Feuergraben-Laufgang, klar zwischen den Traversen.
   spielerSpawn: [
-    { x: 0, y: -1.4, z: 15 },
-    { x: -10, y: -1.4, z: 15 },
-    { x: 10, y: -1.4, z: 15 },
+    { x: 0, y: -1.4, z: 16 },
+    { x: -16, y: -1.4, z: 16 },
+    { x: 16, y: -1.4, z: 16 },
   ],
   navGraph,
 };

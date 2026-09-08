@@ -460,16 +460,16 @@ describe("golden replay — Sektor-Nav-Graph", () => {
 
   it("trifft den Nav-Golden-Anker", () => {
     const s = replay();
-    // AP6-01 (Neubaseline, begründet): neuer Nacht-Sektor mit EINER Frontlinie
-    // (`front`) + EINER Home-Line (`home`), größeres Grabennetz, neue Nav-Knoten
-    // (`front-front`, drei Feind-Spawns). Der Zielknoten aller Wellengegner ist
-    // damit `front-front`, die Linie `"front"`. AP6-02 (dieser Stand) hat die
-    // Werte NICHT bewegt — die A/B/C-Verdrahtung raus, `frontZiel` jetzt aus den
-    // Sektor-Metadaten, `abschnittRng` (eigener, sonst ungenutzter Strom)
-    // entfernt: kein Rng-Versatz, kein Verhaltenswechsel. Gegenprobe: der
-    // Determinismus-Test oben + die Wellen-Eskalation in wave-eskalation.test.ts.
+    // AP6-01b (Neubaseline, begründet): der Sektor ist als echtes Grabensystem
+    // NEU GEBAUT (gezähnter Feuergraben mit Traversen, Zickzack-Verbindungsgräben,
+    // begehbare Unterstände, ~30 % größer, ~72-Knoten-Nav-Graph). Damit brechen
+    // die positionsabhängigen Werte BEWUSST — Spielerpfad und Feind-Spawnpunkte
+    // liegen anders. Die Sim-**Regeln** sind unverändert: Wellenkurve 5·8·11·14·17,
+    // Uhr −2/−1, Klassenmischung, Zielknoten aller Wellengegner = `front-front`,
+    // Linie `"front"`. Gegenprobe: der Determinismus-Test oben + der volle
+    // Headless-Einsatz (wave-eskalation.test.ts, 0 Despawns, gewonnen).
     expect(s.tick).toBe(600);
-    expect(s.player.pos.x).toBeCloseTo(3.6891, 3);
+    expect(s.player.pos.x).toBeCloseTo(13.35, 3);
     expect(s.player.pos.z).toBeCloseTo(12.1298, 3);
     expect(s.wave.welle).toBe(1);
     expect(s.wave.angriffskraftRest).toBe(145); // 150 − 5 Spawns
@@ -500,8 +500,8 @@ describe("golden replay — Sektor-Nav-Graph", () => {
       "linieninfanterie-schwer",
       "linieninfanterie",
     ]);
-    expect(nach[0]?.pos.x).toBeCloseTo(9.995, 2);
-    expect(nach[0]?.pos.z).toBeCloseTo(47.375, 2);
+    expect(nach[0]?.pos.x).toBeCloseTo(0.114, 2);
+    expect(nach[0]?.pos.z).toBeCloseTo(49.667, 2);
 
     expect(s.front.map((f) => f.id)).toEqual(["front"]);
     expect(s.front.map((f) => f.zustand)).toEqual(["stabil"]);
@@ -516,17 +516,17 @@ describe("golden replay — Sektor-Nav-Graph", () => {
 // Golden-/Replay-Anker für „die Uhr" (AP4-04): ein Kill an der Frontlinie
 // zermürbt die Angriffskraft stärker als an einer gefallenen Front.
 describe("golden replay — die Uhr (AP4-04)", () => {
-  // AP6-01 (Neubaseline): EINE Frontlinie `front`, neuer Spawn (Seed 1 →
-  // (−10, 15)); der Gegner steht direkt davor (+Z). Die Uhr selbst (−2 an der
-  // stehenden Frontlinie, −1 an der gefallenen) ist unverändert — AP6-02 hat
-  // nur die A/B/C-Verdrahtung entfernt, kein Verhalten. Gegenprobe: der
+  // AP6-01b (Neubaseline): der Sektor ist neu gebaut (gezähnter Feuergraben).
+  // Seed 1 spawnt jetzt im Laufgang der West-Nische (−16, 16); der Gegner steht
+  // direkt davor (+Z) in der Nische. Die Uhr selbst (−2 an der stehenden
+  // Frontlinie, −1 an der gefallenen) ist unverändert. Gegenprobe: der
   // Determinismus-Test oben.
   const bau = () =>
     createSim(1, sektorGreybox, {
       enemies: [
         {
           defId: "linieninfanterie",
-          pos: { x: -10, y: 0, z: 16 },
+          pos: { x: -16, y: 0, z: 19 },
           abschnitt: "front",
         },
       ],

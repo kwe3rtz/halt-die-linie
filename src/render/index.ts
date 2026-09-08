@@ -474,12 +474,15 @@ export function createRenderer(
     truemmerMat = flachMat("truemmer", 0.2, 0.18, 0.16);
     for (const ab of [meta.frontLinie, meta.homeLinie]) {
       const truemmer = ab.parapetBreschen.map((pos, i) => {
+        // AP6-01b: flacher Schutthaufen in der Lücke (vorher ein 1,3 m hoher
+        // Quader, der im Greybox wie eine umgefallene Box las). Sitzt tief in
+        // der Bresche, liest sich als aufgeschütteter Erdkegel.
         const m = MeshBuilder.CreateBox(
           `bresche_${ab.id}_${i}`,
-          { width: 2.6, height: 1.3, depth: 1.7 },
+          { width: 2.4, height: 0.55, depth: 1.3 },
           scene,
         );
-        m.position.set(pos.x, pos.y - 0.2, pos.z);
+        m.position.set(pos.x, pos.y - 0.55, pos.z);
         m.material = truemmerMat;
         m.isPickable = false;
         m.renderingGroupId = GROUP_WORLD;

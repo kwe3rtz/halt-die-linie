@@ -1,5 +1,5 @@
-// Durchlauf-Test für den zentralen Laufgraben (AP5-01, auf den Nacht-Sektor
-// umgestellt in AP6-01): eine Spielerkapsel läuft den langen gedeckten
+// Durchlauf-Test für den zentralen Express-Laufgraben (AP5-01, auf den
+// AP6-01b-Sektor umgestellt): eine Spielerkapsel läuft den langen gedeckten
 // Laufgraben mehrfach in beide Richtungen ab — mittig, an beiden Wänden
 // schleifend (seitlicher Druck), im Zickzack, gehend, sprintend, springend,
 // plus einmal durch die Spieler-Sim selbst. Pro Tick darf sich die Kapsel
@@ -13,6 +13,12 @@
 // Z-Fläche der Wand — bis zu 16,5 m entfernt. Die Gegenprobe unten trifft
 // genau diesen Zustand. Der Fix sitzt in `collision.ts` (KONTAKT_EPS +
 // achsenweise Tiefengrenze), nicht in der Sektorgeometrie.
+//
+// AP6-01b: Der Express-Laufgraben (x = 0) kreuzt den Stützgraben (z ≈ −1) und
+// den Reservegraben (z ≈ −22) über schmale Sally-Ports (±1,7 m). Der Wand-
+// Schleif-Test läuft daher im langen durchgehenden **Südabschnitt**
+// (Reservegraben-Port → Home-Graben, ~24 m Wand) — mehr als die 16,5 m des
+// alten Bugs.
 import { describe, expect, it } from "vitest";
 import {
   createCollisionWorld,
@@ -37,23 +43,24 @@ const TOLERANZ = 1e-3;
 /** Zeitbudget je Durchlauf (~35 m mit Seitendruck bei Gehtempo ≈ 11 s). */
 const MAX_SEKUNDEN = 45;
 
-// Zentraler Laufgraben (src/data/sektor.ts): Sohle −1,8, lichte Breite
-// x ∈ [−1,8, 1,8], Wände von z = −31 bis 9. Die Sohle reicht z −32..12 und
-// mündet nach Norden in den Frontgraben, nach Süden in den Home-Graben.
+// Zentraler Express-Laufgraben (src/data/sektor.ts): Sohle −1,8, lichte Breite
+// x ∈ [−1,8, 1,8], Wände z −44 … 11 (Sally-Ports bei z ≈ −1 / −22). Getestet
+// wird der durchgehende Südabschnitt: Reservegraben-Port (z ≈ −20) → Home-Graben.
 const SOHLE = -1.8;
 const WAND_INNEN = 1.8;
-const GRABEN_SUED = -30.5;
-const GRABEN_NORD = 8.5;
-/** Start-/Zielpunkte jenseits beider Mündungen (Frontgraben / Home-Graben). */
-const FRONT_Z = 14;
-const HOME_Z = -36;
+const GRABEN_SUED = -43.5;
+const GRABEN_NORD = -24;
+/** Start-/Zielpunkte: Reservegraben-Port (Mittellinie) bzw. Home-Graben. */
+const FRONT_Z = -22;
+const HOME_Z = -49;
 /**
- * Der Korridor (beidseitig geschlossene Grabenwände) reicht z ≈ −30,5 … 8,5.
- * Seitendruck, Sprünge und die Wand-Invarianten gelten im Korridor; außerhalb
- * steuert die Kapsel zur Mittellinie, um die Mündung zu treffen.
+ * Der durchgehende Südkorridor reicht z ≈ −43,5 … −24 (südlich des
+ * Reservegraben-Ports). Seitendruck, Sprünge und die Wand-Invarianten gelten im
+ * Korridor; außerhalb steuert die Kapsel zur Mittellinie, um Port bzw. Mündung
+ * mittig zu treffen.
  */
-const KORRIDOR_SUED = -31 + 0.5;
-const KORRIDOR_NORD = 9 - 0.5;
+const KORRIDOR_SUED = -43.5 + 0.5;
+const KORRIDOR_NORD = -24 - 0.5;
 const imKorridor = (z: number): boolean =>
   z > KORRIDOR_SUED && z < KORRIDOR_NORD;
 
@@ -172,7 +179,7 @@ describe("Verbindungsgraben — Durchlauf ohne Sprünge (AP5-01)", () => {
   ];
 
   for (const [name, opt] of faelle) {
-    it(`${name}: Front → Home → Front`, () => {
+    it(`${name}: Reservegraben → Home → Reservegraben`, () => {
       const hin = laufe(world, FRONT_Z, HOME_Z, opt);
       expect(hin.fehler).toEqual([]);
       expect(
@@ -190,7 +197,7 @@ describe("Verbindungsgraben — Durchlauf ohne Sprünge (AP5-01)", () => {
 
   it("stehend gegen jede Wand drücken: die Kapsel bleibt auf der Stelle", () => {
     for (const seite of [1, -1]) {
-      let pos: Vec3 = { x: 0, y: SOHLE, z: 2 };
+      let pos: Vec3 = { x: 0, y: SOHLE, z: -30 };
       let vel: Vec3 = { x: 0, y: 0, z: 0 };
       let kontakt: Vec3 | undefined;
       for (let t = 0; t < 120; t += 1) {
@@ -209,7 +216,7 @@ describe("Verbindungsgraben — Durchlauf ohne Sprünge (AP5-01)", () => {
       }
       expect(kontakt).toBeDefined();
       expect(Math.abs(pos.x)).toBeCloseTo(WAND_INNEN - RADIUS, 6);
-      expect(pos.z).toBe(2);
+      expect(pos.z).toBe(-30);
       expect(pos.y).toBeCloseTo(SOHLE, 6);
     }
   });
@@ -223,10 +230,10 @@ describe("Verbindungsgraben — die Ursache (Gegenprobe, AP5-01)", () => {
     expect(-WAND_INNEN + RADIUS - RADIUS).toBeLessThan(-WAND_INNEN);
   });
 
-  it("anliegend an der Ostwand weiter dagegen drücken: kein Sprung ans Wandende (vorher: z 0 → 11,85)", () => {
+  it("anliegend an der Ostwand weiter dagegen drücken: kein Sprung ans Wandende (vorher: z −30 → weit weg)", () => {
     const world = createCollisionWorld(sektorGreybox);
-    // Exakt der Zustand nach dem X-Push des vorigen Ticks.
-    let pos: Vec3 = { x: WAND_INNEN - RADIUS, y: SOHLE, z: 0 };
+    // Exakt der Zustand nach dem X-Push des vorigen Ticks (Südkorridor).
+    let pos: Vec3 = { x: WAND_INNEN - RADIUS, y: SOHLE, z: -30 };
     for (let t = 0; t < 10; t += 1) {
       const r = moveCapsule(
         world,
@@ -236,16 +243,16 @@ describe("Verbindungsgraben — die Ursache (Gegenprobe, AP5-01)", () => {
         HEIGHT,
         DT,
       );
-      expect(r.pos.z).toBe(0);
+      expect(r.pos.z).toBe(-30);
       expect(r.pos.x).toBeLessThanOrEqual(WAND_INNEN - RADIUS + 1e-9);
       expect(r.pos.y).toBeCloseTo(SOHLE, 6);
       pos = r.pos;
     }
   });
 
-  it("anliegend an der Westwand weiter dagegen drücken: kein Sprung ans Wandende (vorher: z −10 → −21,85)", () => {
+  it("anliegend an der Westwand weiter dagegen drücken: kein Sprung ans Wandende (vorher: z −38 → weit weg)", () => {
     const world = createCollisionWorld(sektorGreybox);
-    let pos: Vec3 = { x: -(WAND_INNEN - RADIUS), y: SOHLE, z: -10 };
+    let pos: Vec3 = { x: -(WAND_INNEN - RADIUS), y: SOHLE, z: -38 };
     for (let t = 0; t < 10; t += 1) {
       const r = moveCapsule(
         world,
@@ -255,7 +262,7 @@ describe("Verbindungsgraben — die Ursache (Gegenprobe, AP5-01)", () => {
         HEIGHT,
         DT,
       );
-      expect(r.pos.z).toBe(-10);
+      expect(r.pos.z).toBe(-38);
       expect(r.pos.x).toBeGreaterThanOrEqual(-(WAND_INNEN - RADIUS) - 1e-9);
       expect(r.pos.y).toBeCloseTo(SOHLE, 6);
       pos = r.pos;
@@ -284,31 +291,38 @@ function cmd(mx: number, my: number, sprint: boolean): InputCommand {
 }
 
 describe("Verbindungsgraben — Spieler-Sim, hin und zurück mit Wandkontakt (AP5-01)", () => {
-  /** Seed, dessen Spawn der mittlere ist (0, −1,4, 15). */
+  /** Seed, dessen Spawn der mittlere ist (0, −1,4, 16). */
   function mittlererSeed(): number {
     for (let seed = 1; seed < 100; seed += 1) {
       const p = createSim(seed, sektorGreybox, { waves: false }).getState()
         .player.pos;
-      if (p.x === 0 && p.z === 15) {
+      if (p.x === 0 && p.z === 16) {
         return seed;
       }
     }
     throw new Error("kein Seed mit mittlerem Spawn gefunden");
   }
 
-  it("rückwärts an der Ostwand nach Süden, vorwärts an der Westwand nach Norden — kein Tick über Sprint × dt", () => {
+  it("Süden durch den Express-Laufgraben, im Südkorridor an der Ostwand schleifend, zurück nach Norden — kein Tick über Sprint × dt", () => {
     const sim = createSim(mittlererSeed(), sektorGreybox, { waves: false });
     // yaw 0: move.y = −1 → −Z (Richtung Home), move.x = +1 → +X (Ostwand).
-    // Hin: Sprint diagonal an der Ostwand nach Süden. Zurück: nach Norden,
-    // dabei zur Mitte steuern, um die Home-Parapet-Lücke (x ±4) zu treffen.
+    // Der Express-Laufgraben kreuzt Stütz-/Reservegraben über schmale Ports —
+    // in den Port-Zonen (z ≈ −1 / −22) auf Mittellinie halten, sonst darf die
+    // Kapsel an der Wand schleifen; die AP5-01-Invariante (kein Teleport an der
+    // langen Wand) gilt im durchgehenden Südkorridor (z < −24).
     const plan = (t: number): InputCommand => {
-      const px = sim.getState().player.pos.x;
-      if (t < 60) return cmd(0, -1, false); // 1 s in die Mündung
-      if (t < 60 * 12) return cmd(1, -1, true); // Sprint diagonal Süden (Ostwand)
-      if (t < 60 * 13) return cmd(0, 0, false); // stehen
-      // Zurück: erst auf die Mittellinie schleifen (Home-Parapet-Lücke x ±4 /
-      // Laufgraben x ±1,8), dann geradeaus nach Norden.
-      if (Math.abs(px) > 1.2) return cmd(px > 0 ? -1 : 1, 0, true);
+      const p = sim.getState().player.pos;
+      if (t < 60) return cmd(0, -1, false); // in die Parados-Mündung
+      if (t < 60 * 15) {
+        // hin nach Süden: an der Ostwand nur im Südkorridor, sonst mittig.
+        const anWand = p.z < -25 && p.z > -42;
+        if (!anWand && Math.abs(p.x) > 1.0)
+          return cmd(p.x > 0 ? -1 : 1, -1, true);
+        return cmd(anWand ? 1 : 0, -1, true);
+      }
+      if (t < 60 * 16) return cmd(0, 0, false); // stehen
+      // zurück: auf die Mittellinie schleifen, dann geradeaus nach Norden.
+      if (Math.abs(p.x) > 1.0) return cmd(p.x > 0 ? -1 : 1, 0, true);
       return cmd(0, 1, true);
     };
     let prev = sim.getState().player.pos;

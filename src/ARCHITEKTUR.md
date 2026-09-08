@@ -380,6 +380,61 @@ Halte-Semantik ist bewusst abgetrennt → AP6-02b.
 - **M7** (nur eine Bresche pro Linie am Nav-Zugang) bleibt bekannte
   Einschränkung → AP7-Politur (die Flanken-Bresche ist reines physisches Loch).
 
+### Sektor-Neubau: echtes Grabensystem (AP6-01b) — nur Geometrie/Nav
+
+**Kein Regelwechsel.** `src/sim/**` unangetastet; der Inline-Testlevel-Anker in
+`sim.test.ts` (`eigene LevelData`) unangetastet. Nur `src/data/sektor.ts` (neu
+gebaut), `src/data/module.ts` (neue Bauteile) und ein Renderer-Feinschliff.
+
+- **`src/data/sektor.ts` neu:** der AP6-01-Bau war zu schematisch (gerade
+  Box-Korridore statt Gräben, leere Flächen). Jetzt ein echtes WW1-Grabensystem,
+  ~30 % größer (x ±44 · z −60…92, vorher ±34 · −46…72), noch Greybox:
+  - **Gezähnter Feuergraben** (z 12…30): fünf Feuernischen (x −32/−16/0/16/32)
+    mit vier dicken Erd-Traversen dazwischen (`traverse()` — der „Zahn"), ein
+    durchgehender Laufgang dahinter. Bewegung im Zickzack Nische↔Laufgang.
+  - **Niemandsland** (z 30…56): Trichterfeld + eine quer laufende verfallene
+    Alt-Frontlinie (flache begehbare Rinne) + zwei Sap-Köpfe (`sap()` —
+    Horchposten, zugleich Anmarsch-Schleuse durch die Parapet-Lücken bei x ±16).
+  - **Hinterland** (z −42…12): kein offenes Feld mehr — drei Verbindungsgräben
+    längs (Mitte gerade = „Express-Laufgraben", lichte Breite ±1,8, bis auf zwei
+    schmale Sally-Ports durchgehende Wand; West/Ost ±2,6), Stützgraben quer
+    (z −1), Reservegraben quer (z −22), dazwischen Geländeinseln mit
+    Geschützstellungen (`geschuetzstellung()`) + Baracken-Ruinen als Deckung.
+  - **Home-Line** (z −60…−42): die stärkste Linie, ebenfalls gezähnt (3 Nischen
+    x −24/0/24, 2 Traversen), drei begehbare Unterstände an der Rückwand, offene
+    Flanken mit je einer Rampe (x ±38 — hier steigt auch der Feind ein).
+  - **Ein durchgehender Sohle-Auffangboden** unter dem ganzen Sektor (Oberkante
+    `GRABEN_SOHLE`): keine Lücke, durch die eine Kapsel aus der Welt fällt.
+- **`module.ts`:** neue Bauteile `traverse` (massiver Erdblock), `sap`
+  (Stichgraben-Kopf, offen nach −Z), `geschuetzstellung` (Sandsack-Hufeisen
+  ≤ 0,95 m). `PARAPET_OBERKANTE` 0,55 → **0,62** (Jank: 0,55 lag nur 0,05 m =
+  `STEP_HEIGHT` über der Feldfläche, die Brustwehr war im Spieltest „oben
+  begehbar"); `FEUERTRITT_OBERKANTE` −0,95 → −0,85, Feuertritt als drei flache
+  Stufen (die Bank läge sonst > `STEP_HEIGHT` über der Sohle).
+  `unterstand()` neu: kein Oberflächen-„Bunker" mehr, sondern ein niedriger
+  gedeckter Raum am Grabenniveau (begehbar rein/raus, Erddecke dicht überm
+  Kopf). `// TODO(Rückfrage)` am Code: ein Raum _unter_ Flur mit Kopffreiheit
+  bräuchte einen abgesenkten Boden, und dafür die EINE Sohle-Auffangplatte zu
+  durchbrechen ist riskanter als es wert ist → der vom Ticket erlaubte
+  „flachste hinein-Verbau".
+- **Nav-Graph** ~75 Knoten (vorher 34): Feindseite 3, Niemandsland 19,
+  Frontlinie 20 (Traversen-Durchgänge `rl-a..d` als `engstelle`), Hinterland 19
+  (drei Verbindungsgräben + zwei Quergräben), Home-Line 11 (`hrl-a/b` als
+  `engstelle`). `home-ziel` liegt frei erreichbar im Graben, kein enger Riegel
+  dahinter (AP6-06-Fund: Gegner überschossen das alte Ziel und verklumpten).
+  Jede Kante beidseitig im Begehbarkeits-Test.
+- **Zonen** unverändert als Konzept (lückenlose Z-Bänder), Koordinaten neu.
+  `homeLinie.bounds` enger als das Zonen-Band (z −53…−42) — die Unterstände
+  dahinter zählen nicht als „Linie".
+- **Renderer:** Bresche-Trümmer jetzt flacher Schutthaufen (vorher ein 1,3 m
+  hoher Quader, der im Greybox wie eine umgefallene Box las).
+- **Golden-Anker:** „Sektor-Nav-Graph" + „die Uhr" in `sim.test.ts` **bewusst
+  neu baseliniert** (neuer Sektor, andere Startpositionen) — rein positionell,
+  Uhr-/Wave-Regeln bit-identisch (Begründung am `expect()`, Gegenprobe:
+  Determinismus-Doppellauf + voller headless-Einsatz Seed 1 → gewonnen, 0
+  Despawns). `collision-verbindungsgraben.test.ts` auf das südliche lückenlose
+  Wandstück des Express-Laufgrabens umgezielt (die Sally-Ports sind neu).
+
 ## Bundle-Größe
 
 Produktions-Build (`npm run build`), gemessen 2026-09-02, nur `src/main.ts`
