@@ -17,22 +17,35 @@ Muster), `KONZEPT.md` §3, `src/data/sektor.ts`, `src/data/module.ts`,
 ## Warum
 
 AP6-01c hat den Baukasten (Tiefe, Verkleidung, Material, Laufrost, echter
-Abstiegs-Unterstand) gebaut und an einer isolierten Probe-Ecke belegt, die der
-Nutzer abgenommen hat. Dieses Ticket **baut den ganzen Sektor damit neu** — im
+Abstiegs-Unterstand) gebaut und an einer isolierten `?probe`-Szene belegt (Code
+`41635d9`, reviewed). Dieses Ticket **baut den ganzen Sektor damit neu** — im
 neuen Look **und** im geschrumpften, „schlanke Front"-Grundriss aus der Grill-
-Runde 2026-09-09.
+Runde 2026-09-09. Der Kickoff kommt erst, wenn der Nutzer die Probe-Ecke
+angespielt und den Look abgenommen hat (ggf. mit Zielvorlage-Korrekturen).
 
 ## Auftrag — der ganze Sektor
 
 ### 1. Baukasten global schalten (`src/data/module.ts`)
 
-- `GRABEN_SOHLE` → der in AP6-01c festgelegte Tiefe-Wert (Zielvorlage: −2,7,
-  ggf. im Probe-Bau justiert — den Bericht-Wert nehmen).
-- `PARAPET_OBERKANTE` → +0,70 (bzw. AP6-01c-Wert).
-- `FEUERTRITT_OBERKANTE` → −0,90, 4 Stufen.
-- `verkleidung()` in `grabengerade` / `parapet` / die Nischen-Komposita
-  einziehen — **jede** Grabenwand im Sektor verkleidet.
-- Nav-`IN_GRABEN` / Spawn-Y / Rampen folgen der neuen Sohle.
+Der Look-Baukasten steht schon (AP6-01c, `module.ts` Abschnitt „Graben-Look").
+Hier: die lokalen `*_TIEF`-Kennwerte + Helfer global in die vom Sektor genutzten
+Module ziehen und die alten Werte ersetzen.
+
+- `GRABEN_SOHLE` → **−2,7** (`SOHLE_TIEF` aus AP6-01c — im Probe-Bau bestätigt).
+- `PARAPET_OBERKANTE`: Erd-Brustwehr **0,58** (`BRUSTWEHR_TIEF`) + Sandsack-Krone
+  **0,70** (`PARAPET_KRONE_TIEF`). **Zeigt der Probe-Spieltest eine kletternde
+  Kapsel an der Brustwehr → `BRUSTWEHR_TIEF` auf ≥ 0,62 heben** (STEP_HEIGHT-
+  Marge ist bei 0,58 nur 0,08).
+- `FEUERTRITT_OBERKANTE` → **−0,90** (`FEUERTRITT_TIEF`), **4 Stufen** à 0,45.
+- `PARADOS`-Krone → **0,30** (`PARADOS_KRONE_TIEF`).
+- `verkleidung()` / `sandsackKrone()` / `laufrost()` in `grabengerade` /
+  `parapet` / die Nischen-Komposita einziehen — **jede** Grabenwand verkleidet.
+  `laufrost` **ohne** Querstege-Kollider (nur Render-Detail, AP6-01c-Fund).
+- `unterstand()` → auf `abstiegUnterstand()` umstellen (echter Abstieg steht
+  schon, nur noch nicht im Sektor verdrahtet — das ist der AP6-01b-Rückstand).
+  Die 3 Home-Unterstände brauchen je eine `abstiegUnterstandLoch()`-Aussparung
+  im Sohle-Auffangboden.
+- Nav-`IN_GRABEN` / Spawn-Y / Rampen folgen der neuen Sohle (−2,7).
 
 ### 2. Geschrumpfter Grundriss (`src/data/sektor.ts` — Neubau)
 
@@ -94,12 +107,15 @@ die AP6-01b-Disziplin**:
   nicht, nur Positionen. Bricht ein `ak`-Wert → Fehler, beim Planer melden.
 - Inline-Testlevel-Anker (eigene `LevelData`) **unberührt**.
 
-### 5. Perf
+### 5. Perf — Merge je Material ist Pflicht
 
-Die Verkleidung vervielfacht die Box-Zahl. AP6-01c hat die Frame-Zeit der
-Probe-Szene gemessen. Ist der ganze Sektor headless spürbar langsamer (Draw-
-Calls hoch): **Merge je Material** (ein `StandardMaterial` → ein gemergtes
-Mesh pro Zone/Material) im Renderer. Mit N-Box-Benchmark-Zahl im Bericht.
+AP6-01c-Messung: Probe = 164 Boxen → ~64 aktive Meshes/Blick, ein Draw-Call je
+Mesh. Schätzung ganzer Sektor: **700–900 Boxen**. Ein Mesh/Draw-Call je Box wird
+auf schwacher Hardware spürbar → **`Mesh.MergeMeshes` (bzw. Thin-Instances) für
+die statische Welt-Geometrie, gruppiert je Material/Zone**, ist in diesem Ticket
+**verpflichtend**, nicht „ggf.". Bresche-Segmente + andere zur Laufzeit
+schaltbare (`tag`) Boxen bleiben Einzel-Meshes (der Merge darf sie nicht
+schlucken). N-Box-Frame-Benchmark headless im Bericht (vorher/nachher).
 
 ### 6. Jank-Pass (weiter gültig aus AP6-01b)
 

@@ -723,7 +723,7 @@ in `tickets/`.
 |---|---|---|
 | AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
 | AP6-01b | Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ erledigt/ (`e9aaeca`) |
-| AP6-01c | Graben-Look: Baukasten (Tiefe −2,7, Verkleidung Holz/Sandsack/Wellblech, Laufrost, `oberflaeche`-Materialfeld, echter Abstiegs-Unterstand) + isolierte Probe-Ecke (`?probe`) | **offen — als Nächstes** |
+| AP6-01c | Graben-Look: Baukasten (Tiefe −2,7, Verkleidung Holz/Sandsack/Wellblech, Laufrost, `oberflaeche`-Materialfeld, echter Abstiegs-Unterstand) + isolierte Probe-Ecke (`?probe`) | ✅ erledigt/ (`41635d9`) — Nutzer-Spieltest offen |
 | AP6-01d | Graben-Look: ganzer Sektor im neuen Look + geschrumpfter „schlanke Front"-Grundriss (x ±32 / z ~120) + parametrisierte Verbindungsgraben-Anzahl + Golden-Rebaseline | offen (nach AP6-01c-Spieltest) |
 | AP6-02 | Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung, kein Verhaltenswechsel) | ✅ erledigt/ (f427ef1) |
 | AP6-02b | Bresche → Durchbruch → Linienfall (physisch, telegraphiert) + Uhr-Regel (Golden-Rebaseline hier) | offen (nach AP6-05) |

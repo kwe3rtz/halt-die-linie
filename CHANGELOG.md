@@ -12,6 +12,28 @@ begehbares WW1-Grabennetz, Feind-Spawn folgt der vordersten gehaltenen Linie,
 „Instand setzen" als Rückeroberung, Nacht zuerst mit roamenden Toten. Branch
 `arbeitspaket-6` von `main`.
 
+- **AP6-01c** · `41635d9` · **Graben-Look: Baukasten + Materialsystem +
+  Probe-Ecke.** Spieltest AP6-01b + Grill-Runde 2026-09-09: die Map liest sich
+  trotz zwei Neubauten weiter als „Rechtecke mit Wänden" — es fehlen **Tiefe,
+  Material, Enge**. Beschluss: der Graben-*Look* ist ein eigener Brocken und
+  kommt zuerst. Dieses Ticket baut den Baukasten dafür, **rein additiv** (der
+  echte Sektor + die Golden-Anker unberührt): `src/sim/collision.ts` bekommt
+  `Oberflaeche` + optionales `LevelBox.oberflaeche` (reine Renderer-Durchreiche,
+  keine Sim-Logik); `src/render/index.ts` färbt Boxen mit gesetztem Feld über
+  flache Nacht-Materialfarben (`holz`/`sandsack`/`wellblech`/`laufrost`/`beton`),
+  ungesetzt = altes Verhalten; `src/data/module.ts` bekommt den neuen Abschnitt
+  „Graben-Look-Baukasten" (`verkleidung`/`sandsackKrone`/`laufrost`/
+  `feuertrittTief` + **`abstiegUnterstand`** = echter Abstieg Treppe hinab, Raum
+  2,0 m unter der Sohle — **löst den AP6-01b-`unterstand()`-Rückstand**, nur
+  noch nicht im Sektor verdrahtet); `src/data/probe-graben.ts` (neu) = isolierte
+  `?probe`-Dev-Szene (1 tiefe verkleidete Feuernische + Traverse +
+  Verbindungsgraben-Stumpf + Abstiegs-Unterstand). `src/main.ts`:
+  URLSearchParams-Guard `?probe`. +11 Tests (Tiefe / Feuertritt < STEP_HEIGHT /
+  Krone nicht begehbar / Abstieg + Kopffreiheit / kein Durchfallen), 314 gesamt,
+  CI grün. Golden-Anker **bit-identisch** (keine Rebaseline). Perf: Probe 164
+  Boxen → AP6-01d braucht Merge je Material. **Visuelle Abnahme durch den Nutzer
+  im `?probe`-Spieltest.**
+
 - **AP6-01b** · `e9aaeca` · **Sektor-Neubau: echtes Grabensystem.** Der AP6-01-
   Bau war funktional, aber „zu abstrakt" (gerade Box-Korridore + leere Flächen)
   und mit Jank (4. Spieltest). `src/data/sektor.ts` **komplett neu** als

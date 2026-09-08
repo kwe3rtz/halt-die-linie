@@ -1,9 +1,9 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-09 (AP6-01/01b/02/06 erledigt · Spieltest + **Grill-Runde**:
-die Map liest sich weiter als „Rechtecke mit Wänden" — es fehlen Tiefe,
-Material, Enge. Beschluss: **Graben-Look zuerst** → **AP6-01c** (Baukasten +
-Probe-Ecke) ist als Nächstes, Kickoff an den Worker raus)
+**Stand:** 2026-09-09 (AP6-01/01b/02/06 + **AP6-01c erledigt** — Graben-Look-
+Baukasten + isolierte `?probe`-Szene, reviewed, Golden bit-identisch. **Nutzer
+spielt jetzt `npm run dev` → `?probe` an** — sein Urteil formt den AP6-01d-
+Kickoff, Worker wartet)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -59,13 +59,15 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     **Material** (glatte Farbe pro Zone) und **Enge** (3-m-Korridore).
     Strukturierte Design-Baum-Runde (`grilling`, 5 Runden) → **der Graben-*Look*
     ist ein eigener Brocken und kommt zuerst**, vor Gegner-KI und Kern-Bogen.
-  - **AP6-01c** (**als Nächstes**, Kickoff an den Worker): Baukasten —
-    Grabentiefe −2,7, Wand-Verkleidung (Holz-Pfosten + Bohlen-Kurse + Sandsack-
-    Krone), `oberflaeche`-Materialfeld auf `LevelBox` + flache Material-Farben
-    im Renderer, Laufrost-Boden, **echter Abstiegs-Unterstand** (Treppe hinab,
-    Raum unter der Sohle — löst den AP6-01b-`unterstand()`-Rückstand) +
-    **isolierte Probe-Ecke** (`?probe`-Dev-Szene). Echter Sektor unberührt,
-    kein Golden-Risiko. → Nutzer-Spieltest der Probe-Ecke.
+  - **AP6-01c erledigt** (`41635d9`): Graben-Look-Baukasten, **rein additiv** —
+    `Oberflaeche`-Feld auf `LevelBox` (reine Renderer-Durchreiche) + flache
+    Material-Farben, `module.ts`-Abschnitt „Graben-Look" (`verkleidung` /
+    `sandsackKrone` / `laufrost` / `feuertrittTief` / **`abstiegUnterstand`** =
+    echter Abstieg Treppe hinab, 2,0 m Kopffreiheit — **löst den AP6-01b-
+    `unterstand()`-Rückstand**), isolierte `?probe`-Dev-Szene
+    (`src/data/probe-graben.ts`). Echter Sektor unberührt, **Golden bit-
+    identisch**, 314 Tests, CI grün. Perf: Probe 164 Boxen → AP6-01d braucht
+    Merge je Material. **Nutzer spielt `?probe` an** (visuelle Abnahme).
   - **AP6-01d** (nach dem Spieltest): ganzer Sektor im neuen Look +
     geschrumpfter „schlanke Front"-Grundriss (x ±32 / z ~120, 4 Front-Nischen,
     2 Breschen, Home = Bunker mit 3 echten Abstiegs-Unterständen, 3 gewundene
@@ -88,6 +90,10 @@ Gegner folgen dem Nav-Graphen an die Front, reißen Parapet-Breschen auf; fällt
 die Front, öffnet sich der Weg ins Hinterland. Jeder Kill zermürbt die Angriffskraft
 (zonengewichtet) → Zeit-Finale an der Home-Line → extrahieren (`E`) oder
 verlängern (`Q`). Tasten: F3 Debug · M Lagekarte · T Ton · E/Q.
+**`?probe` (Dev, AP6-01c):** `http://localhost:5173/?probe` lädt die isolierte
+Graben-Look-Probe-Szene (tiefe verkleidete Feuernische + Traverse +
+Verbindungsgraben-Stumpf + echter Abstiegs-Unterstand) statt des Sektors — kein
+HUD, keine Wellen. Der echte Sektor ist davon unberührt.
 Preview (main): <https://kwe3rtz.github.io/halt-die-linie/>
 
 ## Arbeitsweise gerade
@@ -105,12 +111,12 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **AP6-01c — Graben-Look-Baukasten + Probe-Ecke** (Kickoff raus an den Worker,
-   `/clear` vorher). Grabentiefe −2,7, Wand-Verkleidung als Formdetail-Geometrie
-   + `oberflaeche`-Materialfeld + flache Material-Farben, Laufrost, echter
-   Abstiegs-Unterstand, isolierte `?probe`-Szene. Echter Sektor unberührt →
-   **kein Golden-Risiko**. Zielvorlage (Querschnitt + Maße + Palette + Plan)
-   liegt im Ticket. → **Nutzer spielt die Probe-Ecke an.**
+1. **Nutzer spielt `npm run dev` → `http://localhost:5173/?probe` an** — die
+   isolierte Graben-Look-Probe-Ecke (AP6-01c). Beurteilen: fühlt sich der Graben
+   *tief + eng* an? Trägt die Verkleidung (Holz/Sandsack/Laufrost)? Funktioniert
+   der Abstieg in den Unterstand flüssig (Kamera treppab)? Nacht-Helligkeit auf
+   echter GPU (headless war warm-orange). Screenshots in
+   `tickets/erledigt/AP6-01c-screenshots/`.
 2. **AP6-01d — ganzer Sektor** im neuen Look + geschrumpfter Grundriss
    („schlanke Front", Home = Bunker, 3 gewundene Verbindungsgräben mit
    parametrisierter Anzahl, kein Stützgraben). Golden-Anker brechen bewusst
@@ -159,6 +165,22 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   (`AUFGABEN.md`). **CI-Laufzeit** ~5–7 min, im Auge behalten.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
+
+- **2026-09-09** — **AP6-01c erledigt** (`41635d9`, reviewed, 314 Tests, CI
+  grün). Graben-Look-Baukasten **rein additiv**: `Oberflaeche`-Feld auf
+  `LevelBox` (Renderer-Durchreiche, keine Sim-Logik → goldene Regel gewahrt) +
+  flache Nacht-Material-Farben; `module.ts`-Abschnitt „Graben-Look"
+  (`verkleidung` Pfosten+Bohlen-Kurse, `sandsackKrone`, `laufrost`,
+  `feuertrittTief` 4 Stufen, **`abstiegUnterstand`** echter Abstieg 2,0 m
+  Kopffreiheit); isolierte `?probe`-Szene. **Echter Sektor + Golden-Anker
+  bit-identisch unberührt** (Worker hat statt `parapet()`/`unterstand()` zu
+  ändern eigenständige Helfer gebaut — richtig, AP6-01d macht den globalen
+  Schnitt + die Rebaseline). 4 Worker-Entscheidungen akzeptiert (neue Helfer ·
+  Erd-Brustwehr 0,58 + Sandsack-Krone 0,70 · 0,7-m-Vestibül am Treppenfuß ·
+  `laufrost`-Querstege ohne Kollider). **Der AP6-01b-`unterstand()`-Rückstand
+  ist gelöst.** Perf-Anker: Probe 164 Boxen, Schätzung Sektor 700–900 →
+  **Merge je Material ist in AP6-01d Pflicht.** Visuelle Abnahme: Nutzer-
+  Spieltest `?probe`.
 
 - **2026-09-09** — **Grill-Runde: Graben-Look zuerst.** Spieltest des AP6-01b-
   Sektors + strukturierte Design-Baum-Runde (`grilling`-Skill, 5 Runden, mit

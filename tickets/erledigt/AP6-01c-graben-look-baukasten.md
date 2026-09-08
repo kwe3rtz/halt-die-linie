@@ -1,6 +1,8 @@
 # AP6-01c — Graben-Look: Baukasten, Materialsystem & Probe-Ecke
 
-**Status:** review — Worker fertig (Bericht unten). **Vor** AP6-01d, AP6-02b, AP6-05.
+**Status:** ✅ erledigt (`41635d9`, reviewed 2026-09-09). Code-Review grün — die
+**visuelle Abnahme** macht der Nutzer im `?probe`-Spieltest; sein Urteil formt
+die AP6-01d-Zielvorlage. **Vor** AP6-01d, AP6-02b, AP6-05.
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **`/clear` vor dem Start:** ja (neuer Baukasten, Renderer-Änderung, viel Fläche).
 
@@ -470,3 +472,78 @@ Reichweite-15-Lichtern warm-orange; die zwei Probe-Lichter sind bewusst sparsam
 gesetzt, der offene Graben lebt vom Mond-Ambient. Auf echter GPU justieren (wie
 AP6-01b-Merkposten). Fokus außerdem: fühlt sich die Nische *tief + eng* an,
 trägt die Verkleidung, funktioniert der Abstieg flüssig (Kamera beim Treppab).
+
+---
+
+## Review — ki-game-63 (2026-09-09)
+
+**Verdikt: grünes Licht (Code).** `41635d9` auf `arbeitspaket-6`, CI „CI" +
+„Pages Preview" = success. Die **visuelle Abnahme** macht der Nutzer im
+`?probe`-Spieltest (Prozess Grill Q6) — Code-Review und Ist-Bau sind sauber.
+
+**Geprüft:**
+
+- **Isolation (der kritische Punkt):** `sektor.ts` **nicht** im Diff, `sim.test.ts`
+  **nicht** im Diff, `navgraph-begehbarkeit.test.ts` **nicht** im Diff. Golden-
+  Anker also bit-identisch ohne Rebaseline — genau die Ticket-Vorgabe. `parapet()`
+  / `unterstand()` / `traverse()` / `GRABEN_SOHLE` / `PARAPET_OBERKANTE`
+  unverändert. Alles Neue additiv (`module.ts` +488 nur neuer Abschnitt,
+  `probe-graben.ts` neu). Der `?probe`-Zweig in `main.ts` ist ein
+  URLSearchParams-Guard; der Normalpfad wurde nur in `starteSektor()` gekapselt
+  (Logik byte-gleich).
+- **Goldene Regel:** `src/sim/collision.ts` bekommt `Oberflaeche` + optionales
+  `LevelBox.oberflaeche` — reiner Typ, **keine** Sim/Kollisions-Logik liest das
+  Feld (nur `boxMaterial()` im Renderer). `sim/index.ts` re-exportiert nur den
+  Typ. Grenze gewahrt.
+- **Renderer:** `boxMaterial()` prüft `oberflaeche` zuerst, sonst **exakt der
+  alte Pfad** → kein Sektor-Box trägt das Feld, echter Sektor sieht unverändert
+  aus (Gegenprobe im Bericht + `sektor.test.ts` grün). Material-Map flach,
+  `specularColor` 0, im `dispose()` aufgeräumt.
+- **`abstiegUnterstand`** = echter Abstieg (Grill Q9): Raumboden −4,90,
+  Deckenunterkante −2,90 → 2,0 m Kopffreiheit; 8 Treppenstufen à 0,275 m
+  < `STEP_HEIGHT`; vollständig geschlossene Kiste (eigene Bodenplatte −5,40) +
+  `abstiegUnterstandLoch()` für die Auffangboden-Aussparung; **nicht im
+  Nav-Graph** (Spieler-Schutzraum). **Der AP6-01b-`unterstand()`-Rückstand ist
+  damit gelöst** — bleibt nur bis AP6-01d unverdrahtet.
+- **Tests:** +11 in `probe-graben.test.ts` — Tiefe (Auge auf Sohle 1,5 m unter
+  der Brustwehr / auf der Bank drüber), Feuertritt-Stufen < `STEP_HEIGHT` + Auge
+  ≈ Kronenhöhe, Parapet-Krone nicht begehbar (echte `moveCapsule`), Abstieg
+  hinab→Raumboden→Kopffreiheit→hinauf, keine Kapsel durch den Auffangboden-
+  Ausschnitt, durchgehender Boden an 6 Stellen. 314 Tests gesamt, CI grün.
+- **Screenshots 01/02/07:** lesen sich klar als **tiefer verkleideter Graben**
+  (Pfosten + Bohlen-Kurse + Sandsack-Krone gegen den Nachthimmel) bzw. **echter
+  Unterstand** (Treppe hinab, Kopffreiheit, Blick hoch durch den Schacht). Ton
+  headless warm-orange (Swiftshader + Nahlicht) — auf echter GPU beurteilen.
+
+**Die vier Worker-Entscheidungen — alle akzeptiert:**
+
+1. **Neue Helfer statt `parapet()`/`unterstand()` ändern.** Richtig und
+   sauberer als die Ticket-Formulierung: jede Änderung an den von `sektor.ts`
+   genutzten Modulen hätte die Golden-Anker verschoben. AP6-01d macht den
+   globalen Schnitt + die Rebaseline (ohnehin dort verortet).
+2. **Erd-Brustwehr 0,58 + Sandsack-Krone 0,58→0,70.** Trägt STEP_HEIGHT-Marge
+   (0,08) *und* Schuss-Linie (Auge +0,70 = 0,12 m über der Erde). **Merkposten:**
+   0,08 m Marge ist knapp — zeigt der Spieltest eine kletternde Kapsel, in
+   AP6-01d `BRUSTWEHR_TIEF` auf ≥ 0,62 heben.
+3. **0,7-m-Vestibül am Treppenfuß** (Decke setzt erst danach an) — das ist der
+   ticket-erlaubte „flachstmögliche echte Abstieg", *nicht* der flache
+   Fallback. Raum bleibt voll 2,0 m.
+4. **`laufrost`-Querstege per Default aus** (3-cm-Mikrostufe → Kamera-Zittern).
+   Datenfeld bleibt, in AP6-01d als reines Render-Detail ohne Kollider.
+
+**Für AP6-01d (in die Spec übernommen):**
+
+- **Perf:** Probe = 164 Boxen, ~64 aktive Meshes/Blick, headless ~21 ms/Frame
+  (Swiftshader-CPU). Schätzung ganzer Sektor 700–900 Boxen → **Merge je Material
+  ist Pflicht, nicht „ggf."** (`Mesh.MergeMeshes`/Thin-Instances für die
+  statische Welt), mit N-Box-Frame-Benchmark im Bericht.
+- **As-built-Kennwerte sind der Startwert:** `SOHLE_TIEF −2,7`, `BRUSTWEHR_TIEF
+  0,58` (→ ggf. 0,62), `PARAPET_KRONE_TIEF 0,70`, `FEUERTRITT_TIEF −0,90`
+  (4 Stufen), `PARADOS_KRONE_TIEF 0,30`. Abstiegs-Unterstand-Maße aus
+  `abstiegUnterstand()` übernehmen.
+
+**Nächster Schritt:** Nutzer spielt `npm run dev` → `?probe`. Danach schreibt
+der Planer den AP6-01d-Kickoff (mit etwaigen Zielvorlage-Korrekturen aus dem
+Spieltest). Worker wartet bis dahin.
+
+Folge-Ticket: AP6-01d (nach dem Spieltest).

@@ -84,7 +84,7 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 |---|---|
 | AP6-01 Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung | ✅ `erledigt/` (`c4d21f5`) |
 | AP6-01b Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ `erledigt/` (`e9aaeca`) |
-| AP6-01c Graben-Look: Baukasten (Tiefe, Verkleidung, Material, Laufrost, echter Abstiegs-Unterstand) + isolierte Probe-Ecke | offen — **als Nächstes** |
+| AP6-01c Graben-Look: Baukasten (Tiefe, Verkleidung, Material, Laufrost, echter Abstiegs-Unterstand) + isolierte Probe-Ecke | ✅ `erledigt/` (`41635d9`) — Nutzer-Spieltest offen |
 | AP6-01d Graben-Look: ganzer Sektor + geschrumpfter „schlanke Front"-Grundriss + Golden-Rebaseline | offen (nach AP6-01c-Spieltest) |
 | AP6-02 Eine Frontlinie/Home-Line: A/B/C-Verdrahtung raus (Bereinigung) | ✅ `erledigt/` (`f427ef1`) |
 | AP6-02b Bresche → Durchbruch → Linienfall + Uhr-Regel | offen (nach AP6-05) |
