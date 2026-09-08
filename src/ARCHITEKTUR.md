@@ -435,6 +435,48 @@ gebaut), `src/data/module.ts` (neue Bauteile) und ein Renderer-Feinschliff.
   Despawns). `collision-verbindungsgraben.test.ts` auf das südliche lückenlose
   Wandstück des Express-Laufgrabens umgezielt (die Sally-Ports sind neu).
 
+### Graben-Look-Baukasten + Probe-Szene (AP6-01c) — additiv, kein Sektor-Eingriff
+
+**Der echte Sektor (`sektor.ts`) und die Golden-Anker sind unberührt.** Alles
+neu ist additiv: neue Exporte in `module.ts`, ein optionales `oberflaeche`-Feld,
+eine isolierte `?probe`-Dev-Szene. AP6-01d rollt den Look auf den ganzen Sektor
+und macht den globalen Schnitt (Golden-Rebaseline).
+
+- **`LevelBox.oberflaeche?: Oberflaeche`** (`src/sim/collision.ts`) — reine
+  Renderer-Durchreiche (`erde`/`holz`/`sandsack`/`wellblech`/`laufrost`/`beton`),
+  die Sim/Kollision liest es nie. Ungesetzt bzw. `erde` = heutiges Verhalten.
+- **`src/render/index.ts`:** `Map<Oberflaeche, StandardMaterial>` (flache
+  Nacht-Farben, `specularColor` 0). `boxMaterial` prüft `box.oberflaeche` zuerst,
+  sonst exakt der alte Pfad (Zonen-Ton / Greybox). Vierter Parameter
+  `probe?: { lichter }` — nur die `?probe`-Szene bringt so ihre Nacht-Lichter
+  mit (sie hat kein `SektorMeta`); der Feuertonnen-Bauer ist in `baueNachtLicht`
+  herausgezogen und dient beiden Pfaden. Keine Texturen (KONZEPT.md §9.10).
+- **`src/data/module.ts` — neue Helfer (lokale Kennwerte `SOHLE_TIEF` −2,7 /
+  `BRUSTWEHR_TIEF` 0,58 / `PARAPET_KRONE_TIEF` 0,70 / `FEUERTRITT_TIEF` −0,90 /
+  `PARADOS_KRONE_TIEF` 0,30):**
+  - `verkleidung(segment)` → Holz-Stützpfosten (~1,2 m) + vier Bohlen-Kurse als
+    Formdetail; `sandsackKrone(segment)` → Klötze mit Lücken auf der Krone;
+    `laufrost(bereich)` → dünne Deckplatte über der Sohle.
+  - `feuertrittTief(...)` → vier flache Stufen (je < `STEP_HEIGHT`) von der
+    tiefen Sohle zur Bank −0,90; Auge auf der Bank ≈ Kronenhöhe.
+  - `abstiegUnterstand(...)` → **echter Abstieg** (Grill Q9): 8 Stufen hinab in
+    einen geschlossenen Raum ~2,0 m unter der Sohle mit 2,0 m Kopffreiheit,
+    Vestibül am Fuß der Treppe (Kopffreiheit beim Abstieg), optionale Erd-Kappe.
+    `abstiegUnterstandLoch(...)` liefert die XZ-Aussparung im Auffangboden. Der
+    AP6-01b-Rückstand `unterstand()` (flacher Fallback) ist damit gelöst —
+    `unterstand()` selbst bleibt bis AP6-01d im Ist (Sektor nutzt es noch).
+- **`src/data/probe-graben.ts` (neu):** eine isolierte `LevelData` (kein `meta`)
+  — 1 tiefe Feuernische (verkleidet, 4-Stufen-Feuertritt, Sandsack-Krone,
+  Laufrost) + 1 Erd-Traverse (teilt die Feuerlinie) + ~8 m
+  Verbindungsgraben-Stumpf + 1 Abstiegs-Unterstand. `?probe` in `main.ts`
+  (kleiner geguardeter Zweig, `starteProbe`) lädt sie statt des Sektors, ohne
+  HUD/Kompass/Wellen.
+- **Tests:** `src/data/probe-graben.test.ts` — Baukasten-Einheitstests +
+  Begehbarkeit der Probe-Szene (Feuertritt-Stufen, Parapet-Krone nicht
+  begehbar, durchgehender Boden, Treppe hinab → Raumboden mit Kopffreiheit →
+  hinauf, kein Durchfallen). `sim.test.ts`-Golden-Anker + alle Sektor-Tests
+  **unverändert grün**.
+
 ## Bundle-Größe
 
 Produktions-Build (`npm run build`), gemessen 2026-09-02, nur `src/main.ts`

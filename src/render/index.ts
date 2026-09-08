@@ -19,7 +19,8 @@ import {
 } from "@babylonjs/core";
 import type { EnemyView, SimState, SektorMeta, ZonenId } from "../sim";
 import { brescheTag, zoneAt } from "../sim";
-import type { LevelBox, LevelData } from "../sim/collision";
+import type { LevelBox, LevelData, Oberflaeche } from "../sim/collision";
+import type { Vec3 } from "../sim/math";
 import {
   linieninfanterie,
   linieninfanterieSchnell,
@@ -108,6 +109,12 @@ export function createRenderer(
   canvas: HTMLCanvasElement,
   level: LevelData,
   meta?: SektorMeta,
+  /**
+   * Nur die isolierte `?probe`-Dev-Szene (AP6-01c): hart platzierte
+   * Nacht-Lichter, weil sie kein `SektorMeta` mitbringt. Im echten Spiel
+   * `undefined` — die Lichter kommen dort aus `meta.lichter`.
+   */
+  probe?: { lichter?: readonly Vec3[] },
 ): Renderer {
   const engine = new Engine(canvas, true, { stencil: true });
   const scene = new Scene(engine);
@@ -363,7 +370,36 @@ export function createRenderer(
     zonenMat.set(id, flachMat(`zone_${id}`, r, g, b));
   }
 
+  // Graben-Look-Materialien (AP6-01c): flache Nacht-Farben + Formdetail, keine
+  // Texturen (KONZEPT.md §3 / §9.10). `erde` bzw. ein fehlendes `oberflaeche`-
+  // Feld heißt „heutiges Verhalten" (Zonen-Ton / Greybox-Fallback) — der echte
+  // Sektor setzt das Feld nirgends, sein Aussehen ändert sich nicht.
+  const OBERFLAECHE_TON: Record<
+    Exclude<Oberflaeche, "erde">,
+    [number, number, number]
+  > = {
+    holz: [0.3, 0.23, 0.15],
+    sandsack: [0.46, 0.44, 0.34],
+    wellblech: [0.27, 0.29, 0.31],
+    laufrost: [0.22, 0.19, 0.14],
+    beton: [0.32, 0.33, 0.35],
+  };
+  const oberflaecheMat = new Map<Oberflaeche, StandardMaterial>();
+  for (const key of Object.keys(OBERFLAECHE_TON) as Exclude<
+    Oberflaeche,
+    "erde"
+  >[]) {
+    const [r, g, b] = OBERFLAECHE_TON[key];
+    oberflaecheMat.set(key, flachMat(`mat_${key}`, r, g, b));
+  }
+
   const boxMaterial = (box: LevelBox): StandardMaterial => {
+    if (box.oberflaeche && box.oberflaeche !== "erde") {
+      const m = oberflaecheMat.get(box.oberflaeche);
+      if (m) {
+        return m;
+      }
+    }
     if (box.center.y + box.size.y / 2 > 2) {
       return grenzeMat; // hohe Betonsilhouette (Turmruine)
     }
@@ -547,6 +583,32 @@ export function createRenderer(
     return m;
   };
 
+  // Statische Feuertonne + kleiner Punktstrahler an einem Orientierungspunkt —
+  // keine dynamischen Lichter, keine Animation (Greybox-Niveau). Genutzt für
+  // `meta.lichter` (Sektor) wie für `probe.lichter` (AP6-01c-Probe-Szene).
+  let feuerMat: StandardMaterial | null = null;
+  const baueNachtLicht = (pos: Vec3, i: number): void => {
+    feuerMat ??= emissivMat("feuer", [1, 0.66, 0.28]);
+    const glut = MeshBuilder.CreateBox(`feuer_${i}`, { size: 0.5 }, scene);
+    glut.position.set(pos.x, pos.y, pos.z);
+    glut.material = feuerMat;
+    glut.isPickable = false;
+    glut.renderingGroupId = GROUP_WORLD;
+    leitMeshes.push(glut);
+    const licht = new PointLight(
+      `feuer_l_${i}`,
+      new Vector3(pos.x, pos.y + 0.6, pos.z),
+      scene,
+    );
+    licht.diffuse = new Color3(1, 0.7, 0.4);
+    // AP6-06: Intensität 14 → 2,4 und Reichweite 26 → 15 — warmer Akzent-Schein
+    // über dem globalen Ambient-Boden, kein Scheinwerfer (kein Washout).
+    licht.intensity = 2.4;
+    licht.range = 15;
+    licht.falloffType = PointLight.FALLOFF_GLTF;
+    nachtLichter.push(licht);
+  };
+
   if (meta) {
     // Leit-„Spines" (AP4-05) werden seit AP5-05 nicht mehr gezeichnet;
     // `meta.spineRouten` bleibt als Datenmodell (KONZEPT.md §10).
@@ -623,33 +685,12 @@ export function createRenderer(
       leitMeshes.push(m);
     }
 
-    // Nacht-Lichter (AP6-01): statische Feuertonnen / Leuchtfeuer — je ein
-    // kleiner Punktstrahler + ein emissives Mesh als Orientierungspunkt. Keine
-    // dynamischen Lichter, keine Animation (Greybox-Niveau).
-    const feuerMat = emissivMat("feuer", [1, 0.66, 0.28]);
-    meta.lichter.forEach((pos, i) => {
-      const glut = MeshBuilder.CreateBox(`feuer_${i}`, { size: 0.5 }, scene);
-      glut.position.set(pos.x, pos.y, pos.z);
-      glut.material = feuerMat;
-      glut.isPickable = false;
-      glut.renderingGroupId = GROUP_WORLD;
-      leitMeshes.push(glut);
-      const licht = new PointLight(
-        `feuer_l_${i}`,
-        new Vector3(pos.x, pos.y + 0.6, pos.z),
-        scene,
-      );
-      licht.diffuse = new Color3(1, 0.7, 0.4);
-      // AP6-06: Intensität 14 → 2,4 und Reichweite 26 → 15. Vorher brannte
-      // jede Fläche im Nahbereich eines Feuers aus (Washout), während alles
-      // ohne Feuer in Reichweite auf Schwarz fiel. Jetzt ein warmer Akzent-
-      // Schein über den globalen Ambient-Boden, kein Scheinwerfer.
-      licht.intensity = 2.4;
-      licht.range = 15;
-      licht.falloffType = PointLight.FALLOFF_GLTF;
-      nachtLichter.push(licht);
-    });
+    // Nacht-Lichter (AP6-01): statische Feuertonnen / Leuchtfeuer.
+    meta.lichter.forEach(baueNachtLicht);
   }
+
+  // Probe-Szene (AP6-01c): hart platzierte Lichter statt `meta.lichter`.
+  probe?.lichter?.forEach(baueNachtLicht);
 
   const resize = () => engine.resize();
   window.addEventListener("resize", resize);
@@ -791,6 +832,9 @@ export function createRenderer(
         t.dispose();
       }
       for (const m of zonenMat.values()) {
+        m.dispose();
+      }
+      for (const m of oberflaecheMat.values()) {
         m.dispose();
       }
       grenzeMat.dispose();

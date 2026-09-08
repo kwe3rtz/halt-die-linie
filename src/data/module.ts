@@ -7,7 +7,7 @@
 // prozedurale Generator fürs vordere Labyrinth nutzen (KONZEPT.md §3 / §9.5).
 // Keine Abstraktion über das hier Gebrauchte hinaus.
 import type { Vec3 } from "../sim/math";
-import type { LevelBox } from "../sim/collision";
+import type { LevelBox, Oberflaeche } from "../sim/collision";
 
 /** Rastermaß in Metern — das Modulmaß, auf das der Sektor aufgebaut ist. */
 export const RASTER = 4;
@@ -429,4 +429,489 @@ export function modul(
     const mitTag = b.tag === undefined ? welt : { ...welt, tag: b.tag };
     return b.unsichtbar ? { ...mitTag, unsichtbar: true } : mitTag;
   });
+}
+
+// ===========================================================================
+// AP6-01c — Graben-Look-Baukasten (Tiefe · Verkleidung · echter Abstieg)
+// ===========================================================================
+//
+// Additiv zum Bestand: die alten Module (`parapet`, `unterstand`, `traverse`,
+// die Kennwerte `GRABEN_SOHLE` / `PARAPET_OBERKANTE` / `FEUERTRITT_OBERKANTE`)
+// bleiben **unverändert** — der echte Sektor (`sektor.ts`) und damit die
+// Golden-Anker in `sim.test.ts` sind nicht betroffen. Diese Helfer bauen den
+// tiefen, verkleideten Graben-Look; genutzt wird er in AP6-01c nur von der
+// isolierten Probe-Szene (`probe-graben.ts`). AP6-01d rollt ihn auf den ganzen
+// Sektor aus und macht den globalen Schnitt (Golden-Rebaseline).
+//
+// Umsetzung des Materials: **flache Farben + Formdetail-Geometrie**, keine
+// Texturen (KONZEPT.md §3 „Der Graben-Look", §9.10). Das Material trägt jede
+// Box als `oberflaeche`-Feld — reine Renderer-Durchreiche.
+
+/**
+ * Grabensohle im neuen Look: 2,7 m unter Feld (war 1,8). Man steht *unten
+ * drin*, die Wände überragen einen. Lokal für die Probe-Module — AP6-01d
+ * ersetzt damit global `GRABEN_SOHLE`.
+ */
+export const SOHLE_TIEF = -2.7;
+/**
+ * Feuertritt-Bank im neuen Look: −0,90. Auge (Fuß + 1,6) = +0,70 ≈ Kronenhöhe
+ * → über die Kimme schießbar, Kopf gedeckt. Vier flache Stufen von der tiefen
+ * Sohle (je 0,45 m < STEP_HEIGHT).
+ */
+export const FEUERTRITT_TIEF = -0.9;
+/** Oberkante Erd-Brustwehr (ohne Sandsack-Krone). > STEP_HEIGHT übers Feld. */
+export const BRUSTWEHR_TIEF = 0.58;
+/** Oberkante Sandsack-Krone (Orientierungslinie, hellster Ton). */
+export const PARAPET_KRONE_TIEF = 0.7;
+/** Oberkante Parados (Rückwand) — flach, unter Druck rausklettern. */
+export const PARADOS_KRONE_TIEF = 0.3;
+
+/** Box aus Mittelpunkt + Größe mit Oberflächen-Material. */
+function obx(
+  cx: number,
+  cy: number,
+  cz: number,
+  sx: number,
+  sy: number,
+  sz: number,
+  oberflaeche: Oberflaeche,
+): LevelBox {
+  return {
+    center: { x: cx, y: cy, z: cz },
+    size: { x: sx, y: sy, z: sz },
+    oberflaeche,
+  };
+}
+
+/** Box aus Min/Max-Ecken mit Oberflächen-Material (für den Probe-Bau bequem). */
+export function materialBox(
+  x0: number,
+  x1: number,
+  y0: number,
+  y1: number,
+  z0: number,
+  z1: number,
+  oberflaeche: Oberflaeche,
+): LevelBox {
+  return obx(
+    (x0 + x1) / 2,
+    (y0 + y1) / 2,
+    (z0 + z1) / 2,
+    Math.abs(x1 - x0),
+    Math.abs(y1 - y0),
+    Math.abs(z1 - z0),
+    oberflaeche,
+  );
+}
+
+/**
+ * Ein achsenparalleles Grabenwand-Segment für die Verkleidungs-Helfer. `a`/`b`
+ * sind die Enden in der XZ-Ebene (die Wandfläche), `normale` zeigt als
+ * Einheitsvektor in den Graben hinein ((±1,0) oder (0,±1)).
+ */
+export interface WandSegment {
+  a: { x: number; z: number };
+  b: { x: number; z: number };
+  /** Welt-Y Wandfuß (Grabensohle). */
+  sohle: number;
+  /** Welt-Y Wandkrone (Oberkante Erdwand). */
+  krone: number;
+  normale: { x: number; z: number };
+}
+
+interface SegAchsen {
+  entlangX: boolean;
+  min: number;
+  max: number;
+  laenge: number;
+  /** Konstante Querkoordinate der Wandfläche. */
+  face: number;
+  /** Vorzeichen der Normale in Querrichtung (in den Graben). */
+  nq: number;
+}
+
+function segAchsen(seg: WandSegment): SegAchsen {
+  const entlangX = Math.abs(seg.b.x - seg.a.x) >= Math.abs(seg.b.z - seg.a.z);
+  const av = entlangX ? seg.a.x : seg.a.z;
+  const bv = entlangX ? seg.b.x : seg.b.z;
+  return {
+    entlangX,
+    min: Math.min(av, bv),
+    max: Math.max(av, bv),
+    laenge: Math.abs(bv - av),
+    face: entlangX ? seg.a.z : seg.a.x,
+    nq: entlangX ? Math.sign(seg.normale.z) : Math.sign(seg.normale.x),
+  };
+}
+
+/**
+ * Verkleidung eines Grabenwand-Segments — **Formdetail-Geometrie** (KONZEPT.md
+ * §3): senkrechte Holz-Stützpfosten alle ~1,2 m + vier waagerechte
+ * Bohlen-Kurse, beide ragen ein Stück in den Graben. Zusätzlich zur (separat
+ * gebauten) Erd-Basiswand. `opt.vonY` hebt den Ansatz an (z. B. über den
+ * Feuertritt, damit die Pfosten die Bank nicht verstellen).
+ */
+export function verkleidung(
+  seg: WandSegment,
+  opt: { vonY?: number; pfostenAbstand?: number } = {},
+): LevelBox[] {
+  const { entlangX, min, max, laenge, face, nq } = segAchsen(seg);
+  const vonY = opt.vonY ?? seg.sohle;
+  const abstand = opt.pfostenAbstand ?? 1.2;
+  const hoehe = seg.krone - vonY;
+  if (hoehe <= 0 || laenge <= 0) {
+    return [];
+  }
+  const midY = (vonY + seg.krone) / 2;
+  const out: LevelBox[] = [];
+
+  // Stützpfosten 0,15 × H × 0,15, ~0,12 m vor der Wandfläche.
+  const n = Math.max(1, Math.round(laenge / abstand));
+  for (let i = 0; i <= n; i += 1) {
+    const p = min + (i / n) * laenge;
+    const q = face + nq * 0.06;
+    out.push(
+      entlangX
+        ? obx(p, midY, q, 0.15, hoehe, 0.15, "holz")
+        : obx(q, midY, p, 0.15, hoehe, 0.15, "holz"),
+    );
+  }
+  // Bohlen-Kurse: vier Leisten 0,20 hoch × 0,06 vorstehend über die ganze Länge.
+  const mid = (min + max) / 2;
+  for (const relY of [0.4, 1.1, 1.8, 2.5]) {
+    const y = vonY + relY;
+    if (y + 0.1 >= seg.krone) {
+      continue;
+    }
+    const q = face + nq * 0.03;
+    out.push(
+      entlangX
+        ? obx(mid, y, q, laenge, 0.2, 0.06, "holz")
+        : obx(q, y, mid, 0.06, 0.2, laenge, "holz"),
+    );
+  }
+  return out;
+}
+
+/**
+ * Sandsack-Krone auf einem Segment — Reihe Klötze (0,50 × 0,35 × 0,45) mit
+ * kleinen Lücken (die „Kimme"), Oberkante = `oberkante`. Hellster Ton im Sektor
+ * → dient der Orientierung (Horizontlinie).
+ */
+export function sandsackKrone(
+  seg: WandSegment,
+  opt: { oberkante?: number; luecke?: number } = {},
+): LevelBox[] {
+  const { entlangX, min, max, laenge, face, nq } = segAchsen(seg);
+  const oberkante = opt.oberkante ?? PARAPET_KRONE_TIEF;
+  const luecke = opt.luecke ?? 0.15;
+  const sack = 0.5;
+  const hoehe = 0.35;
+  const cy = oberkante - hoehe / 2;
+  const q = face + nq * (0.45 / 2 - 0.08); // leicht in den Graben gerückt
+  const teilung = sack + luecke;
+  const anzahl = Math.max(1, Math.floor(laenge / teilung));
+  const rest = laenge - anzahl * teilung + luecke;
+  const start = min + rest / 2;
+  const out: LevelBox[] = [];
+  for (let i = 0; i < anzahl; i += 1) {
+    const c = start + sack / 2 + i * teilung;
+    if (c > max) {
+      break;
+    }
+    out.push(
+      entlangX
+        ? obx(c, cy, q, sack, hoehe, 0.45, "sandsack")
+        : obx(q, cy, c, 0.45, hoehe, sack, "sandsack"),
+    );
+  }
+  return out;
+}
+
+/**
+ * Laufrost über der Grabensohle — dünne Deckplatte (Oberkante `sohle + 0,04`)
+ * als begehbare Fläche. `querStege` legt optional schmale Querleisten (0,03 m
+ * vorstehend) alle ~0,5 m darüber.
+ */
+export function laufrost(bereich: {
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  sohle: number;
+  querStege?: boolean;
+}): LevelBox[] {
+  const top = bereich.sohle + 0.04;
+  const cx = (bereich.minX + bereich.maxX) / 2;
+  const cz = (bereich.minZ + bereich.maxZ) / 2;
+  const sx = bereich.maxX - bereich.minX;
+  const sz = bereich.maxZ - bereich.minZ;
+  const out: LevelBox[] = [obx(cx, top - 0.02, cz, sx, 0.04, sz, "laufrost")];
+  if (bereich.querStege) {
+    const n = Math.max(1, Math.round(sz / 0.5));
+    for (let i = 1; i < n; i += 1) {
+      out.push(
+        obx(
+          cx,
+          top + 0.015,
+          bereich.minZ + (i / n) * sz,
+          sx,
+          0.03,
+          0.05,
+          "laufrost",
+        ),
+      );
+    }
+  }
+  return out;
+}
+
+/**
+ * Feuertritt als vier flache Stufen von der tiefen Sohle zur Bank an der
+ * Brustwehr. Die Stufen stapeln sich Richtung Wand (jede höhere reicht weniger
+ * weit in den Graben), jede < STEP_HEIGHT. Riser + Tritt in `holz`.
+ */
+export function feuertrittTief(opt: {
+  minX: number;
+  maxX: number;
+  /** Grabenseitige Kante der untersten Stufe. */
+  zToe: number;
+  /** An der Brustwehr (die Stufen enden hier). */
+  zWand: number;
+  sohle?: number;
+  bank?: number;
+  stufen?: number;
+}): LevelBox[] {
+  const sohle = opt.sohle ?? SOHLE_TIEF;
+  const bank = opt.bank ?? FEUERTRITT_TIEF;
+  const stufen = opt.stufen ?? 4;
+  const cx = (opt.minX + opt.maxX) / 2;
+  const sx = opt.maxX - opt.minX;
+  const unten = sohle - 0.6;
+  const spanZ = opt.zWand - opt.zToe;
+  const out: LevelBox[] = [];
+  for (let i = 0; i < stufen; i += 1) {
+    const top = sohle + ((i + 1) / stufen) * (bank - sohle);
+    const z0 = opt.zToe + (i / stufen) * spanZ;
+    const zc = (z0 + opt.zWand) / 2;
+    out.push(
+      obx(
+        cx,
+        (unten + top) / 2,
+        zc,
+        sx,
+        top - unten,
+        Math.abs(opt.zWand - z0),
+        "holz",
+      ),
+    );
+  }
+  return out;
+}
+
+// Feste Maße des Abstiegs-Unterstands (auch von `abstiegUnterstandLoch` genutzt).
+const US_SCHACHT_B = 1.6; // lichte Breite Treppenschacht (X)
+const US_SCHACHT_T = 2.4; // Länge Treppenschacht (Z)
+const US_STUFEN = 8;
+const US_RAUM_B = 3.5; // lichte Breite Raum (X)
+const US_RAUM_T = 3.2; // lichte Tiefe Raum (Z)
+const US_WAND = 0.25;
+const US_VESTIBUEL = 0.7; // offener Boden am Fuß der Treppe, vor der Decke
+const US_TIEFE = 2.2; // Sohle → Raumboden (Raumboden = Auge − 1,6 unter Decke)
+const US_KOPF = 2.0; // lichte Höhe Raum (Raumboden → Deckenunterkante)
+
+/**
+ * Echter Abstiegs-Unterstand (KONZEPT.md §3, Grill Q9): Treppe von der
+ * Grabensohle **hinab** in einen Raum *unter* der Sohle mit Kopffreiheit
+ * (lichte Höhe 2,0 m). Vollständig geschlossene Kiste — eigene Bodenplatte + 4
+ * Wände + Decke + Treppe; die einzige Öffnung nach oben ist der Treppenschacht
+ * (offen in den Graben). **Nicht im Nav-Graph** (Spieler-Schutzraum, nie
+ * Feind-Route) → das fehlende `FALL_LIMIT` für Gegner ist hier irrelevant.
+ *
+ * Der Aufrufer stanzt den durchgehenden Sohle-Auffangboden über
+ * `abstiegUnterstandLoch(...)` aus (die eigene Bodenplatte dichtet ab). Mit
+ * `kappeBis` legt der Helfer selbst die Erd-Kappe über die Decke (bis Welt-Y
+ * `kappeBis`, i. d. R. `OBERFLAECHE`).
+ */
+export function abstiegUnterstand(opt: {
+  /** Grabensohle = Oberkante Treppenschacht. */
+  sohle?: number;
+  /** Zentrum des Treppenschachts in der Grabensohle (XZ). */
+  schacht: { x: number; z: number };
+  /** Der Raum liegt in dieser Z-Richtung vom Schacht (−1 = nach −Z). */
+  richtungZ: 1 | -1;
+  /** Welt-Y, bis zu dem die Erd-Kappe über die Decke reicht (z. B. 0). */
+  kappeBis?: number;
+}): LevelBox[] {
+  const sohle = opt.sohle ?? SOHLE_TIEF;
+  const dir = opt.richtungZ;
+  const { x: sx, z: sz } = opt.schacht;
+  const W = US_WAND;
+
+  const raumBoden = sohle - US_TIEFE;
+  const deckeUnten = raumBoden + US_KOPF;
+  const bodenPlatte = raumBoden - 0.5;
+
+  const schachtEndZ = sz + dir * US_SCHACHT_T;
+  const deckeNahZ = schachtEndZ + dir * US_VESTIBUEL; // hier beginnt die Decke
+  const fernZ = schachtEndZ + dir * US_RAUM_T; // Innenkante Rückwand
+  const fernAussen = fernZ + dir * W;
+
+  const raumMinX = sx - US_RAUM_B / 2;
+  const raumMaxX = sx + US_RAUM_B / 2;
+  const schMinX = sx - US_SCHACHT_B / 2;
+  const schMaxX = sx + US_SCHACHT_B / 2;
+  const zSpanne = (a: number, b: number): [number, number] => [
+    Math.min(a, b),
+    Math.max(a, b),
+  ];
+  const [footMinZ, footMaxZ] = zSpanne(sz, fernAussen);
+
+  const out: LevelBox[] = [];
+
+  // Bodenplatte über die ganze Aussparung (dichtet den Auffangboden ab).
+  out.push(
+    materialBox(
+      raumMinX - W,
+      raumMaxX + W,
+      bodenPlatte,
+      raumBoden,
+      footMinZ,
+      footMaxZ,
+      "laufrost",
+    ),
+  );
+  // Treppe hinab: diskrete Stufen (je ~0,3 m tief, ~0,28 m hoch < STEP_HEIGHT),
+  // die letzte auf Raumboden-Niveau. Massiv bis zur Bodenplatte.
+  const tread = US_SCHACHT_T / US_STUFEN;
+  for (let i = 0; i < US_STUFEN; i += 1) {
+    const top = sohle - ((i + 1) / US_STUFEN) * US_TIEFE;
+    const [z0, z1] = zSpanne(sz + dir * i * tread, sz + dir * (i + 1) * tread);
+    out.push(materialBox(schMinX, schMaxX, bodenPlatte, top, z0, z1, "holz"));
+  }
+  // Schacht-Seitenwände (Holz-Verbau), Bodenplatte → Sohle.
+  {
+    const [z0, z1] = zSpanne(sz, schachtEndZ);
+    out.push(
+      materialBox(schMinX - W, schMinX, bodenPlatte, sohle, z0, z1, "holz"),
+      materialBox(schMaxX, schMaxX + W, bodenPlatte, sohle, z0, z1, "holz"),
+    );
+  }
+  // Decke (Holz-Rahmen) — erst ab `deckeNahZ` (der Vestibül-Bereich am Fuß der
+  // Treppe bleibt oben offen, sonst stößt der absteigende Kopf an).
+  {
+    const [z0, z1] = zSpanne(deckeNahZ, fernAussen);
+    out.push(
+      materialBox(
+        raumMinX - W,
+        raumMaxX + W,
+        deckeUnten,
+        deckeUnten + 0.4,
+        z0,
+        z1,
+        "holz",
+      ),
+    );
+  }
+  // Seitenwände Raum + Vestibül (Wellblech), Bodenplatte → Decke.
+  {
+    const [z0, z1] = zSpanne(schachtEndZ, fernAussen);
+    out.push(
+      materialBox(
+        raumMinX - W,
+        raumMinX,
+        bodenPlatte,
+        deckeUnten,
+        z0,
+        z1,
+        "wellblech",
+      ),
+      materialBox(
+        raumMaxX,
+        raumMaxX + W,
+        bodenPlatte,
+        deckeUnten,
+        z0,
+        z1,
+        "wellblech",
+      ),
+    );
+  }
+  // Rückwand (fern vom Schacht).
+  {
+    const [z0, z1] = zSpanne(fernZ, fernAussen);
+    out.push(
+      materialBox(
+        raumMinX - W,
+        raumMaxX + W,
+        bodenPlatte,
+        deckeUnten,
+        z0,
+        z1,
+        "wellblech",
+      ),
+    );
+  }
+  // Türwand am Deckenansatz mit ~1,8 m Öffnung.
+  {
+    const [z0, z1] = zSpanne(deckeNahZ - W / 2, deckeNahZ + W / 2);
+    out.push(
+      materialBox(
+        raumMinX - W,
+        sx - 0.9,
+        bodenPlatte,
+        deckeUnten,
+        z0,
+        z1,
+        "wellblech",
+      ),
+      materialBox(
+        sx + 0.9,
+        raumMaxX + W,
+        bodenPlatte,
+        deckeUnten,
+        z0,
+        z1,
+        "wellblech",
+      ),
+    );
+  }
+  // Erd-Kappe über der Decke (optional) — nur über dem gedeckten Raum.
+  if (opt.kappeBis !== undefined) {
+    const [z0, z1] = zSpanne(deckeNahZ, fernAussen);
+    out.push(
+      materialBox(
+        raumMinX - W,
+        raumMaxX + W,
+        deckeUnten + 0.4,
+        opt.kappeBis,
+        z0,
+        z1,
+        "erde",
+      ),
+    );
+  }
+
+  return out;
+}
+
+/**
+ * Die XZ-Aussparung, die der Aufrufer im durchgehenden Sohle-Auffangboden für
+ * einen `abstiegUnterstand` frei lassen muss (Schacht + Vestibül + Raum) — die
+ * eigene Bodenplatte des Unterstands dichtet sie ab. Auch fürs Hinterland-Feld
+ * (offener Treppenschacht) brauchbar.
+ */
+export function abstiegUnterstandLoch(opt: {
+  schacht: { x: number; z: number };
+  richtungZ: 1 | -1;
+}): { minX: number; maxX: number; minZ: number; maxZ: number } {
+  const dir = opt.richtungZ;
+  const { x: sx, z: sz } = opt.schacht;
+  const fernAussen = sz + dir * (US_SCHACHT_T + US_RAUM_T + US_WAND);
+  return {
+    minX: sx - US_RAUM_B / 2 - US_WAND,
+    maxX: sx + US_RAUM_B / 2 + US_WAND,
+    minZ: Math.min(sz, fernAussen),
+    maxZ: Math.max(sz, fernAussen),
+  };
 }

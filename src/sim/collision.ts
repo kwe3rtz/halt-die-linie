@@ -7,12 +7,27 @@
 // nebenbei den Bodenkontakt.
 import type { Vec3 } from "./math";
 
+/**
+ * Oberflächen-Material einer `LevelBox` (AP6-01c, Graben-Look). **Reine
+ * Durchreiche** — die Sim/Kollision liest das Feld nie, nur der Renderer
+ * (`src/render`) wählt danach ein flaches `StandardMaterial`. `erde` bzw. ein
+ * fehlendes Feld heißt „heutiges Verhalten" (Zonen-Ton / Greybox-Fallback).
+ * Echte Texturen sind ein späterer Schritt (KONZEPT.md §9.10).
+ */
+export type Oberflaeche =
+  "erde" | "holz" | "sandsack" | "wellblech" | "laufrost" | "beton";
+
 /** Ein Level-Baustein als reine Daten — kein Babylon-Typ. */
 export interface LevelBox {
   /** Mittelpunkt in Weltkoordinaten. */
   center: Vec3;
   /** Volle Kantenlänge je Achse. */
   size: Vec3;
+  /**
+   * Oberflächen-Material (AP6-01c) — nur der Renderer wertet es aus, die Sim
+   * ignoriert es. Ungesetzt = heutiges Verhalten.
+   */
+  oberflaeche?: Oberflaeche;
   /**
    * Optionales Etikett (z. B. `brescheTag(id, i)` aus `./sektor`). Getaggte
    * Boxen kann die Sim zur Laufzeit ab-/anschalten (`setKolliderAktiv`) — so

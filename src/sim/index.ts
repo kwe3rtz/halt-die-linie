@@ -71,7 +71,13 @@ import {
 } from "./wave";
 
 export type { Vec3 } from "./math";
-export type { LevelBox, LevelData, CollisionWorld, Aabb } from "./collision";
+export type {
+  LevelBox,
+  LevelData,
+  CollisionWorld,
+  Aabb,
+  Oberflaeche,
+} from "./collision";
 export type { EnemyZustand } from "./enemies";
 export type { WavePhase } from "./wave";
 export type {

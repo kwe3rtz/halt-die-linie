@@ -1,6 +1,6 @@
 # AP6-01c — Graben-Look: Baukasten, Materialsystem & Probe-Ecke
 
-**Status:** offen — Kickoff folgt vom Planer. **Vor** AP6-01d, AP6-02b, AP6-05.
+**Status:** review — Worker fertig (Bericht unten). **Vor** AP6-01d, AP6-02b, AP6-05.
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **`/clear` vor dem Start:** ja (neuer Baukasten, Renderer-Änderung, viel Fläche).
 
@@ -322,3 +322,151 @@ Unterstände, Minenkammer). Der volle Beschluss-Satz:
     VG-Mündungen; **keine** MG-Stände / Wandkammern jetzt (Backlog). Home-Line
     wie skizziert: Feuertritt + Brustwehr, 2–3 echte Abstiegs-Bunker
     (Munitionslager / Verbandsplatz / Feldkommandeur), Depot.
+
+---
+
+## Bericht — AP6-01c
+
+COMMIT: <hash> (Branch arbeitspaket-6)
+CI: <steht nach dem Push> / Pages <steht nach dem Push>
+TODO(Rückfrage): keine im Code. Zwei Entscheidungen unten (Punkt 1 + 2) an den Planer.
+
+Checks: typecheck / lint / format:check / test:coverage / build — **alle grün**
+Tests: 314 (+11 neu in `src/data/probe-graben.test.ts`) · Coverage src/sim: 98,43 % Stmts / 97,02 % Branch (unverändert — `src/data/**` liegt außerhalb der Schwelle) · Bundle: 6 921,08 kB roh / 1 537,18 kB gzip (Δ ~0 — `probe-graben.ts` ist eine kleine Datendatei)
+
+### Umsetzung — was gebaut wurde
+
+**Alles additiv. Der echte Sektor (`sektor.ts`) ist nicht angefasst, die
+Golden-Anker in `sim.test.ts` sind bit-identisch grün, `parapet()` /
+`unterstand()` / `traverse()` / die globalen Kennwerte unverändert.**
+
+1. **`src/sim/collision.ts`** — `Oberflaeche`-Typ
+   (`erde|holz|sandsack|wellblech|laufrost|beton`) + optionales
+   `LevelBox.oberflaeche`. Reine Durchreiche, keine Sim-Logik; `createCollisionWorld`
+   unberührt, goldene Regel gewahrt. Re-Export über `src/sim/index.ts`.
+2. **`src/render/index.ts`** — `Map<Oberflaeche, StandardMaterial>` (flache
+   Nacht-`Color3` nach Ziellvorlage §3, `specularColor` 0). `boxMaterial()` prüft
+   `box.oberflaeche` zuerst (außer `erde`), sonst **exakt der alte Pfad** →
+   der echte Sektor sieht unverändert aus (kein Sektor-Box trägt das Feld).
+   Vierter Parameter `probe?: { lichter }` + Feuertonnen-Bauer in
+   `baueNachtLicht` herausgezogen (dient `meta.lichter` **und** der Probe-Szene).
+   Materialien im `dispose()` mit aufgeräumt.
+3. **`src/data/module.ts`** — neuer Abschnitt „Graben-Look-Baukasten", rein
+   additiv:
+   - Lokale Kennwerte `SOHLE_TIEF −2,7`, `BRUSTWEHR_TIEF 0,58`,
+     `PARAPET_KRONE_TIEF 0,70`, `FEUERTRITT_TIEF −0,90`, `PARADOS_KRONE_TIEF 0,30`
+     (klar kommentiert „AP6-01d macht das global").
+   - `verkleidung(seg, opt)` — Holz-Stützpfosten (~1,2 m) + vier Bohlen-Kurse,
+     achsen-generisch über eine `WandSegment`-Beschreibung.
+   - `sandsackKrone(seg, opt)` — Klötze 0,50 × 0,35 × 0,45 mit ~0,15-Lücken
+     („Kimme"), Oberkante = Krone.
+   - `laufrost(bereich)` — dünne Deckplatte (Oberkante Sohle + 0,04),
+     optionale Querstege.
+   - `feuertrittTief(opt)` — vier Stufen von der tiefen Sohle zur Bank; jede
+     Stufe 0,45 m < `STEP_HEIGHT`.
+   - `abstiegUnterstand(opt)` — der **echte Abstieg** (Grill Q9): Bodenplatte +
+     8 Treppenstufen (~0,275 m < `STEP_HEIGHT`) + Schacht-Seitenwände + Decke
+     (erst hinter einem 0,7-m-Vestibül, damit der Kopf beim Abstieg frei bleibt)
+     + Wellblech-Wände + Türwand mit 1,8-m-Öffnung + optionale Erd-Kappe
+     (`kappeBis`). Raumboden −4,90, Deckenunterkante −2,90 → **2,0 m lichte
+     Höhe** (Auge −3,30 → 0,40 m unter der Decke). `abstiegUnterstandLoch(opt)`
+     gibt die XZ-Aussparung im Auffangboden zurück.
+4. **`src/data/probe-graben.ts` (neu)** — eine isolierte `LevelData`, **kein
+   `SektorMeta`** (`createSim` nimmt es als schlichtes Level, keine Zonen/Nav/
+   Wellen/Uhr): 1 tiefe verkleidete Feuernische (4-Stufen-Feuertritt, Sandsack-
+   Krone, Laufrost, Brustwehr + West-Stirnwand + Parados) · 1 Erd-Traverse, die
+   die Feuerlinie in eine West- und Ost-Bucht teilt · ~7,6 m Verbindungsgraben-
+   Stumpf (verkleidet, Laufrost) · 1 `abstiegUnterstand` am Grabenende ·
+   Feindseiten-/Hinterland-Feld als Kulisse (mit Graben-Schlitz + Unterstand-
+   Kappe). Rechteck-Subtraktion (`bodenPlatten`) für den Hinterland-Boden.
+   `probeGrabenLichter` = 2 hart platzierte Lichter (Laufgang-Akzent + Unterstand).
+5. **`src/main.ts`** — kleiner geguardeter Zweig: `?probe` → `starteProbe(canvas)`
+   (Sim + Renderer + Input + Debug-Overlay, kein HUD/Kompass/Lagekarte/Audio).
+   Der Normalpfad ist in `starteSektor()` gewandert, sonst unverändert.
+6. **`src/data/probe-graben.test.ts` (neu, 11 Tests)** — Baukasten-Einheitstests
+   + Begehbarkeit der Probe-Szene mit echter `moveCapsule`.
+
+### Akzeptanzkriterien — geprüft
+
+| Kriterium | Ergebnis |
+| --- | --- |
+| `npm run dev` **ohne** `?probe`: echter Sektor exakt wie vorher | ✅ Gegenprobe: Golden-Anker `sim.test.ts` bit-identisch, alle 41 `sektor.test.ts` + `navgraph-begehbarkeit.test.ts` grün; kein Sektor-Box trägt `oberflaeche`, `boxMaterial` fällt für ihn auf den alten Pfad zurück |
+| `?probe`: tiefer verkleideter Graben — Wände überragen einen | ✅ Screenshot 01: von der Sohle (Auge −1,10) sieht man nur Wand + Sandsack-Krone gegen den Himmel; Test „Tiefe": Auge auf der Sohle 1,48 m unter der Brustwehr-Oberkante |
+| Feuertritt hoch, über die Kimme schießbar | ✅ Screenshot 02: auf der Bank (Auge +0,70) Blick über die Brustwehr (Erde +0,58) ins Feld; Test: Auge−Krone = 0,00 m ≤ 0,15 |
+| Sandsack-Krone als heller Horizont, Laufrost, Holz-Pfosten + Bohlen | ✅ Screenshots 01/03/04/05 — `sandsack` hellster Ton, Formdetail-Grid klar lesbar |
+| Abstiegs-Unterstand: Treppe hinab, Raum mit Kopffreiheit, wieder hinauf | ✅ Screenshots 06/07; Sim-Test: Kapsel läuft die 8 Stufen hinab, landet auf −4,90, Auge (−3,30) clippt nicht in die Decke (−2,90), läuft wieder hinauf in den Graben |
+| Kapsel fällt nicht durch den Auffangboden-Ausschnitt | ✅ Test „keine Kapsel fällt durch": drei Fallproben über der Raum-Aussparung → alle auf der Raum-Bodenplatte (> −5,3) |
+| Feuertritt: jede Stufe < `STEP_HEIGHT`; Auge auf der Bank ±0,15 der Krone | ✅ Stufen-Oberkanten −2,25 / −1,80 / −1,35 / −0,90 (Δ 0,45 < 0,50); Auge auf der Bank +0,70 = Krone +0,70 |
+| Parapet-Krone von jeder angrenzenden Lauffläche > `STEP_HEIGHT` | ✅ Test: Kapsel vom Feindseiten-Feld (y 0) gegen die Brustwehr → stoppt bei z ≈ 4,3, steigt nicht hinauf (Δ 0,58 > 0,50); von der Bank (−0,90) zur Krone Δ 1,60 |
+| Golden-Anker `sim.test.ts` unverändert | ✅ bit-identisch (keine Rebaseline) |
+| `navgraph-begehbarkeit.test.ts` unverändert grün | ✅ |
+| alle Checks grün | ✅ |
+
+### Perf-Notiz (Anker für AP6-01d)
+
+Probe-Szene: **164 Level-Boxen** (erde 21 · holz 93 · sandsack 42 · laufrost 3 ·
+wellblech 5) → 169 Meshes total, **~64 aktive Meshes je Blick** (Frustum-Cull),
+19 Materialien. Headless (Swiftshader, 1280×720): **Median-Frame ~20,8 ms /
+p95 ~22,5 ms** (~48 fps) — reine CPU-Rasterung, eine echte GPU liegt weit
+darüber (vgl. AP6-06-Merkposten). Draw-Calls ≈ aktive Meshes (kein Batching).
+
+**Für AP6-01d:** die Verkleidung vervielfacht die Box-Zahl. Der ganze Sektor im
+neuen Look (~5 Front-Nischen + Parados + 3 Verbindungsgräben + Home-Line mit 3
+Abstiegs-Unterständen) landet grob bei **700–900 Boxen** → ein Mesh/Draw-Call je
+Box wird auf schwacher Hardware spürbar. Empfehlung: im Renderer **Merge je
+Material** (`Mesh.MergeMeshes` bzw. Thin-Instances) für die statische Welt-
+Geometrie, mit N-Box-Frame-Benchmark als Budget-Anker.
+
+### Entscheidungen / Abweichungen vom Ticket
+
+1. **Neue Helfer statt Änderung von `parapet()` / `unterstand()`.** Das Ticket
+   (Auftrag §1) nennt „Feuertritt 3 → 4 Stufen" und „`unterstand()` neu". Die
+   Akzeptanzkriterien fordern aber **Golden-Anker unverändert** und „echter
+   Sektor unberührt" (und „Ausdrücklich NICHT: der echte Sektor"). Da `sektor.ts`
+   `modul("parapet"/"unterstand"/"traverse", …)` aufruft, hätte jede Änderung
+   dieser Funktionen den Sektor (und damit die positionsabhängigen Golden-Anker)
+   verschoben. Deshalb: **neue, eigenständige Helfer** (`feuertrittTief`,
+   `abstiegUnterstand`, `verkleidung`, …), die nur die Probe-Szene nutzt. Die
+   alten Module + Kennwerte bleiben für den Sektor im Ist; **AP6-01d** verdrahtet
+   den neuen Look global und trägt dort die Golden-Rebaseline (wie im Ticket
+   „Ausdrücklich NICHT in AP6-01c" ohnehin vorgesehen). Der AP6-01b-`unterstand()`-
+   Rückstand ist mit `abstiegUnterstand` **gelöst** — nur noch nicht im Sektor
+   verdrahtet.
+2. **`PARAPET_KRONE_TIEF` = 0,70 wie im Ticket, aber die Erd-Brustwehr endet bei
+   0,58**, die Sandsäcke sitzen 0,58 → 0,70 mit Lücken darauf. So ist die
+   Erdwand von der Feldseite > `STEP_HEIGHT` (nicht begehbar, Marge 0,08) und
+   das Auge auf der Bank (+0,70) liegt 0,12 m über der Erde → sauber „über die
+   Kimme". Das Ticket-Querschnitt-ASCII (§1) zeichnet die Brustwehr bis
+   OBERFLAECHE 0,00; 0,58 ist die Feinjustierung, die die STEP_HEIGHT-Marge
+   *und* die Schuss-Linie zugleich trägt. Für AP6-01d ist damit `BRUSTWEHR_TIEF`
+   0,58 der Startwert (im Spieltest justierbar).
+3. **Kleines offenes „Vestibül" (0,7 m) am Fuß der Treppe**, bevor die Decke
+   ansetzt — ohne das stößt der absteigende Kopf an die Deckenkante, weil die
+   letzten Stufen noch nicht auf Raumboden-Niveau sind. Der Treppenschacht ist
+   dadurch (samt Vestibül) **oben offen zum Graben** (wie im Ziellvorlage-ASCII
+   „oben offen zum Graben"), die eigentliche Kammer ist gedeckt + erd-bekappt.
+4. **`querStege` beim `laufrost` per Default aus** — 0,03-m-Leisten alle 0,5 m
+   lösten beim Gehen einen Mikro-Step-Up aus (Kamera-Zittern). Das Datenfeld
+   bleibt für AP6-01d (dann als reines Render-Detail ohne Kollider zu bauen).
+
+### Manuell geprüft
+
+Headless (Playwright + Swiftshader, Wegwerf-`hdl-probe.html` → gelöscht):
+7 Screenshots in `tickets/AP6-01c-screenshots/`:
+
+| Datei | Blick |
+| --- | --- |
+| 01-nische-von-unten | von der Grabensohle: verkleidete Wand überragt, Sandsack-Krone gegen den Nachthimmel |
+| 02-feuertritt-ueber-die-kimme | auf der Bank stehend, Blick über die Brustwehr ins Feld |
+| 03-verkleidung-laufrost-nah | Wandecke: Pfosten + Bohlen + Laufrost-Boden + 4-Stufen-Feuertritt |
+| 04-traverse-feuerbuchten | die Erd-Traverse teilt die Feuerlinie (Zickzack über den Laufgang) |
+| 05-verbindungsgraben-eng | enger verkleideter Verbindungsgraben-Stumpf, am Ende der Abstiegs-Schacht |
+| 06-abstieg-treppe-hinab | vom Grabenrand die Treppe hinab in den Unterstand |
+| 07-im-unterstand-blick-hoch | im Raum: Kopffreiheit, Treppe + Grabenöffnung mit Krone dahinter |
+
+**Merkposten Spieltest (echte GPU):** die Nacht-Helligkeit ist headless
+(Swiftshader) nur bedingt aussagekräftig und in der engen Szene mit den
+Reichweite-15-Lichtern warm-orange; die zwei Probe-Lichter sind bewusst sparsam
+gesetzt, der offene Graben lebt vom Mond-Ambient. Auf echter GPU justieren (wie
+AP6-01b-Merkposten). Fokus außerdem: fühlt sich die Nische *tief + eng* an,
+trägt die Verkleidung, funktioniert der Abstieg flüssig (Kamera beim Treppab).
