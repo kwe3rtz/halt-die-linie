@@ -2526,3 +2526,321 @@ Lesbarkeit & Ausnutzbarkeit (Spieler-Manipulation):
 Ablenkungsmittel (Leuchtkugeln / Knallkörper): Eine geschossene Leuchtkugel ins Niemandsland zieht 80 % aller Roamer aus dem Hinterland ab. Der Spieler kann die Horde gezielt steuern, um sich den Rücken für eine Reparatur freizumachen.
 
 Licht-Dilemma: Lampe an = volle Sicht im verwinkelten Graben, zieht aber Untote an. Lampe aus = Schleichen an der Horde vorbei ist möglich, aber die Sicht ist minimal (Grabenhorror).
+
+---
+
+# Runde 4 — Gesamtreview nach dem AP6-01b-Spieltest (2026-09-09)
+
+Der Nutzer hat ChatGPT / Perplexity / Gemini den **aktuellen Stand** (Konzept
+v0.3 — eine Frontlinie + Home-Line, fechtender Rückzug, Nacht-Roaming, der
+AP6-01b-Sektor) zum **Gesamtreview** gegeben. Kein enges Briefing, offene Frage
+„was würdet ihr am Konzept noch verfeinern". Rohmaterial unten dicht
+zusammengefasst (die Vollantworten liegen im Nutzer-Chat 2026-09-09), danach
+die **Planer-Triage** — was davon Beschluss-relevant ist und *wann*.
+
+## ChatGPT — 32 Punkte + „idealer 15-min-Run" + Prioritäten
+
+1. **Die „Uhr" wörtlicher modellieren: echte Feindreserve statt zonengewichteter
+   Kills.** Der Feind hat z. B. 100 Reservepunkte; der Director gibt sie aus,
+   wenn er Gegner schickt (Wiedergänger 1, Läufer 1,5, Grabengänger 2, Heuler 3,
+   Koloss 10). Ein 3 m hinter der Front getöteter Gegner ist nicht „weniger
+   wert" als 3 m davor — sonst optimiert der Spieler das abstrakte System statt
+   die Stellung. Position ändert die **Kampf-Effizienz** (Anmarschkosten,
+   Zugang), nicht den Kill-*Wert*. Kein künstlicher Multiplikator nötig, damit
+   „an der Front sind wir im Vorteil" spürbar ist.
+2. **Finale-Widerspruch:** Warum soll der Soldat 70–100 m zurücklaufen und
+   ausgerechnet die Home-Line verteidigen, wenn er die Front *nie* verloren
+   hat? Fühlt sich an wie „du hast gehalten — das Spiel gibt die Linie trotzdem
+   auf, damit das geplante Finale stattfindet". Zwei saubere Lösungen:
+   **A (bevorzugt): Finale dort, wo die Verteidigung gerade steht** — Front
+   gehalten → schwereres vorgelagertes Finale + bessere Belohnung; Front
+   gefallen → Home-Line-Finale + schlechtere Lage. **B:** befohlener Rückzug
+   per Feldtelefon mit glaubwürdigem Grund („eigenes Sperrfeuer in 90 s"), die
+   Bewegung selbst wird zum Finale.
+3. **Kleine KI-Garnison (Stellungssoldaten).** Nicht Bots — 1–2 namenlose
+   Kompaniesoldaten an Haltepunkten, fangen *kleinen* Druck auf, besiegen keine
+   Welle. Job: Zeit kaufen + Zustand kommunizieren (stabil → kämpft → bedrängt
+   → überrannt) + Welt beleben. Macht den Solospieler vom „einzigen
+   Verteidiger" zum mobilen Krisenlöser. Bewusst simpel: kein Inventar, keine
+   Befehle, kein ständiges Wiederbeleben. Später: Nachschub ausgeben, um einen
+   Ersatztrupp an einen Posten zu schicken (besserer Einsatz für „KI-Trupps"
+   als bloß mehr DPS).
+4. **Frontfall noch physischer:** 4–5 benannte Breschen; eine Bresche allein ≠
+   „Front verloren" — die Toten müssen *hineinkommen*. Zweite räumliche
+   Schwelle: Parapet → Frontgraben → **Kommunikationsknoten hinter der Front**.
+   Kritische Masse am rückwärtigen Sammelpunkt → Befehl „FRONT NICHT ZU HALTEN
+   — ZURÜCK". Der Spieler versteht *warum* die Stellung aufgegeben wird: der
+   Feind ist in die Struktur eingedrungen, nicht „ein Balken runter".
+5. **2–3 In-Run-„Feldanpassungen"** statt Perks/+Schaden. Beispiel Langgewehr:
+   Schnellanschlag (schneller aus Sprint/Ziel, mehr Schwanken), Schützenstellung
+   (Stabilität auf Feuertritt, schwächer in Bewegung), verstärkte Patronierung
+   (mehr Reserve, höhere Nachschubkosten), Bajonett-Routine. ~2 pro Einsatz →
+   kleine Run-Build-Identität ohne „Diablo im Schützengraben".
+6. **Ein seltenes Felddepot pro Sektor** (seltene Waffe / große Sprengladung /
+   experimentelles Gerät / Top-Versorgung), Position + Inhalt variieren. **Bonus,
+   nie Pflichtlösung.** Erzeugt Run-Geschichten („wir haben früh das Selbstlade-
+   gewehr gefunden").
+7. **KEINE Waffen-Rarity-Farben** (weiß→grün→…→orange) und **kein** „M98 +240 %
+   Schaden" — beschädigt den Feldpost-/Schlachtplan-Ton. Vertikale Progression
+   aus: bessere Versorgung, taktische Optionen, Zugriff auf seltene Waffen,
+   Klassenkompetenz, Positionierung — nicht aus exponentiellen Zahlen.
+8. **Nachschub braucht Investitionskonflikt:** „brauche ich jetzt" (Munition 20,
+   Draht 15) vs. „macht uns später stärker" (Munitionsdepot reaktivieren 40).
+   Interessanter als „Sandsack oder anderer Sandsack".
+9. **„Türen kaufen" → Infrastruktur freimachen.** Eingestürzten Kommunikations-
+   graben einmalig für Nachschub räumen → dauerhafter Shortcut für den Einsatz.
+   Macht die Map zum Teil des Builds. Max. 2–3 solcher Entscheidungen pro Karte.
+10. **Optionale Feldaufträge** übers Feldtelefon (Telefonleitung im Niemandsland
+    verbinden, Munitionskiste bergen, Beobachtungspunkt 45 s besetzen …).
+    Belohnung Nachschub / einmalige Artillerie / seltene Ausrüstung. Spieler
+    kann „Nein, Front zu heiß" sagen. Anfangs max. 1 pro Skirmish.
+11. **Modifier-System à la DRG (Mission-Warnings / Anomalies) = „Frontlagen".**
+    Dichter Nebel, Munitionsknappheit, Unruhige Erde (mehr Roaming), Zerschossene
+    Leitung (Warnungen verspätet), Schweres Sperrfeuer, Vollmond, Frischer
+    Nachschub, Gasnester. Massiv Replayability ohne neue Gegner/Waffen/Karten,
+    passt stilistisch besser als „Zombies +50 % Feuerresistenz".
+12. **Nacht-Roaming: Aufmerksamkeit gehört einem ORT, nicht dem Spieler.**
+    Schuss = starker kurzer Reiz an Position X; Laterne = schwacher dauerhafter;
+    Signalrakete = starker langer. Roaming-Gruppen: „da drüben war etwas", nicht
+    `targetPlayer = Max`. Ermöglicht echte Manipulation (aus Seitenbucht
+    schießen → Tote laufen hin → durch den Kommunikationsgraben zurück).
+13. **Heuler an dieses System koppeln:** er *schreit* statt zuzuschlagen →
+    massiver Aufmerksamkeitsreiz an seiner Position → nahe Gruppen wechseln das
+    Ziel. Automatisch Prioritätsziel, stark im Sounddesign.
+14. **Nacht-Gegner nach Verben, nicht Statblöcken:** Wiedergänger = Raum füllen /
+    Grunddruck · Läufer = Distanz schließen / schlechte Position bestrafen ·
+    Grabengänger = vorbereitete Kill-Zones über Nebenwege umgehen · Heuler =
+    weitere Gruppen in den Kampf ziehen · Koloss = Stellung/Barrikade brechen,
+    Positionswechsel erzwingen.
+15. **Koloss ≠ Bullet-Sponge.** Gefährlich, weil er *Geometrie verändert*
+    (Draht, Sandsackstellung). Kugeln verlangsamen/verwunden, echtes Ziel:
+    Schwachstelle / Sprengladung / Umgebungsexplosiv.
+16. **Solo, 1 Waffe → jedem kritischen Problem 2–3 Lösungswege.** Koloss:
+    Pionier-Sprengladung (effizient) / garantierte schwere Ladung aus einem
+    Frontdepot / Schwachstelle mit Normalwaffe (langsam, gefährlich).
+17. **Bauen kauft immer nur Verzögerung, ersetzt nie den Spieler** (Draht hält
+    8 s länger auf; Autoturm, der eine Lane ohne Spieler tötet = schlecht).
+    Vordefinierte Bauplätze bleiben (Pathing, FP-Lesbarkeit, Server-Sim,
+    Balancing, KI). Pionier wählt *was* auf einen Slot kommt.
+18. **„Instand setzen" hinterlässt sichtbare Narben.** Nach Rückeroberung:
+    Front wieder aktiv, aber Draht weg, ein Bauplatz beschädigt, Depot leer.
+    Erste Verteidigung = vorbereitet, zweite = improvisiert. Rückeroberung
+    wertvoll, aber nie kostenloser Reset.
+19. **Tod/Respawn: kein kostenloses Respawnen.** Solo: begrenzte Notbergung
+    (Bild dunkel → Sekunden später an letzter sicherer Stellung, Munition
+    teilweise weg, Zeit vergangen, Lage weiterentwickelt). Standard 1 Bergung,
+    leicht 2, dann Einsatz verloren (Soldat kommt verwundet zurück, kein
+    Permadeath).
+20. **Quartier = überwiegend horizontale Progression** (Waffenkammer: neue
+    Typen; Pionierschuppen: neue Bauoptionen; Funkposten: neue Supportbefehle;
+    Lazarett: neue Heilung; Ausbildung: neue Feldanpassungen). Kein +Damage-
+    Techbaum, der die Frontmechanik trivialisiert.
+21. **Gefechtsbericht** nach dem Einsatz (Feldpost-Stil, Ereignis-Timeline:
+    „23:17 Front durchbrochen · 23:22 Front instand gesetzt · 23:34 Gefr. Weber
+    verwundet geborgen" + verschossene Patronen, Nachschub, Stellungsschäden,
+    gerettete Infrastruktur, Soldaten-XP). Gibt Runs eine Geschichte, verstärkt
+    die Kompaniefantasie, ist intern gute Telemetrie. **Hoch priorisieren.**
+22. **Extraktion als hartes Push-your-Luck:** nach dem Hauptauftrag „RÜCKZUG
+    FREIGEGEBEN — Beute teilweise gesichert". Abziehen = sicher; weiter halten =
+    zusätzliche Feindreserve aktiv. **Kniff: die verdiente Grundbeute bleibt
+    gesichert, nur der Verlängerungs-Bonus steht neu auf dem Spiel** → Spieler
+    trauen sich „eine geht noch".
+23. **Verlängerungen mutieren den Run** (Licht fällt aus / Heuler-Aktivität
+    hoch / Frontdepot getroffen / Koloss gemeldet) statt „gleiche Welle +20 %".
+    Max. 2–3 Verlängerungen.
+24. **Nacht braucht echte Ruhe** — regelmäßig 20–40 s, in denen *nichts*
+    angreift (Wind, ferne Artillerie, Holz knarzt). Nicht verlorene Spielzeit —
+    das lässt den nächsten Angriff wirken. L4D-Director denkt in Spannungs-
+    kurven, nicht in Gegneranzahl.
+25. **Manche Tote sind schon auf der Karte** (regungslos in einer Nische, halb
+    im Schlamm — „Leiche oder nicht?"), reagieren auf Licht/Nähe/Lärm. Nicht
+    jede Leiche, kein billiger Jump-Scare (GTFO-Prinzip).
+26. **Licht als fast zweite Waffe:** Dunkelheit = sicherer vor Aufmerksamkeit,
+    schlechte Info; Licht = gute Info, evtl. Aufmerksamkeit. Signalrakete =
+    Beleuchtung + Crowd-Control + Risiko in einem.
+27. **Schwierigkeit über Parallelität skalieren, nicht HP.** Solo = eine
+    Hauptkrise + Roamingdruck; 2 Spieler = zwei relevante Orte; 4 = zwei große
+    Probleme + Spezialgegner + Hinterlanddruck. Erzeugt „du links, ich rechts".
+28. **Klassen = unterschiedliche Antworten, nicht unterschiedliche
+    Erlaubnisse.** Bresche: Schütze tötet schnell genug · MG unterdrückt den
+    Eingang · Pionier baut Sperre · Sanitäter hält die Garnison kampffähig.
+    Nie „Interaktion nicht möglich: Pionier erforderlich".
+29. **Der Schütze braucht Identität = der Responder.** Nicht +Gewehrschaden:
+    bessere Bewegung zwischen Stellungen, schneller Anschlag nach Sprint,
+    bessere improvisierte Deckung, schnelleres Markieren von Bedrohungen. MG
+    ankert · Pionier formt · Sanitäter erhält · **Schütze reagiert.**
+30. **Generator würfelt später nicht nur Geometrie:** welche Infrastruktur
+    funktioniert, wo das seltene Felddepot liegt, welche 2 Breschen anfällig
+    sind, wo dormant dead liegen, welche Roaming-Routen bevorzugt, welche
+    Verbindung blockiert/reparierbar ist.
+31. **Meta-System produziert „Frontlagen" statt „Maps":** Einsatz = Sektor +
+    Bedingungen + Gegnerzusammenstellung + optionaler Auftrag. Die Karte ist
+    nur der physische Träger.
+32. **Bewusst NICHT:** Crafting-Inventar · Loot-Rarity-Treadmill · Hunger/Durst/
+    Waffenverschleiß · 50 frei platzierbare Bauobjekte · riesiger Skilltree pro
+    Soldat · 10 Zombiespezies (5 reichen bei echten unterschiedlichen Problemen)
+    · Pflicht-Boss nach jedem Run (Koloss bleibt *Ereignis*) · Zufalls-Spawns
+    direkt hinter dem Spieler · permanente Maximal-Intensität · Pflicht-
+    Sidequests · harte Klassenschranke für kritische Mechaniken · **weitere
+    große Meta-Systeme, bevor Frontlinie + Nachtroaming + Rückzug Spaß machen.**
+
+**ChatGPT-Prioritätsreihenfolge:** (1) AP6 nur auf Front + Nachtökologie —
+Feindreserve statt Kill-Uhr, physischer Durchbruch, wenige Roaming-Gruppen,
+Lärm/Licht, echte Ruhe, **kein** großes Progressionssystem. (2) Stellung als
+Entscheidungsraum — Nachschub, 3–4 Bau-/Versorgungsoptionen, Instandsetzen mit
+Narben, evtl. einfache Garnison. (3) Run-Dramaturgie — 2–3 Feldanpassungen,
+seltenes Depot, 1 optionaler Auftrag, Extraktion/Verlängerung, Gefechtsbericht.
+
+## Perplexity — Loop / Progression / Atmosphäre / KI / Meta
+
+- **Pacing:** L4D-AI-Director-Intensitätsphasen (Build-up → Peak → Cooldown
+  10–20 s) **kombiniert mit** CoD-Runden-Nummern für klare Meilensteine.
+  Empfehlung Hybrid: Wellen 1–5 linear/strukturiert, ab Welle 6 Director
+  dynamisch, jede 5. Welle fixer Elite + Bonus.
+- **Progression:** Perks/Feld-Upgrades (CoD-Stil), Waffen-Mods/Overclocks
+  (DRG-Stil, 2–3 Slots/Waffe), Wandwaffen als feste Drops mit limitierter
+  Munition + zufälligem Run-Upgrade.
+- **Atmosphäre:** Soldaten-Biografien + Feldpost + Traumata; Audio-Horror
+  (Heulen fern / Flüstern nah / Stille); visuelle Landmarken (Panzerwrack,
+  Bunker, Krater) — hat der Sektor teils schon.
+- **KI:** Spezial-Gegner mit *Mechanik* nicht HP (Heuler/Tank/Schleicher/
+  Brenner); einfaches KI-Flanking über Verbindungsgräben + Deckungsnutzung;
+  Elite-Variation über Fähigkeiten (Koloss regeneriert ohne Feuer, Heuler ruft
+  3–5 Normale).
+- **Meta:** tägliche/wöchentliche Herausforderungen; Modifier (Warnings negativ
+  / Anomalies positiv); Endgame „Kriegs-Modus" (mehrere Sektoren, persistente
+  Verluste, DRG-Deep-Dive-artig).
+- **QoL:** Replay-System, Statistiken, Loadout-Presets, Trainings-Modus,
+  Farbenblind-Modus.
+- **NICHT:** Permadeath, PvP, offene Welt, Fahrzeuge, Microtransactions.
+- **Top-5:** AI-Director-Pacing · Feld-Upgrades · Spezialgegner-Mechaniken ·
+  tägl./wöch. Herausforderungen · Audio-Horror Nacht.
+
+## Gemini — interaktive Grabenwerkzeuge (Antwort im Nutzer-Chat bei ~50k abgeschnitten)
+
+- **Interaktive Graben-Fallen:** Gas-/Brand-Ventile (10 s tödliche Zone, aber
+  vernebelt eigene Sicht, kostet Nachschub); Signalfackel-Mörser an der
+  Home-Line (Leuchtkugel ins Niemandsland zieht nachts ~80 % der Roamer ab);
+  Schlamm-/Barrikaden-Einsturz an Biegungen (bremst Gegner, versperrt aber auch
+  den eigenen Durchgang).
+- **Solo „Augen & Ohren":** Stolperdraht-/Glocken-Warnsystem an den Breschen
+  („Abschnitt B wird überrannt" sofort hörbar); reparierbarer **KI-Beobachter**
+  am Scherenfernrohr — schießt nicht, gibt Frühwarnung / kündigt Elite an
+  (DRG-Bosco, aber rein passiv/defensiv).
+- **High-Risk-Scavenging im Niemandsland** in Feuerpausen (Pionier-Material,
+  seltene Wandwaffen, Munition — Risiko durch Roamer/Scharfschützen).
+- **WW1-Nahkampf als Munitions-Notbremse:** zweistufig (leichter Stoß-Hieb vs.
+  aufgeladener Stich), Exekution eines taumelnden Gegners lässt garantiert etwas
+  Munition fallen.
+- **Audio-Hierarchie (Egoperspektive, Sicht durch Biegungen begrenzt):**
+  Signature-Sounds je Elite (Koloss Kettengerassel + Zischen; Sturmtrupp
+  Granaten-Klacken; Heuler Schrei vor dem Losbrechen); Umgebungs-Resonanz
+  (enger Betonunterstand klingt anders als offener Holzgraben).
+- **3 Sofort-Fixes (Gemini):** Stolperdraht-Warnsysteme an Breschen · [Rest
+  abgeschnitten — Nutzer kann nachreichen].
+
+---
+
+## Planer-Triage Runde 4 (nicht von den KIs) — 2026-09-09
+
+**Nichts davon berührt AP6-01c/01d (Graben-Look).** Der Worker baut ungestört
+weiter. Das hier ist Konzept-Arbeit für *nach* dem Look-Pass.
+
+### A — Bestätigt die aktuelle Richtung, keine Aktion
+
+- **Physischer Frontfall** (Bresche → Eindringen → Rückraum → Fall) = exakt die
+  AP6-02b-Spec. ChatGPT #4 fügt „Kommunikationsknoten hinter der Front als
+  zweite Schwelle" hinzu — AP6-02b hat das im Kern („Gegner halten einen Fleck
+  hinter der Linie → DURCHBRUCH"), die *benannte* Schwelle schärft die
+  Telegraphie. In den AP6-02b-Kickoff aufnehmen.
+- **Lärm/Licht → Ort, nicht Spieler · Roaming-Gruppen mit Zuständen · Signal-
+  körper als Lockmittel · Gegner nach Verben · echte Ruhephasen · keine Spawns
+  hinter dem Spieler** — alles schon in Sparring Runde 3, jetzt von 3 KIs
+  unabhängig bestätigt. Direkt in die Gegner-KI-Design-Runde (Schritt 3 der
+  neuen Reihenfolge).
+- **„Keine großen Meta-Systeme, bevor der Kern Spaß macht"** — alle 3 KIs
+  unabhängig, deckt sich mit der KONTER-Lehre + der „Breite, aber Kern zuerst"-
+  Linie. Bestätigung, kein Kurswechsel.
+- **Klassen = Antworten, nicht Erlaubnisse; Umwelt = garantierte Notlösung für
+  harte Gegner** — schon KONZEPT §3/§4. ChatGPT #16/#28 schärfen die Regel
+  („jedes kritische Problem 2–3 Wege, einer klassen-optimal, einer
+  umwelt-garantiert"). Als expliziten Design-Grundsatz in KONZEPT §5 (Gegner-
+  Roster) aufnehmen, wenn der Roster-Ausbau dran ist.
+
+### B — Fordert eine Entscheidung heraus → eigene Design-Runde, VOR AP6-02b
+
+1. **Die „Uhr": zonengewichtete Kills → echte Feindreserve** (ChatGPT #1, koppelt
+   an #31 „Frontlagen" und an den Director). Der stärkste Einzelpunkt. Unser
+   „Frontfall = gefährlicher, nicht schneller" (Sparring R3, KONZEPT §3) ist
+   *derselbe Wille* — ChatGPTs Reserve-Modell ist die sauberere Mechanik dafür
+   und entfernt die Exploit-Fläche ganz. **Aber:** Änderung an `front.ts` / der
+   Uhr, und AP6-02b ist gegen das aktuelle Modell geschrieben. → gehört in die
+   **Gegner-KI-/Nacht-Kern-Design-Runde** (die kommt eh vor AP6-02b), weil
+   „Director gibt Reserve aus" = Wave-Director + Roaming-Budget in einem.
+2. **Finale-Ort** (ChatGPT #2). Sehr scharfer Punkt: KONZEPT §6 nimmt heute das
+   Home-Line-Finale *immer* an. Variante A (Finale, wo die Verteidigung gerade
+   steht) ist systemischer und erhält die Spieler-Leistung. → KONZEPT-§6-
+   Revision, dieselbe Design-Runde.
+3. **Kleine statische Garnison** (ChatGPT #3, Gemini „Beobachter"). Löst 3
+   Probleme auf einmal (Solo-Fiktion „1 Mann / 70 m", Löcherstopfer,
+   Atmosphäre). KONZEPT §3 hat „Zuweisbare KI-Trupps — BESCHLOSSEN", aber als
+   *anfordernde Verstärkung*, nicht als *ambiente Posten*. → Design-Runde:
+   entscheiden, ob eine **minimale** Version (1–2 Posten je Haltepunkt, 4
+   Zustände, kein Revive) noch in AP6 landet oder AP7 wird. Tendenz Planer:
+   minimal in AP6, wenn die KI-Runde zeigt dass der Solo-Loop es *braucht*.
+
+→ Vorschlag: **eine gebündelte Design-Runde „Nacht-Kern + Uhr"** nach AP6-01d,
+die (a) das Reserve-Modell, (b) den Finale-Ort, (c) die Garnison-Frage und
+(d) das Roam-/Reiz-System (Sparring R3) zusammen klärt — sie hängen alle am
+selben Director-/Budget-Konzept. Danach AP6-05-Spec + AP6-02b-Anpassung.
+
+### C — Speist die Gegner-KI-/Nacht-Kern-Design-Runde (schon geplant)
+
+Aufmerksamkeit-an-Ort (#12) · Heuler als Schrei-Reiz (#13) · Gegner-Verben (#14)
+· Koloss = Geometrie-Brecher nicht Sponge (#15) · L4D-Intensitätsphasen mit
+echtem Cooldown (Perplexity, #24) · dormant dead auf der Karte (#25, GTFO) ·
+Licht als taktisches System / „zweite Waffe" (#26) · Schwierigkeit über
+Parallelität statt HP (#27, für späteren Koop) · Stolperdraht-/Glocken-Warnung
+an Breschen (Gemini) · Audio-Signaturen je Elite (Gemini). Der Design-Runden-
+Brief muss diese Liste explizit aufgreifen.
+
+### D — Später (§7–§9, nach AP6). Hier geparkt, Backlog-Eintrag folgt
+
+- Feldanpassungen / In-Run-Waffenoptionen (#5) — die *akzeptable* Form von
+  „Perks", playstyle statt +Schaden.
+- Seltenes Felddepot / „Mystery-Box-Moment" (#6) — erweitert die bestehende
+  Wandwaffen-Idee.
+- **Kein Rarity-/Schaden-Treadmill** (#7, #32, Perplexity) — als **Constraint
+  jetzt** in KONZEPT §9.10 + WAFFEN.md festhalten (billig, verhindert Drift).
+- Nachschub-Investitionskonflikt (#8) · Infrastruktur-Freimachen / Map-als-Build
+  (#9) · optionale Feldaufträge (#10) · Frontlagen/Modifier (#11, Perplexity).
+- **„Instand setzen" mit Narben** (#18) — billig, schärft eine schon
+  beschlossene Mechanik → in die AP6-04-Spec, wenn sie geschrieben wird.
+- Notbergung statt Gratis-Respawn (#19) · Quartier horizontal (#20, = KONZEPT §7).
+- **Gefechtsbericht** (#21) — billig, hoher Atmosphäre-Wert, gute Telemetrie.
+  Eigener Backlog-Eintrag, eher hoch.
+- Extraktion als hartes Push-your-Luck: Grundbeute gesichert, nur Verlängerungs-
+  Bonus im Risiko; Verlängerungen mutieren den Run (#22, #23) — für die
+  KONZEPT-§6-Revision mitnehmen.
+- Zweistufiger Nahkampf + Exekutions-Munition (Gemini #4) — relevant wegen
+  „Solo, 1 Waffe" → WAFFEN-Backlog.
+- Interaktive Grabenwerkzeuge: Gas-Ventile, Signalmörser, Flutbarrikaden
+  (Gemini #1) · No-Man's-Land-Scavenging in Feuerpausen (Gemini #3, ChatGPT-
+  Overlap) — Backlog, evtl. an das seltene Depot koppeln.
+- Umgebungs-Audio-Resonanz Beton vs. Holzgraben (Gemini #5) — hängt am
+  AP6-01c-Materialsystem (`wellblech`/`beton` vs. `holz`), schöner späterer
+  Anschluss.
+- Soldaten-Biografien / Feldpost / Traumata (Perplexity) — §7.
+- Tägl./wöch. Herausforderungen, Replay, Loadout-Presets, Trainings-Modus,
+  Farbenblind-Modus (Perplexity QoL) — Infrastruktur-/Meta-Backlog.
+- „Kriegs-Modus" mit persistenten Verlusten (Perplexity Endgame) — steht schon
+  im Backlog („Krieg"-Modus), ergänzt um DRG-Deep-Dive-Struktur.
+
+### E — Verworfen / schon abgelehnt
+
+Permadeath (§10) · Rarity-Farben + %-Schaden-Treadmill (von den KIs selbst
+abgelehnt) · CoD-Perks mit flachen Statboni (ChatGPT warnt selbst; „Feldanpassung"
+ist die gute Form) · frei platzierbares Bauen (schon vordefinierte Slots) ·
+Pflicht-Boss pro Run · Hunger/Durst/Verschleiß · PvP / offene Welt /
+Microtransactions (Perplexity) · Waffen-Mod-Menü im DRG-Umfang (zu viel
+UI/Balance für einen 15-min-Run — die 2 Feldanpassungen decken den Bedarf).

@@ -104,3 +104,60 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
 - Justierbare Kamera / Zoom-Optionen.
 - Waffen-Aufsätze und -Varianten in die Tiefe.
 - Grabenschilder mit generierten Namen, Sektor-Lore.
+
+## Aus Sparring Runde 4 (2026-09-09) — nach dem Kern
+
+Gesamtreview von ChatGPT / Perplexity / Gemini nach dem AP6-01b-Spieltest.
+Volltext + Planer-Triage in `SPARRING-ANTWORTEN.md` „Runde 4". Alles hier ist
+**nach** AP6 (erst Frontlinie + Nacht-Roaming + Rückzug zum Spaß bringen — von
+allen drei KIs unabhängig betont). In grober Reihenfolge:
+
+- **Feldanpassungen** — 2–3 In-Run-Waffenoptionen, die die *Spielweise* ändern
+  (Schnellanschlag, Schützenstellung, verstärkte Patronierung …), nicht +Schaden.
+  Die einzige akzeptierte Form von „Perks".
+- **Seltenes Felddepot pro Sektor** — 1 zufälliger Top-Gegenstand (seltene
+  Waffe / Sprengladung / Versorgung), Position + Inhalt variieren. Bonus, nie
+  Pflichtlösung. Erweitert die Wandwaffen-Idee.
+- **Nachschub-Investitionskonflikt** — „jetzt brauchen" (Munition/Draht) vs.
+  „später stärker" (Depot reaktivieren, Kommunikationsgraben freiräumen =
+  dauerhafter Shortcut, Map-als-Build). Max. 2–3 Infrastruktur-Entscheidungen
+  pro Karte.
+- **Optionale Feldaufträge** übers Feldtelefon — 1 pro Skirmish, echt
+  ablehnbar. Belohnung Nachschub / einmalige Artillerie / seltene Ausrüstung.
+- **Frontlagen / Modifier** (DRG Warnings & Anomalies) — Nebel, Munitionsknapp-
+  heit, Unruhige Erde, Vollmond, Gasnester … Replayability ohne neue Assets.
+  Verwandt: [[variable-verbindungsgraben]] und der Generator (Runde-4-Punkt #31:
+  „Frontlagen statt Maps" — Einsatz = Sektor + Bedingungen + Gegnermix +
+  optionaler Auftrag).
+- **Gefechtsbericht** nach dem Einsatz (Feldpost-Ereignis-Timeline + Munition/
+  Nachschub/Stellungsschäden/Soldaten-XP). Billig, hoher Ton-Wert, gute interne
+  Telemetrie — **eher hoch priorisieren.**
+- **Extraktion als hartes Push-your-Luck** — Grundbeute bleibt gesichert, nur
+  der Verlängerungs-Bonus steht neu auf dem Spiel; Verlängerungen *mutieren*
+  den Run (Licht aus / Heuler-Alarm / Koloss gemeldet). Max. 2–3. → gehört in
+  die KONZEPT-§6-Revision.
+- **„Instand setzen" mit Narben** — nach Rückeroberung Front aktiv, aber Draht
+  weg / ein Bauplatz beschädigt / Depot leer. Kein kostenloser Reset. → in die
+  AP6-04-Spec.
+- **Notbergung statt Gratis-Respawn** (solo 1×, leicht 2×, dann Einsatz
+  verloren — Soldat kommt verwundet zurück).
+- **Kein Rarity-/Schaden-Treadmill** — keine Waffen-Rarity-Farben, kein
+  „+240 % Schaden". Vertikale Progression aus Versorgung / taktischen Optionen /
+  Zugriff auf seltene Waffen / Klassenkompetenz / Position. (Constraint, nicht
+  Feature — gehört perspektivisch nach `WAFFEN.md` + KONZEPT §9.10.)
+- **Quartier = horizontale Progression** (neue Optionen, nicht größere Zahlen).
+- **Zweistufiger WW1-Nahkampf + Exekutions-Munition** als Munitions-Notbremse
+  (relevant wegen „Solo, 1 Waffe").
+- **Interaktive Grabenwerkzeuge** — Gas-/Brandventile, Signalfackel-Mörser als
+  Roamer-Köder, einstürzende Barrikaden (Area-Denial an Engstellen).
+- **No-Man's-Land-Scavenging** in Feuerpausen (Risiko/Ertrag), evtl. an das
+  seltene Depot gekoppelt.
+- **Umgebungs-Audio-Resonanz** Beton-Unterstand vs. offener Holzgraben —
+  knüpft an das AP6-01c-Materialsystem an.
+
+**Speist direkt die kommende Gegner-KI-/Nacht-Kern-Design-Runde** (kein
+Backlog, sondern nächster Schritt): Feindreserve statt zonengewichteter Kills ·
+Finale dort wo die Verteidigung steht (KONZEPT §6) · kleine statische Garnison
+(1–2 Posten je Haltepunkt, 4 Zustände) · Aufmerksamkeit-an-Ort · Heuler als
+Schrei-Reiz · L4D-Intensitätsphasen mit echtem Cooldown · dormant dead ·
+Licht als taktisches System · Warn-Stolperdraht an Breschen.
