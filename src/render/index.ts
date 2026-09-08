@@ -10,7 +10,7 @@ import {
   FreeCamera,
   HemisphericLight,
   type LinesMesh,
-  type Mesh,
+  Mesh,
   MeshBuilder,
   PointLight,
   Scene,
@@ -414,9 +414,29 @@ export function createRenderer(
   };
 
   // Getaggte Boxen (Bresche-Segmente, AP4-06) werden ausgeblendet, sobald die
-  // Sim den Kollider abschaltet — dieselbe Konvention `brescheTag`.
-  const tagMeshes = new Map<string, Mesh>();
+  // Sim den Kollider abschaltet — dieselbe Konvention `brescheTag`. Ein Tag
+  // deckt mehrere Boxen ab (Wandstück + Verkleidung + Sandsäcke), deshalb eine
+  // Liste je Etikett.
+  const tagMeshes = new Map<string, Mesh[]>();
   const meshes: Mesh[] = [];
+  // AP6-01d: der Sektor im Graben-Look bringt ~1 700 Boxen mit (Formdetail).
+  // Ein Mesh je Box wäre ein Draw-Call je Box — deshalb wird die **statische**
+  // Welt-Geometrie zusammengefasst, und zwar je **Material und Zonen-Band**:
+  // nur je Material zu mergen ergäbe wenige riesige Meshes, die das Frustum-
+  // Culling nie mehr verwerfen kann (im Graben sieht man ~20 m weit). Die
+  // Bänder kommen aus `meta.zonen` (Feindseite … Home-Line), ohne Meta bleibt
+  // es ein Band. Zur Laufzeit schaltbare (`tag`) Boxen bleiben Einzel-Meshes —
+  // sonst ließe sich eine offene Bresche nicht mehr ausblenden.
+  const bandVon = (box: LevelBox): number => {
+    if (!meta) {
+      return 0;
+    }
+    const i = meta.zonen.findIndex(
+      (z) => box.center.z >= z.bounds.minZ && box.center.z < z.bounds.maxZ,
+    );
+    return i < 0 ? meta.zonen.length : i;
+  };
+  const statisch = new Map<string, { mat: StandardMaterial; meshes: Mesh[] }>();
   level.boxes.forEach((box, i) => {
     if (box.unsichtbar) {
       return; // Kartengrenze (AP5-03): Kollision ohne Mesh
@@ -427,13 +447,41 @@ export function createRenderer(
       scene,
     );
     mesh.position.set(box.center.x, box.center.y, box.center.z);
-    mesh.material = boxMaterial(box);
+    const mat = boxMaterial(box);
+    mesh.material = mat;
     mesh.renderingGroupId = GROUP_WORLD;
     if (box.tag !== undefined) {
-      tagMeshes.set(box.tag, mesh);
+      const liste = tagMeshes.get(box.tag);
+      if (liste) {
+        liste.push(mesh);
+      } else {
+        tagMeshes.set(box.tag, [mesh]);
+      }
+      meshes.push(mesh);
+      return;
     }
-    meshes.push(mesh);
+    const key = `${mat.name}#${bandVon(box)}`;
+    const gruppe = statisch.get(key);
+    if (gruppe) {
+      gruppe.meshes.push(mesh);
+    } else {
+      statisch.set(key, { mat, meshes: [mesh] });
+    }
   });
+  for (const { mat, meshes: gruppe } of statisch.values()) {
+    if (gruppe.length < 2) {
+      meshes.push(...gruppe);
+      continue;
+    }
+    const merged = Mesh.MergeMeshes(gruppe, true, true);
+    if (!merged) {
+      meshes.push(...gruppe); // Merge fehlgeschlagen: Einzel-Meshes behalten
+      continue;
+    }
+    merged.material = mat;
+    merged.renderingGroupId = GROUP_WORLD;
+    meshes.push(merged);
+  }
 
   // Landmark-Akzent: leuchtender Pfosten über dem Panzerwrack-Hulk, damit der
   // Fixpunkt fürs Auge aus jeder Zone lesbar bleibt (KONZEPT.md §3).
@@ -551,7 +599,9 @@ export function createRenderer(
       // Offene Bresche: Parapet-Segment weg (die Sim hat den Kollider
       // abgeschaltet), Trümmer an.
       f.breschen.forEach((offen, i) => {
-        tagMeshes.get(brescheTag(f.id, i))?.setEnabled(!offen);
+        for (const m of tagMeshes.get(brescheTag(f.id, i)) ?? []) {
+          m.setEnabled(!offen);
+        }
       });
       const v = frontVisuals.get(f.id);
       if (!v) {
@@ -583,21 +633,45 @@ export function createRenderer(
     return m;
   };
 
-  // Statische Feuertonne + kleiner Punktstrahler an einem Orientierungspunkt —
-  // keine dynamischen Lichter, keine Animation (Greybox-Niveau). Genutzt für
-  // `meta.lichter` (Sektor) wie für `probe.lichter` (AP6-01c-Probe-Szene).
-  let feuerMat: StandardMaterial | null = null;
+  // Statische Petroleum-/Sturmlaterne + kleiner Punktstrahler an einem
+  // Orientierungspunkt — keine dynamischen Lichter, keine Animation. AP6-01d
+  // (Spieltest-Korrektur 2): statt eines 0,5-m-Würfels („Feuertonne") eine
+  // **4-Box-Greybox-Laterne** — Fuß-Tank, emissiver Glaszylinder, Deckel,
+  // Bügel; ~0,25 × 0,5 m, ohne Kollider. Ein echtes Laternen-Modell ist
+  // Backlog. Genutzt für `meta.lichter` (Sektor) wie für `probe.lichter`.
+  let glasMat: StandardMaterial | null = null;
+  let blechMat: StandardMaterial | null = null;
   const baueNachtLicht = (pos: Vec3, i: number): void => {
-    feuerMat ??= emissivMat("feuer", [1, 0.66, 0.28]);
-    const glut = MeshBuilder.CreateBox(`feuer_${i}`, { size: 0.5 }, scene);
-    glut.position.set(pos.x, pos.y, pos.z);
-    glut.material = feuerMat;
-    glut.isPickable = false;
-    glut.renderingGroupId = GROUP_WORLD;
-    leitMeshes.push(glut);
+    glasMat ??= emissivMat("laterne_glas", [1, 0.72, 0.34]);
+    blechMat ??= emissivMat("laterne_blech", [0.16, 0.14, 0.12]);
+    const teil = (
+      name: string,
+      dx: number,
+      dy: number,
+      dz: number,
+      w: number,
+      h: number,
+      d: number,
+      mat: StandardMaterial,
+    ): void => {
+      const m = MeshBuilder.CreateBox(
+        `${name}_${i}`,
+        { width: w, height: h, depth: d },
+        scene,
+      );
+      m.position.set(pos.x + dx, pos.y + dy, pos.z + dz);
+      m.material = mat;
+      m.isPickable = false;
+      m.renderingGroupId = GROUP_WORLD;
+      leitMeshes.push(m);
+    };
+    teil("lat_tank", 0, 0.06, 0, 0.24, 0.12, 0.24, blechMat);
+    teil("lat_glas", 0, 0.28, 0, 0.19, 0.32, 0.19, glasMat);
+    teil("lat_deckel", 0, 0.47, 0, 0.26, 0.06, 0.26, blechMat);
+    teil("lat_buegel", 0, 0.56, 0, 0.05, 0.14, 0.05, blechMat);
     const licht = new PointLight(
-      `feuer_l_${i}`,
-      new Vector3(pos.x, pos.y + 0.6, pos.z),
+      `laterne_l_${i}`,
+      new Vector3(pos.x, pos.y + 0.45, pos.z),
       scene,
     );
     licht.diffuse = new Color3(1, 0.7, 0.4);
@@ -837,10 +911,13 @@ export function createRenderer(
       for (const m of oberflaecheMat.values()) {
         m.dispose();
       }
+      // Die Welt-Meshes teilen sich diese Materialien (erst recht seit dem
+      // Merge je Material) — sie werden hier einmal aufgeräumt, nicht je Mesh.
+      groundMat.dispose();
+      parapetMat.dispose();
       grenzeMat.dispose();
       umlandMat.dispose();
       for (const mesh of meshes) {
-        mesh.material?.dispose();
         mesh.dispose();
       }
       scene.dispose();

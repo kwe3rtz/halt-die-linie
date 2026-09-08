@@ -73,7 +73,7 @@ describe("Gegner-Klassen — gemischte Welle auf dem echten Sektor (AP5-06)", ()
     knoten: sektorGreybox.meta.navGraph.knoten,
     kanten: sektorGreybox.meta.navGraph.kanten.map((k) => ({ ...k })),
   };
-  const spieler = { x: 0, y: -1.6, z: -20 }; // tief im Hinterland, außer Sicht der Anmarschroute
+  const spieler = { x: 0, y: -2.5, z: -20 }; // tief im Hinterland, außer Sicht der Anmarschroute
 
   it("17 Gegner (7 normal, 5 schnell, 5 schwer) kommen alle ohne Watchdog-Eingriff an — Marschzeit klar nach Klasse gestaffelt", () => {
     // Zusammensetzung fest statt gewürfelt und Streuung neutral (0,5/0,5):
@@ -135,18 +135,17 @@ describe("Gegner-Klassen — gemischte Welle auf dem echten Sektor (AP5-06)", ()
         nav,
       );
       for (const e of list) {
-        maxFest = Math.max(maxFest, e.festVersuche);
-        if (!ankunft.has(e.id) && e.pos.z <= 17) ankunft.set(e.id, t);
+        // Nur der Anmarschweg zählt (siehe wave-eskalation.test.ts).
+        if (!ankunft.has(e.id)) maxFest = Math.max(maxFest, e.festVersuche);
+        if (!ankunft.has(e.id) && e.pos.z <= 19) ankunft.set(e.id, t);
       }
       if (id > reihe.length && ankunft.size + despawned.length >= reihe.length)
         break;
     }
     expect(ankunft.size).toBe(17);
     expect(despawned).toEqual([]);
-    // AP6-01: alle 17 zielen auf `front-front` und stauen sich an den Sap-
-    // Lücken — der Watchdog repathed ein paarmal (Stufe 1), aber kein Gegner
-    // geht verloren.
-    expect(maxFest).toBeLessThanOrEqual(2);
+    // AP6-01d: kein Watchdog-Eingriff auf dem Anmarschweg.
+    expect(maxFest).toBe(0);
 
     const marsch = (def: EnemyDef) =>
       [...ankunft.entries()]

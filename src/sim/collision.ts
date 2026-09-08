@@ -41,6 +41,16 @@ export interface LevelBox {
    * Sichtlinie gehen hindurch (was man nicht sieht, hält keine Kugel auf).
    */
   unsichtbar?: boolean;
+  /**
+   * Nur Mesh, keine Kollision (AP6-01d) — das Gegenstück zu `unsichtbar`.
+   * Die Verkleidungs-Formdetails (Pfosten, Bohlen-Kurse, Sandsäcke, Laufrost-
+   * Querstege, Laterne) stehen ein paar Zentimeter vor der Grabenwand; als
+   * Kollider ließen sie den Spieler beim Entlanglaufen an jeder Kante hängen
+   * (AP6-01c-Spieltest). `createCollisionWorld` filtert sie deshalb heraus —
+   * der Kollider ist die bündig dahinter gesetzte Erd-Basiswand. **Reine
+   * Daten-Durchreiche, keine Sim-Logik.**
+   */
+  nurRender?: boolean;
 }
 
 export interface LevelData {
@@ -101,11 +111,15 @@ export function aabbFromBox(box: LevelBox): Aabb {
 }
 
 export function createCollisionWorld(level: LevelData): CollisionWorld {
+  // `nurRender`-Boxen (Verkleidungs-Formdetail, AP6-01d) sind reine Optik und
+  // kommen gar nicht erst in die Kollisionswelt — sie sparen damit auch jeden
+  // Tick Arbeit in `moveCapsule`/`raycast`.
+  const koerper = level.boxes.filter((b) => b.nurRender !== true);
   return {
-    boxes: level.boxes.map(aabbFromBox),
-    tags: level.boxes.map((b) => b.tag),
-    aktiv: level.boxes.map(() => true),
-    unsichtbar: level.boxes.map((b) => b.unsichtbar === true),
+    boxes: koerper.map(aabbFromBox),
+    tags: koerper.map((b) => b.tag),
+    aktiv: koerper.map(() => true),
+    unsichtbar: koerper.map((b) => b.unsichtbar === true),
   };
 }
 

@@ -235,14 +235,14 @@ describe("Nacht-Sektor — zoneAt / frontLinieAt", () => {
 
   it("zoneAt trifft Stichproben je Zone", () => {
     const proben: [ReturnType<typeof p>, ZonenId | null][] = [
-      [p(0, 70), "feindseite"],
+      [p(0, 66), "feindseite"],
       [p(-15, 40), "niemandsland"],
       [p(0, 33), "niemandsland"],
       [p(0, 20), "frontlinie"],
       [p(18, -6), "hinterland"],
       [p(0, -25), "hinterland"],
-      [p(0, -50), "homeline"],
-      [p(60, 0), null],
+      [p(0, -38), "homeline"],
+      [p(44, 0), null],
     ];
     for (const [pos, erwartet] of proben) {
       expect(zoneAt(meta, pos)).toBe(erwartet);
@@ -254,6 +254,8 @@ describe("Nacht-Sektor — zoneAt / frontLinieAt", () => {
     expect(frontLinieAt(meta, p(0, 20))).toBe("front");
     expect(frontLinieAt(meta, p(0, -5))).toBeNull();
     expect(frontLinieAt(meta, p(0, 40))).toBeNull();
+    // AP6-01d: die Linie reicht über die volle (geschrumpfte) Breite.
+    expect(frontLinieAt(meta, p(31, 18))).toBe("front");
   });
 });
 
@@ -264,7 +266,8 @@ describe("Nacht-Sektor — in der Sim", () => {
       sim.tick(command(), DT);
     }
     const pl = sim.getState().player;
-    expect(pl.pos.y).toBeGreaterThan(-2.2);
+    // AP6-01d: Grabensohle −2,7, Laufrost-Oberkante −2,66.
+    expect(pl.pos.y).toBeGreaterThan(-3.0);
     expect(pl.pos.y).toBeLessThan(0.2);
     expect(pl.onGround).toBe(true);
     expect(zoneAt(sektorGreybox.meta, pl.pos)).toBe("frontlinie");
@@ -284,7 +287,7 @@ describe("Nacht-Sektor — in der Sim", () => {
       sim.tick(command(s), DT);
       const y = sim.getState().player.pos.y;
       expect(Number.isFinite(y)).toBe(true);
-      expect(y).toBeGreaterThan(-3);
+      expect(y).toBeGreaterThan(-6); // tiefster Punkt: Unterstands-Raumboden −5,2
     }
   });
 
@@ -311,7 +314,11 @@ describe("Nacht-Sektor — in der Sim", () => {
   });
 
   it("_setLinieVerloren('front') lenkt alle Gegner auf die Home-Line und öffnet den Weg nach hinten", () => {
-    const sim = createSim(2, sektorGreybox, { waves: true });
+    // AP6-01d: Seed 1 → Spieler-Spawn (−7 · 18,2), also nicht auf der Route
+    // durch den Laufgang. Der Feuergraben hat genau EINEN Laufgang; steht der
+    // Spieler mittendrin, verkeilt sich die Welle an ihm im Nahkampf (das ist
+    // beabsichtigt — hier wollen wir aber die Wegfindung messen).
+    const sim = createSim(1, sektorGreybox, { waves: true });
     for (let i = 0; i < 320; i += 1) sim.tick(command(), DT);
     expect(
       sim.getState().enemies.every((e) => e.zielKnoten === "front-front"),
@@ -374,27 +381,29 @@ describe("Nacht-Sektor — Frontlinie & Home-Line (AP4-03/04)", () => {
       pos: { x: number; y: number; z: number };
       abschnitt: string;
     }[] = [];
+    // AP6-01d: die „Pumpenstand"-Nische liegt bei x 7 (bei x 0 steht jetzt eine
+    // Erd-Traverse); die Anmarschbahn davor läuft übers Niemandsland.
     const cluster: [number, number][] = [
-      [0, 20],
-      [1, 21],
-      [-1, 20],
-      [0, 22],
-      [2, 23],
-      [-2, 22],
-      [0, 24],
-      [1, 25],
-      [-3, 26],
-      [3, 27],
-      [0, 28],
-      [-1, 30],
-      [1, 31],
-      [0, 33],
-      [2, 34],
-      [-2, 35],
-      [0, 37],
-      [1, 38],
-      [-1, 40],
-      [0, 42],
+      [7, 20],
+      [8, 21],
+      [6, 20],
+      [7, 22],
+      [9, 23],
+      [5, 22],
+      [7, 24],
+      [8, 25],
+      [4, 27],
+      [10, 28],
+      [7, 29],
+      [6, 30],
+      [8, 31],
+      [7, 33],
+      [9, 34],
+      [5, 35],
+      [7, 37],
+      [8, 38],
+      [6, 40],
+      [7, 43],
     ];
     for (const [x, z] of cluster) {
       strom.push({
@@ -502,15 +511,15 @@ describe("Nacht-Sektor — Frontlinie & Home-Line (AP4-03/04)", () => {
 });
 
 describe("Nacht-Sektor — die Uhr (AP4-04)", () => {
-  // AP6-01b: Seed 1 → Spawn Laufgang West-Nische (−16, 16); ein Gegner direkt
-  // davor (+Z) in der Nische, mit Geradeausfeuer erlegt (der präzise
-  // Golden-Anker steht in sim.test.ts).
+  // AP6-01d: Seed 1 → Spawn im Laufgang vor der zweiten Feuernische
+  // (−7 · 18,2); ein Gegner direkt davor (+Z) in der Nische, mit
+  // Geradeausfeuer erlegt (der präzise Golden-Anker steht in sim.test.ts).
   const bau = () =>
     createSim(1, sektorGreybox, {
       enemies: [
         {
           defId: "linieninfanterie",
-          pos: { x: -16, y: 0, z: 19 },
+          pos: { x: -7, y: -2.3, z: 21 },
           abschnitt: "front",
         },
       ],
@@ -545,10 +554,13 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
   const { meta } = sektorGreybox;
 
   it("H1: nach dem Fall strömen Gegner durch die offene Bresche hinter die Front (zielen auf home-ziel)", () => {
-    // Seed 2 → Spawn Ostflanke, weit von der Mittel-Bresche.
-    const sim = createSim(2, sektorGreybox, {});
+    // Seed 1 → Spieler-Spawn (−7 · 18,2), weit genug von der „Pumpenstand"-
+    // Bresche (x 7), damit der Gegner nicht schon im Laufgang in den Nahkampf
+    // geht statt weiterzumarschieren.
+    const sim = createSim(1, sektorGreybox, {});
     sim._setLinieVerloren("front", true);
-    sim.spawnEnemy("linieninfanterie", { x: 0, y: 0.2, z: 24 }, "front");
+    // Nördlich der Brustwehr, auf der Bahn vor der „Pumpenstand"-Bresche (x 7).
+    sim.spawnEnemy("linieninfanterie", { x: 7, y: 0.2, z: 29 }, "front");
     const bk = meta.navGraph.knoten.find((k) => k.id === "bresche-front")!;
     let minZ = Infinity;
     let durchDieBresche = false;
@@ -557,7 +569,7 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
       const e = sim.getState().enemies[0];
       if (!e) break;
       minZ = Math.min(minZ, e.pos.z);
-      if (Math.hypot(e.pos.x - bk.pos.x, e.pos.z - bk.pos.z) < 1.2) {
+      if (Math.hypot(e.pos.x - bk.pos.x, e.pos.z - bk.pos.z) < 1.4) {
         durchDieBresche = true;
       }
       if (minZ < 5) break;
@@ -565,20 +577,21 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
     const e = sim.getState().enemies[0];
     expect(e?.zielKnoten).toBe("home-ziel");
     expect(durchDieBresche).toBe(true);
-    expect(minZ).toBeLessThan(8); // wirklich hinter der Front
+    expect(minZ).toBeLessThan(12); // wirklich hinter der Front
   });
 
   it("H1: eine geschlossene Bresche bleibt eine Wand (Gegenprobe)", () => {
-    const sim = createSim(2, sektorGreybox, {});
+    const sim = createSim(1, sektorGreybox, {});
     // Kante offen, aber Bresche zu (kein Kollider aus) → wie Audit H1 vor dem Fix.
     sim._setKanteOffen("bresche-front", "vorfront", true);
-    sim.spawnEnemy("linieninfanterie", { x: 0, y: 0.2, z: 24 }, "front");
+    sim.spawnEnemy("linieninfanterie", { x: 7, y: 0.2, z: 29 }, "front");
     let durchDieBresche = false;
     for (let i = 0; i < 60 * 8; i += 1) {
       sim.tick(command(), DT);
       const e = sim.getState().enemies[0];
       if (!e) continue;
-      if (Math.abs(e.pos.x) < 1.3 + 0.35 && e.pos.z < 17.2) {
+      // Hinter die Brustwehr (z < 24,2) in der Lücke bei x 7 gekommen?
+      if (Math.abs(e.pos.x - 7) < 1.3 + 0.35 && e.pos.z < 23.5) {
         durchDieBresche = true;
       }
     }
@@ -602,9 +615,9 @@ describe("Nacht-Sektor — Kern-Bogen-Fixes (AP4-06)", () => {
 
 describe("Nacht-Sektor — Stuck-Watchdog im Wellen-Loop (AP4-06)", () => {
   it("eingemauerte Spawns werden despawnt (Angriffskraft zurück), der Director schaltet weiter", () => {
-    // Die Kammer liegt auf dem Verstärkungs-Knoten `reinforcement-front`
-    // (−7, 26): so führt auch die Watchdog-Relokation (Stufe 2) zurück in die
-    // versiegelte Kammer → der Gegner fährt sich final fest und wird despawnt.
+    // Die Kammer liegt auf dem Verstärkungs-Knoten `reinforcement-front`: so
+    // führt auch die Watchdog-Relokation (Stufe 2) zurück in die versiegelte
+    // Kammer → der Gegner fährt sich final fest und wird despawnt.
     const rein = sektorGreybox.meta.navGraph.knoten.find(
       (k) => k.id === "reinforcement-front",
     )!;
@@ -652,11 +665,12 @@ describe("Nacht-Sektor — Munitions-Nachschub (AP5-02)", () => {
   const depotFront = meta.frontLinie.depot;
   const RESERVE = standardWaffe.reserve;
 
-  /** Seed, dessen Spawn der mittlere ist (0, −1,4, 16) — nahe dem Front-Depot. */
+  /** Seed, dessen Spawn der mittlere ist (0 · 18,2) — nahe dem Front-Depot. */
   function mittlererSeed(): number {
+    const mitte = sektorGreybox.meta.spielerSpawn[0]!;
     for (let seed = 1; seed < 100; seed += 1) {
       const p0 = createSim(seed, sektorGreybox).getState().player.pos;
-      if (p0.x === 0 && p0.z === 16) return seed;
+      if (p0.x === mitte.x && p0.z === mitte.z) return seed;
     }
     throw new Error("kein Seed mit mittlerem Spawn");
   }
@@ -688,7 +702,7 @@ describe("Nacht-Sektor — Munitions-Nachschub (AP5-02)", () => {
   it("jedes Depot liegt in seiner Linie, knapp über der Grabensohle und in keinem Kollider", () => {
     for (const ab of alle) {
       expect(inBoundsXZ(ab.bounds, ab.depot), ab.id).toBe(true);
-      expect(ab.depot.y).toBeCloseTo(-1.6, 6);
+      expect(ab.depot.y).toBeCloseTo(-2.5, 6); // AP6-01d: Sohle −2,7 + 0,2
       const y = ab.depot.y + 0.05;
       const drin = sektorGreybox.boxes.filter(
         (b) =>
@@ -764,13 +778,13 @@ describe("Nacht-Sektor — Kartengrenze & Umland (AP5-03)", () => {
   });
 
   it("das Umland schließt an jede Sektorkante bündig an — Oberkante = Geländeoberfläche, bis in den Dunst", () => {
-    // AP6-01b: Sektor ±44 · z 92…−60. Proben an den Innenkanten (Feld y = 0) +
+    // AP6-01d: Sektor ±32 · z 72…−48. Proben an den Innenkanten (Feld y = 0) +
     // im auslaufenden Umland dahinter.
     const proben: [number, number][] = [
-      [-42, 6],
-      [42, 6],
-      [0, 88],
-      [0, -64],
+      [-34, 6],
+      [34, 6],
+      [0, 76],
+      [6, -46],
       [-200, 100],
       [200, -100],
       [0, 300],
@@ -785,10 +799,10 @@ describe("Nacht-Sektor — Kartengrenze & Umland (AP5-03)", () => {
 
   it("jenseits der Spielgrenze ragt kein sichtbarer Quader höher als 1,5 m — keine Wand-Silhouette", () => {
     const draussen = (b: (typeof boxes)[number]) =>
-      b.center.x + b.size.x / 2 <= -44 ||
-      b.center.x - b.size.x / 2 >= 44 ||
-      b.center.z - b.size.z / 2 >= 92 ||
-      b.center.z + b.size.z / 2 <= -60;
+      b.center.x + b.size.x / 2 <= -32 ||
+      b.center.x - b.size.x / 2 >= 32 ||
+      b.center.z - b.size.z / 2 >= 72 ||
+      b.center.z + b.size.z / 2 <= -48;
     const aussen = boxes.filter((b) => !b.unsichtbar && draussen(b));
     expect(aussen.length).toBeGreaterThanOrEqual(4);
     for (const b of aussen) {
@@ -801,13 +815,13 @@ describe("Nacht-Sektor — Kartengrenze & Umland (AP5-03)", () => {
 
   it("Zonen und Nav-Graph liegen komplett innerhalb der Grenze", () => {
     for (const z of meta.zonen) {
-      expect(z.bounds.minX).toBeGreaterThanOrEqual(-44);
-      expect(z.bounds.maxX).toBeLessThanOrEqual(44);
+      expect(z.bounds.minX).toBeGreaterThanOrEqual(-32);
+      expect(z.bounds.maxX).toBeLessThanOrEqual(32);
     }
     for (const k of meta.navGraph.knoten) {
-      expect(Math.abs(k.pos.x)).toBeLessThan(43.7);
-      expect(k.pos.z).toBeGreaterThan(-60);
-      expect(k.pos.z).toBeLessThan(92);
+      expect(Math.abs(k.pos.x)).toBeLessThan(31.7);
+      expect(k.pos.z).toBeGreaterThan(-48);
+      expect(k.pos.z).toBeLessThan(72);
     }
   });
 
@@ -825,13 +839,13 @@ describe("Nacht-Sektor — Kartengrenze & Umland (AP5-03)", () => {
         const r = moveCapsule(world, pos, vel, 0.35, 1.8, DT);
         pos = r.pos;
         vel = r.vel;
-        expect(pos.y).toBeGreaterThan(-3);
+        expect(pos.y).toBeGreaterThan(-3.6);
       }
       return pos;
     };
-    const ost = laufe({ x: 30, y: 0.05, z: -38 }, 4.5, 0);
-    expect(ost.x).toBeLessThanOrEqual(43.7);
-    const west = laufe({ x: -30, y: 0.05, z: -38 }, -4.5, 0);
-    expect(west.x).toBeGreaterThanOrEqual(-43.7);
+    const ost = laufe({ x: 20, y: 0.05, z: -20 }, 4.5, 0);
+    expect(ost.x).toBeLessThanOrEqual(31.7);
+    const west = laufe({ x: -20, y: 0.05, z: -20 }, -4.5, 0);
+    expect(west.x).toBeGreaterThanOrEqual(-31.7);
   });
 });

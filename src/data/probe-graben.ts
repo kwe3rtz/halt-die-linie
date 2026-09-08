@@ -22,15 +22,15 @@ import {
   materialBox,
   sandsackKrone,
   verkleidung,
-  BRUSTWEHR_TIEF,
-  FEUERTRITT_TIEF,
-  PARADOS_KRONE_TIEF,
-  PARAPET_KRONE_TIEF,
-  SOHLE_TIEF,
+  BRUSTWEHR_OBERKANTE,
+  FEUERTRITT_OBERKANTE,
+  PARADOS_OBERKANTE,
+  PARAPET_OBERKANTE,
+  GRABEN_SOHLE,
   type WandSegment,
 } from "./module";
 
-const SOHLE = SOHLE_TIEF; // −2,7
+const SOHLE = GRABEN_SOHLE; // −2,7
 const CATCH_UNTEN = SOHLE - 0.6; // −3,3
 
 /** Erd-/Kulissenblock ohne Materialfeld (Renderer-Greybox-Fallback). */
@@ -170,12 +170,12 @@ const boxes: LevelBox[] = [
   ),
 
   // === Feuernische: Erd-Basiswände ========================================
-  // Brustwehr (Erde, dick) — Oberkante BRUSTWEHR_TIEF (> STEP_HEIGHT übers Feld).
+  // Brustwehr (Erde, dick) — Oberkante BRUSTWEHR_OBERKANTE (> STEP_HEIGHT übers Feld).
   erde(
     NISCHE_X0 - 0.5,
     NISCHE_X1 + 0.5,
     CATCH_UNTEN,
-    BRUSTWEHR_TIEF,
+    BRUSTWEHR_OBERKANTE,
     BW_Z0,
     BW_Z1,
   ),
@@ -185,7 +185,7 @@ const boxes: LevelBox[] = [
     -3.0,
     NISCHE_X1 + 0.5,
     CATCH_UNTEN,
-    PARADOS_KRONE_TIEF,
+    PARADOS_OBERKANTE,
     PARADOS_Z0,
     PARADOS_Z1,
   ),
@@ -194,7 +194,7 @@ const boxes: LevelBox[] = [
     NISCHE_X0 - 0.5,
     NISCHE_X0,
     CATCH_UNTEN,
-    BRUSTWEHR_TIEF,
+    BRUSTWEHR_OBERKANTE,
     PARADOS_Z0,
     BW_Z1,
   ),
@@ -202,7 +202,7 @@ const boxes: LevelBox[] = [
     NISCHE_X1,
     NISCHE_X1 + 0.5,
     CATCH_UNTEN,
-    BRUSTWEHR_TIEF,
+    BRUSTWEHR_OBERKANTE,
     PARADOS_Z0,
     BW_Z1,
   ),
@@ -216,26 +216,26 @@ const boxes: LevelBox[] = [
     wand(
       { x: NISCHE_X0, z: BW_Z0 },
       { x: NISCHE_X1, z: BW_Z0 },
-      BRUSTWEHR_TIEF,
+      BRUSTWEHR_OBERKANTE,
       { x: 0, z: -1 },
     ),
-    { vonY: FEUERTRITT_TIEF },
+    { vonY: FEUERTRITT_OBERKANTE },
   ),
   ...sandsackKrone(
     wand(
       { x: NISCHE_X0, z: BW_Z0 },
       { x: NISCHE_X1, z: BW_Z0 },
-      BRUSTWEHR_TIEF,
+      BRUSTWEHR_OBERKANTE,
       { x: 0, z: -1 },
     ),
-    { oberkante: PARAPET_KRONE_TIEF },
+    { oberkante: PARAPET_OBERKANTE },
   ),
   // West-Stirnwand verkleidet.
   ...verkleidung(
     wand(
       { x: NISCHE_X0, z: PARADOS_Z1 },
       { x: NISCHE_X0, z: BW_Z0 },
-      BRUSTWEHR_TIEF,
+      BRUSTWEHR_OBERKANTE,
       { x: 1, z: 0 },
     ),
   ),
@@ -257,7 +257,7 @@ const boxes: LevelBox[] = [
     wand(
       { x: -3.0, z: PARADOS_Z1 },
       { x: NISCHE_X1, z: PARADOS_Z1 },
-      PARADOS_KRONE_TIEF,
+      PARADOS_OBERKANTE,
       { x: 0, z: 1 },
     ),
   ),
@@ -265,10 +265,10 @@ const boxes: LevelBox[] = [
     wand(
       { x: -3.0, z: PARADOS_Z1 },
       { x: NISCHE_X1, z: PARADOS_Z1 },
-      PARADOS_KRONE_TIEF,
+      PARADOS_OBERKANTE,
       { x: 0, z: 1 },
     ),
-    { oberkante: PARADOS_KRONE_TIEF, luecke: 0.1 },
+    { oberkante: PARADOS_OBERKANTE, luecke: 0.1 },
   ),
   // Feuertritt: vier flache Stufen je Feuerbucht (West / Ost der Traverse).
   ...feuertrittTief({
@@ -298,7 +298,7 @@ const boxes: LevelBox[] = [
     VG_X0 - 0.5,
     VG_X0,
     CATCH_UNTEN,
-    BRUSTWEHR_TIEF,
+    BRUSTWEHR_OBERKANTE,
     VG_Z_ENDE - 0.5,
     VG_Z_MUND + 0.2,
   ),
@@ -306,7 +306,7 @@ const boxes: LevelBox[] = [
     VG_X1,
     VG_X1 + 0.5,
     CATCH_UNTEN,
-    BRUSTWEHR_TIEF,
+    BRUSTWEHR_OBERKANTE,
     VG_Z_ENDE - 0.5,
     VG_Z_MUND + 0.2,
   ),
@@ -314,7 +314,7 @@ const boxes: LevelBox[] = [
     wand(
       { x: VG_X0, z: VG_Z_ENDE },
       { x: VG_X0, z: VG_Z_MUND },
-      BRUSTWEHR_TIEF,
+      BRUSTWEHR_OBERKANTE,
       { x: 1, z: 0 },
     ),
   ),
@@ -322,7 +322,7 @@ const boxes: LevelBox[] = [
     wand(
       { x: VG_X1, z: VG_Z_ENDE },
       { x: VG_X1, z: VG_Z_MUND },
-      BRUSTWEHR_TIEF,
+      BRUSTWEHR_OBERKANTE,
       { x: -1, z: 0 },
     ),
   ),
@@ -360,7 +360,7 @@ const boxes: LevelBox[] = [
  */
 export const probeGrabenLichter: readonly Vec3[] = [
   { x: -1.5, y: -2.3, z: -0.6 }, // Laufgang-Akzent (Spawn)
-  { x: -4.5, y: -4.3, z: -12.6 }, // im Unterstand (geschlossen — Pflicht)
+  { x: -4.5, y: -4.9, z: -14.6 }, // im Unterstand (geschlossen — Pflicht)
 ];
 
 export const probeGraben: LevelData = {

@@ -50,9 +50,14 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
     knoten: sektorGreybox.meta.navGraph.knoten,
     kanten: sektorGreybox.meta.navGraph.kanten.map((k) => ({ ...k })),
   };
-  const spieler = { x: 0, y: -1.6, z: -20 }; // tief im Hinterland, außer Sicht der Anmarschroute
+  const spieler = { x: 0, y: -2.5, z: -20 }; // tief im Hinterland, außer Sicht der Anmarschroute
 
-  /** Lässt `anzahl` Gegner im Welle-5-Takt anmarschieren; liefert Ankunftszeiten (z ≤ 17). */
+  /**
+   * Lässt `anzahl` Gegner im Welle-5-Takt anmarschieren; liefert die
+   * Ankunftszeiten. „Angekommen" = im Laufgang hinter den Feuernischen
+   * (z ≤ 19; AP6-01d: Nischen z 19,4…21,8, Laufgang z 17…19,4 — vorher lag der
+   * Feuergraben bei z 12…30, daher 17).
+   */
   function strom(anzahl: number, mitStreuung: boolean) {
     const rng = createRng(4242);
     const punkte = sektorGreybox.meta.feindAnmarsch;
@@ -105,8 +110,12 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
         nav,
       );
       for (const e of list) {
-        maxFest = Math.max(maxFest, e.festVersuche);
-        if (!ankunft.has(e.id) && e.pos.z <= 17) ankunft.set(e.id, t);
+        // Watchdog-Eingriffe zählen nur **auf dem Anmarschweg**. Wer schon an
+        // der Front steht, drückt danach gegen den Parados (der Weg nach hinten
+        // ist zu, solange die Linie hält) und sammelt zwangsläufig Stillstand —
+        // das ist das Klumpen-Thema für AP6-05, nicht der Durchsatz.
+        if (!ankunft.has(e.id)) maxFest = Math.max(maxFest, e.festVersuche);
+        if (!ankunft.has(e.id) && e.pos.z <= 19) ankunft.set(e.id, t);
       }
       if (id > anzahl && ankunft.size + despawned.length >= anzahl) break;
     }
@@ -127,10 +136,9 @@ describe("Wellen-Eskalation — Labyrinth-Durchsatz einer großen Welle", () => 
     const r = strom(wellenGroesse(5), true);
     expect(r.angekommen).toBe(17);
     expect(r.despawned).toEqual([]);
-    // AP6-01: bei EINER Frontlinie strömen alle 17 auf `front-front` zu und
-    // stauen sich an den Sap-Lücken — der Watchdog repathed höchstens einmal,
-    // aber kein Gegner geht verloren.
-    expect(r.maxFest).toBeLessThanOrEqual(1);
+    // AP6-01d: kein einziger Watchdog-Eingriff auf dem Anmarschweg — die Kette
+    // läuft durch Niemandsland, Sap-Rampen und Brustwehr-Lücken sauber durch.
+    expect(r.maxFest).toBe(0);
   });
 
   it("die Streuung zieht die Kette weiter auseinander als ohne", () => {
