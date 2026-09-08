@@ -19,5 +19,10 @@ test-results/
 .vscode/*
 !.vscode/extensions.json
 
+# Agent-Skills (persönliches Werkzeug, npx skills — nicht Projektcode)
+.agents/
+.claude/
+skills-lock.json
+
 __pycache__/
 .venv/
