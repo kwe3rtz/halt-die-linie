@@ -197,7 +197,7 @@ Krone keine Lauffläche.
 
 ## Bericht — AP6-01d
 
-COMMIT: <steht nach dem Commit> (Branch `arbeitspaket-6`)
+COMMIT: `caa554c` (Branch `arbeitspaket-6`)
 CI: <steht nach dem Push> / Pages <steht nach dem Push>
 TODO(Rückfrage): keine im Code. Fünf Entscheidungen unten (1–5) an den Planer.
 
