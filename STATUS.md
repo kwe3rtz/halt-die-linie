@@ -1,8 +1,9 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-08 (AP6-01/01b/02/06 erledigt · Sektor als echtes
-Grabensystem neu gebaut, **wartet auf Spieltest** · dann **AP6-02b**
-(Bresche → Durchbruch))
+**Stand:** 2026-09-09 (AP6-01/01b/02/06 erledigt · Spieltest + **Grill-Runde**:
+die Map liest sich weiter als „Rechtecke mit Wänden" — es fehlen Tiefe,
+Material, Enge. Beschluss: **Graben-Look zuerst** → **AP6-01c** (Baukasten +
+Probe-Ecke) ist als Nächstes, Kickoff an den Worker raus)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -51,13 +52,28 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     Express-Laufgraben) + Stütz-/Reservegraben statt leerem Feld, gezähnte
     Home-Line mit 3 begehbaren Unterständen. Durchgehender Sohle-Auffangboden.
     ~30 % größer (x±44, z−60…92), Nav 72 Knoten. Golden-Anker neu (Uhr-Regel
-    bitgleich). 303 Tests. **Offen an den Nutzer:** `unterstand()` ist der
-    flache Fallback, nicht der gewählte „Raum unter Flur" (Jank-Risiko, Worker
-    begründet) — eigenes Ticket oder Art-Pass?
-  - **AP6-02b** (als Nächstes — wartet auf Spieltest des neuen Sektors):
-    Bresche → Durchbruch → Linienfall (Golden-Rebaseline nur hier).
-  - **AP6-03/04/05**: Spawn-Verlagerung · „Instand setzen" · Roam-Gegner +
-    Perf-Broadphase.
+    bitgleich). 303 Tests.
+  - **Spieltest AP6-01b + Grill-Runde 2026-09-09:** die Map trägt *immer noch
+    nicht* — funktional ein Grabensystem, liest sich aber weiter als „Rechtecke
+    mit dünnen Wänden". Es fehlen **Tiefe** (man steht nicht *drin*),
+    **Material** (glatte Farbe pro Zone) und **Enge** (3-m-Korridore).
+    Strukturierte Design-Baum-Runde (`grilling`, 5 Runden) → **der Graben-*Look*
+    ist ein eigener Brocken und kommt zuerst**, vor Gegner-KI und Kern-Bogen.
+  - **AP6-01c** (**als Nächstes**, Kickoff an den Worker): Baukasten —
+    Grabentiefe −2,7, Wand-Verkleidung (Holz-Pfosten + Bohlen-Kurse + Sandsack-
+    Krone), `oberflaeche`-Materialfeld auf `LevelBox` + flache Material-Farben
+    im Renderer, Laufrost-Boden, **echter Abstiegs-Unterstand** (Treppe hinab,
+    Raum unter der Sohle — löst den AP6-01b-`unterstand()`-Rückstand) +
+    **isolierte Probe-Ecke** (`?probe`-Dev-Szene). Echter Sektor unberührt,
+    kein Golden-Risiko. → Nutzer-Spieltest der Probe-Ecke.
+  - **AP6-01d** (nach dem Spieltest): ganzer Sektor im neuen Look +
+    geschrumpfter „schlanke Front"-Grundriss (x ±32 / z ~120, 4 Front-Nischen,
+    2 Breschen, Home = Bunker mit 3 echten Abstiegs-Unterständen, 3 gewundene
+    Verbindungsgräben — Anzahl als Parameter, kein Stützgraben). Golden-Anker
+    brechen bewusst (Uhr-Regel bitgleich).
+  - **Dann:** Gegner-KI-Design-Runde (mit `SPARRING-ANTWORTEN.md` Runde 3) →
+    **AP6-05** (Roam + Perf) → **AP6-02b** (Bresche → Durchbruch) → **AP6-03**
+    (Spawn-Verlagerung) → **AP6-04** („Instand setzen").
 
 ## Spielbar
 
@@ -89,26 +105,26 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **Anspielen fällig:** der neue Sektor (`arbeitspaket-6`, AP6-01b) ist
-   ungespielt. Quer durch: Feuergraben (zickt man wirklich um die Traversen?)
-   → Express-Laufgraben → Hinterland-Verbindungsgräben (kein leeres Feld mehr?)
-   → Home-Line → Unterstand rein. Prüfen: Nacht-Helligkeit auf echter GPU,
-   Grabensystem-Gefühl, kein Jank mehr.
-2. **`unterstand()`-Entscheid** (aus dem AP6-01b-Review): der gebaute flache
-   Verbau statt „Raum unter Flur" — eigenes Mini-Ticket für einen echten
-   abgesenkten Dugout, oder auf den Art-Pass warten?
-3. **AP6-02b** — nach dem Spieltest + `/clear`. Bresche → Durchbruch →
-   Linienfall (Halte-Punkte je Bresche, lokaler Druck öffnet die Bresche
-   physisch, Gegner hinter der Linie → „DURCHBRUCH" → Fall) + Uhr-Regel
-   (Frontfall = gefährlicher, nicht schneller). Golden-Anker hier bewusst neu +
-   Stub-Gegenprobe. Spec fertig (inkl. Copilot-Härtung):
-   `tickets/AP6-02b-bresche-durchbruch-linienfall.md`. Planer schreibt den
-   Kickoff, Worker `/clear` vorher (großer Brocken).
-4. AP6-03 (Spawn-Verlagerung, Audit H4) → AP6-04 („Instand setzen", eigene
-   Design-Runde davor mit `SPARRING-ANTWORTEN.md` Runde 3) → AP6-05 (Roam +
-   Perf-Broadphase, Audit H1/M5/M6). **„Gegner-KI deutlich besser" (Spieltest)**
-   fällt hierunter: heute laufen alle stur auf `front-front` und klumpen (auch
-   am Laufgraben-Mund, AP6-06-Fund) — AP6-05 + ggf. eigenes Ticket.
+1. **AP6-01c — Graben-Look-Baukasten + Probe-Ecke** (Kickoff raus an den Worker,
+   `/clear` vorher). Grabentiefe −2,7, Wand-Verkleidung als Formdetail-Geometrie
+   + `oberflaeche`-Materialfeld + flache Material-Farben, Laufrost, echter
+   Abstiegs-Unterstand, isolierte `?probe`-Szene. Echter Sektor unberührt →
+   **kein Golden-Risiko**. Zielvorlage (Querschnitt + Maße + Palette + Plan)
+   liegt im Ticket. → **Nutzer spielt die Probe-Ecke an.**
+2. **AP6-01d — ganzer Sektor** im neuen Look + geschrumpfter Grundriss
+   („schlanke Front", Home = Bunker, 3 gewundene Verbindungsgräben mit
+   parametrisierter Anzahl, kein Stützgraben). Golden-Anker brechen bewusst
+   (Uhr-Regel bitgleich, Gegenprobe wie AP6-01b). `/clear` vorher.
+3. **Gegner-KI-Design-Runde** — eigene Runde wie die Grill-Runde, Input
+   `SPARRING-ANTWORTEN.md` Runde 3 (wenige persistente Roam-Gruppen, 4 Zustände,
+   gemeinsames Intensitäts-Budget mit dem Wave-Director). Ergebnis: aktualisierte
+   **AP6-05**-Spec. **„Gegner-KI deutlich besser" (Spieltest)** fällt hierunter:
+   heute laufen alle stur auf `front-front` und klumpen (auch am Laufgraben-
+   Mund, AP6-06-Fund).
+4. **AP6-05** (Roam + Perf-Broadphase, Audit H1/M5/M6) → **AP6-02b** (Bresche →
+   Durchbruch → Linienfall + Uhr-Regel; Golden hier bewusst neu + Stub-
+   Gegenprobe; Spec fertig inkl. Copilot-Härtung) → **AP6-03** (Spawn-
+   Verlagerung, Audit H4) → **AP6-04** („Instand setzen").
 5. Ende AP6: PR `arbeitspaket-6` → `main`.
 
 ## Offene Fäden — nicht vergessen
@@ -121,8 +137,17 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   **`FALL_LIMIT` auch für Gegner** (AP6-06-Fund).
 - **Solo-Balance ab Welle 4** (AP5-Merkposten): Zahlen im Spieltest justieren.
 - **Multi-Seed-Replay-Harness** mit semantischen Assertions — vor AP6-05.
+- **Variable Verbindungsgraben-Anzahl** (`BACKLOG.md` → „Sektor & Generator"):
+  ab AP6-01d ist die Anzahl ein Parameter (`VG_ANZAHL`, fest 3). Der Schalter
+  — Variante 1 Seed-abgeleitet, Variante 2 je Schwierigkeitsgrad — plus ein
+  **Schwierigkeits-System** (existiert nicht) sind Backlog, Entscheid am
+  Generator bzw. Schwierigkeits-System.
+- **Perf: Verkleidungs-Box-Zahl** — AP6-01c/d vervielfachen die Level-Boxen
+  (Formdetail). AP6-01c misst die Probe-Szene, AP6-01d ggf. Merge je Material
+  im Renderer. Im Auge behalten.
 - **Prozeduraler Generator** (KONZEPT §9.6): jetzt fürs *ganze* Grabennetz,
-  nach AP6, wenn der handgebaute Nacht-Sektor trägt.
+  nach AP6, wenn der handgebaute Nacht-Sektor trägt. Nutzt denselben
+  Modul-Baukasten (inkl. Verkleidung ab AP6-01c).
 - **Tag-Modus / Fernkampf-KI** (KONZEPT §5): eigenes Paket nach AP6 (= AP7).
 - **Nachschub-Ökonomie** (KONZEPT §9.7): eine Währung + Budgets/Slots. Offen.
 - **In-Mission-Quest / aktive Fähigkeit** (KONZEPT §4): als Dauermechanik
@@ -134,6 +159,32 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   (`AUFGABEN.md`). **CI-Laufzeit** ~5–7 min, im Auge behalten.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
+
+- **2026-09-09** — **Grill-Runde: Graben-Look zuerst.** Spieltest des AP6-01b-
+  Sektors + strukturierte Design-Baum-Runde (`grilling`-Skill, 5 Runden, mit
+  Nutzer-Referenzbildern WW1-Grabenfoto + historische Schnitt-Karte). Kern:
+  zwei fehlgeschlagene Greybox-Neubauten (AP6-01, AP6-01b) — ein *funktional*
+  korrekter Sektor trägt nicht, wenn er die Fiktion räumlich nicht
+  kommuniziert. Es fehlen **Tiefe** (man steht nicht *drin*), **Material**
+  (glatte Farbe pro Zone), **Enge** (3-m-Korridore). **Beschlüsse:** (1) Der
+  Graben-*Look* ist ein eigener Brocken und kommt **zuerst** — vor Gegner-KI,
+  vor dem Kern-Bogen. **AP6-01c** (Baukasten: Tiefe −2,7, Wand-Verkleidung als
+  Formdetail-Geometrie, `oberflaeche`-Materialfeld + flache Farben, Laufrost,
+  echter Abstiegs-Unterstand; + isolierte `?probe`-Szene) → Nutzer-Spieltest →
+  **AP6-01d** (ganzer Sektor + geschrumpfter „schlanke Front"-Grundriss
+  x ±32 / z ~120; Front 4 Nischen + 2 Breschen + Depot + Parados; Home = Bunker
+  mit 3 echten Abstiegs-Unterständen; 3 gewundene Verbindungsgräben, Anzahl als
+  Parameter; **kein** Stützgraben). (2) Material = **flache Farben + Formdetail,
+  keine Texturen** (die später, §9.10). (3) Abstimm-Prozess: Planer-Zielvorlage
+  → Nutzer ok → Worker-Probe-Ecke → Nutzer ok → ganzer Sektor. (4) Reihenfolge
+  danach: **Gegner-KI-Design-Runde** (mit `SPARRING-ANTWORTEN.md` Runde 3) →
+  **AP6-05** (Roam + Perf) → **AP6-02b** → AP6-03 → AP6-04. (5) Breite-zuerst-
+  Strategie bleibt — der Graben-Look-Pass ist die *eine* bewusste Ausnahme; das
+  5-Minuten-Gefühl bleibt bis ~AP6-05 flach, akzeptiert. (6) Variable
+  Verbindungsgraben-Anzahl (Seed- **oder** Schwierigkeits-gesteuert) + ein
+  Schwierigkeits-System → `BACKLOG.md`. AP6-01b-Rückstand `unterstand()` wird
+  in AP6-01c gelöst. Doku: `KONZEPT.md` §3 (neuer Abschnitt „Der Graben-Look")
+  + §9.10, `AUFGABEN.md`, `BACKLOG.md`, Tickets `AP6-01c`/`AP6-01d`.
 
 - **2026-09-08** — **AP6-01b erledigt** (`e9aaeca`, reviewed, 303 Tests, CI
   grün). Sektor als echtes WW1-Grabensystem neu: gezähnter Feuergraben (5

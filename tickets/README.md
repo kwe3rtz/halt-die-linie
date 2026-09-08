@@ -84,19 +84,26 @@ Sim-Technik aus AP4/AP5 wird umgebaut, nicht weggeworfen. Branch
 |---|---|
 | AP6-01 Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung | ✅ `erledigt/` (`c4d21f5`) |
 | AP6-01b Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ `erledigt/` (`e9aaeca`) |
+| AP6-01c Graben-Look: Baukasten (Tiefe, Verkleidung, Material, Laufrost, echter Abstiegs-Unterstand) + isolierte Probe-Ecke | offen — **als Nächstes** |
+| AP6-01d Graben-Look: ganzer Sektor + geschrumpfter „schlanke Front"-Grundriss + Golden-Rebaseline | offen (nach AP6-01c-Spieltest) |
 | AP6-02 Eine Frontlinie/Home-Line: A/B/C-Verdrahtung raus (Bereinigung) | ✅ `erledigt/` (`f427ef1`) |
-| AP6-02b Bresche → Durchbruch → Linienfall + Uhr-Regel | offen (nach AP6-01b) |
+| AP6-02b Bresche → Durchbruch → Linienfall + Uhr-Regel | offen (nach AP6-05) |
 | AP6-03 Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 „Instand setzen" — gefallene Linie zurückerobern | offen |
-| AP6-05 Roamende Nacht-Gegner + Perf-Broadphase | offen |
+| AP6-05 Roamende Nacht-Gegner + Perf-Broadphase (nach eigener KI-Design-Runde) | offen |
 | AP6-06 Spieltest-Reibung: automatische Testwaffe + glatte Rampen + Nacht heller | ✅ `erledigt/` (`a17e734`) |
 
-**Reihenfolge:** AP6-01 → AP6-02 (Bereinigung, Golden-Anker grün). Dann
-**4. Spieltest (2026-09-08)**: Map zu abstrakt + jank, Startwaffe zu zäh →
-**AP6-06** ✅ (Reibungs-Fixes) → **AP6-01b** ✅ (Sektor als echtes Grabensystem
-neu) → Spieltest → AP6-02b (Bresche→Durchbruch, Golden bricht bewusst) → 03 →
-04 → 05. AP6-02-Split + Audit-Einarbeitung nach Copilot-Spec-Review +
-`AUDIT-2026-09-07-ap5.md`.
+**Reihenfolge:** AP6-01 → AP6-02 (Bereinigung, Golden grün) → **4. Spieltest**
+(Map zu abstrakt + jank, Startwaffe zäh) → **AP6-06** ✅ → **AP6-01b** ✅ →
+Spieltest + **Grill-Runde 2026-09-09** (Map liest sich weiter als „Rechtecke mit
+Wänden" — es fehlen Tiefe, Material, Enge). Beschluss: Graben-Look **zuerst**,
+dann Gegner-KI, dann der Kern-Bogen. Neue Reihenfolge:
+**AP6-01c** (Baukasten + Probe-Ecke) → Nutzer-Spieltest → **AP6-01d** (ganzer
+Sektor + schlanke Front, Golden bricht bewusst) → **Gegner-KI-Design-Runde**
+(mit `SPARRING-ANTWORTEN.md` Runde 3) → **AP6-05** (Roam + Perf) → **AP6-02b**
+(Bresche→Durchbruch) → **AP6-03** (Spawn-Verlagerung) → **AP6-04** („Instand
+setzen") → PR `arbeitspaket-6` → `main`. (Ticket-Nummern ≠ Bau-Reihenfolge —
+wie schon bei AP4-06 / AP6-06.)
 
 ## Arbeitspaket 7+
 

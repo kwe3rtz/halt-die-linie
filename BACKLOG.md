@@ -56,6 +56,29 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
   Waffen-Pool, statt nur leichter Trait. 5×N Balancing, Uniformen pro Nation.
 - **Nationsspezifische Waffen-Pools** mit eigenen Fraktions-Boni.
 
+## Sektor & Generator
+
+- **Variable Verbindungsgraben-Anzahl.** Der Sektor-Datenmodell trägt die Anzahl
+  ab AP6-01d als Parameter (`VG_ANZAHL`, fest 3 gebaut). Der echte Schalter,
+  Entscheid am Generator- **oder** am Schwierigkeits-System:
+  - **Variante 1 — Seed-abgeleitet:** jedes neue Spiel bekommt eine unsichtbare
+    Session-ID; die letzte Ziffer o.Ä. bestimmt 1 / 2 / 3 Verbindungsgräben.
+    Bringt Wiederspielwert + leichte Varianz in denselben handgebauten Sektor.
+  - **Variante 2 — Schwierigkeit-abgeleitet:** leicht = 3 Gänge (viel Weg zum
+    Rotieren), schwer = 1 Gang, kein Stützgraben. Braucht erst ein
+    Schwierigkeits-System (siehe unten).
+- **Schwierigkeits-System.** Existiert noch nicht. Voraussetzung für
+  Verbindungsgraben-Variante 2 und für gestaffelte Wave-Director-Presets.
+- **Quer laufender Stützgraben / zweite Reservelinie.** In AP6-01d bewusst
+  rausgenommen (Vision = 2 Hauptgräben + wenige kleine). Wieder aufnehmen, wenn
+  der Kern trägt und mehr Hinterland-Tiefe fehlt.
+- **MG-Stände auf dem Parapet + Front-Wandkammern.** Aus der Grill-Skizze; die
+  „schlanke Front" (AP6-01d) lässt sie weg. Nachziehen, wenn die Front mehr
+  Struktur/Rollen braucht.
+- **Echte Texturen / Material-Politur** (Holz, Sandsack, Schlamm, Wellblech) —
+  der Schritt *nach* dem Formdetail-Material aus AP6-01c/d. Normal-Maps, ggf.
+  eine WW1-Feldpost/Schlachtplan-Stilstudie (`KONZEPT.md` §9.10).
+
 ## Modi & Meta
 
 - **„Krieg"-Modus** — langer Modus über mehrere Skirmishes. Struktur offen

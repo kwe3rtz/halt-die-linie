@@ -723,33 +723,51 @@ in `tickets/`.
 |---|---|---|
 | AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
 | AP6-01b | Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ erledigt/ (`e9aaeca`) |
+| AP6-01c | Graben-Look: Baukasten (Tiefe −2,7, Verkleidung Holz/Sandsack/Wellblech, Laufrost, `oberflaeche`-Materialfeld, echter Abstiegs-Unterstand) + isolierte Probe-Ecke (`?probe`) | **offen — als Nächstes** |
+| AP6-01d | Graben-Look: ganzer Sektor im neuen Look + geschrumpfter „schlanke Front"-Grundriss (x ±32 / z ~120) + parametrisierte Verbindungsgraben-Anzahl + Golden-Rebaseline | offen (nach AP6-01c-Spieltest) |
 | AP6-02 | Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung, kein Verhaltenswechsel) | ✅ erledigt/ (f427ef1) |
-| AP6-02b | Bresche → Durchbruch → Linienfall (physisch, telegraphiert) + Uhr-Regel (Golden-Rebaseline hier) | offen (nach AP6-01b) |
+| AP6-02b | Bresche → Durchbruch → Linienfall (physisch, telegraphiert) + Uhr-Regel (Golden-Rebaseline hier) | offen (nach AP6-05) |
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
 | AP6-04 | „Instand setzen" — gefallene Linie zurückerobern | offen |
-| AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) + Perf-Broadphase | offen |
+| AP6-05 | Roamende Nacht-Gegner (wandern / sammeln / losbrechen) + Perf-Broadphase — nach eigener KI-Design-Runde | offen |
 | AP6-06 | Spieltest-Reibung: automatische Testwaffe + glatte Rampen + Nacht heller | ✅ erledigt/ (`a17e734`) |
 
-**4. Spieltest (2026-09-07)** des Nacht-Sektors auf `arbeitspaket-6`: „geht in
-die richtige Richtung", aber die Map ist **zu abstrakt** (gerade Box-Korridore
-statt Grabensystem) **und** hat **Jank** (Löcher, an Kanten hängenbleiben);
-Gegner bleiben an den Stufen-Rampen hängen; die Repetierer-Startwaffe macht
-jede Welle zäh; Nacht etwas zu dunkel. → **AP6-06** (schnelle Reibungs-Fixes,
-zuerst) + **AP6-01b** (Sektor als echtes Grabensystem neu, Design-Runde läuft).
-AP6-02b wartet bis der neue Sektor steht (Halte-Punkte/Breschen/Nav hängen am
-Layout).
+**4. Spieltest (2026-09-08)** des Nacht-Sektors: „geht in die richtige Richtung",
+aber Map **zu abstrakt** + **Jank**, Startwaffe zäh, Nacht zu dunkel →
+**AP6-06** ✅ (Reibungs-Fixes) → **AP6-01b** ✅ (Sektor als echtes Grabensystem
+neu). **Spieltest AP6-01b + Grill-Runde 2026-09-09:** die Map liest sich
+*weiterhin* als „Rechtecke mit dünnen Wänden" — funktional ein Grabensystem,
+aber es fehlen **Tiefe** (man steht nicht *drin*), **Material** (glatte
+Farbfläche pro Zone), **Enge** (3-m-Korridore). Zwei fehlgeschlagene Map-
+Neubauten (AP6-01, AP6-01b). Strukturierte Design-Baum-Runde (`grilling`-Skill,
+5 Runden) → **Beschluss: der Graben-*Look* ist ein eigener Brocken, und er
+kommt zuerst** — vor der Gegner-KI, vor dem Kern-Bogen.
 
-**Reihenfolge wichtig:** AP6-06 (Reibung raus) ✅ → AP6-01b (Map-Neubau) ✅ →
-Spieltest des neuen Sektors → **AP6-02b** als Nächstes. AP6-02 war schon vor
-AP6-02b (mechanische Bereinigung, Golden grün) — die Trennung isoliert den
-Golden-Rebaseline auf die eine echte
-Semantik-Änderung (Copilot-Spec-Review 2026-09-07). AP6-02b/03/04/05 setzen
-auf dem neuen Sektor + der stabilen Linien-Referenz auf. Der unabhängige Audit
-`AUDIT-2026-09-07-ap5.md` (2026-09-07, vor AP6-02) ist in die Tickets
-eingearbeitet: H2/H3/N2 → AP6-02, H4 → AP6-03, H1/M5/M6 → AP6-05/AP7, der Rest
-→ AP7-Politur. **AP6-06 fand zusätzlich:** kein `FALL_LIMIT` für Gegner
-(durchgefallener Gegner fällt unendlich statt Despawn) → AP7-Politur;
-Laufgraben-Mund-Klumpen (Gegner überschießen `home-ziel`) → AP6-01b/AP6-05.
+**Neue Reihenfolge (Grill-Runde 2026-09-09):**
+
+1. **AP6-01c** — Baukasten (Tiefe/Verkleidung/Material/Laufrost/Abstiegs-
+   Unterstand) + isolierte Probe-Ecke. Planer-Zielvorlage → Nutzer ok → Worker
+   baut → **Nutzer-Spieltest der Probe-Ecke**.
+2. **AP6-01d** — ganzer Sektor im neuen Look + geschrumpfter Grundriss
+   („schlanke Front": 4 Nischen, 2 Breschen, Depot, Parados; Home = Bunker mit
+   3 echten Abstiegs-Unterständen; 3 gewundene Verbindungsgräben, Anzahl als
+   Parameter; **kein** Stützgraben). Golden-Anker brechen bewusst (Uhr-Regel
+   bitgleich).
+3. **Gegner-KI-Design-Runde** (wie die Grill-Runde, mit `SPARRING-ANTWORTEN.md`
+   Runde 3: wenige persistente Roam-Gruppen, 4 Zustände, gemeinsames
+   Intensitäts-Budget mit dem Wave-Director) → aktualisierte AP6-05-Spec.
+4. **AP6-05** — Roam-Gegner + Perf-Broadphase.
+5. **AP6-02b** — Bresche → Durchbruch → Linienfall + Uhr-Regel.
+6. **AP6-03** (Spawn-Verlagerung) → **AP6-04** („Instand setzen").
+7. PR `arbeitspaket-6` → `main`.
+
+AP6-02 war schon vor AP6-02b (mechanische Bereinigung, Golden grün) — die
+Trennung isoliert den Golden-Rebaseline auf die eine echte Semantik-Änderung
+(Copilot-Spec-Review 2026-09-07). Audit `AUDIT-2026-09-07-ap5.md`: H2/H3/N2 →
+AP6-02, H4 → AP6-03, H1/M5/M6 → AP6-05/AP7, Rest → AP7-Politur. **AP6-06 fand
+zusätzlich:** kein `FALL_LIMIT` für Gegner → AP7-Politur; Laufgraben-Mund-
+Klumpen → AP6-05. **AP6-01b offen an den Nutzer** (`unterstand()` flacher
+Fallback statt „Raum unter Flur") → in **AP6-01c** gelöst (echter Abstieg).
 
 **Ausdrücklich NICHT in AP6:** Tag-Fernkampf-KI (eigenes Paket danach) ·
 prozeduraler Generator · neue Gegnertypen jenseits der Roam-Variante ·

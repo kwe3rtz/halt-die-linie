@@ -1,11 +1,12 @@
 # Halt die Linie — Konzeptdokument
 
-**Entwurf v0.3 · Stand 8. September 2026** (§1/§3/§5/§6/§9/§10 in der
+**Entwurf v0.3 · Stand 9. September 2026** (§1/§3/§5/§6/§9/§10 in der
 Design-Runde 2026-09-07 neu gefasst: eine Frontlinie statt A/B/C-Abschnitte,
 größeres begehbares Grabennetz, „Instand setzen" als Rückeroberung, Nacht
 zuerst. §3/§6 am 2026-09-08 nach Sparring-Runde 3 geschärft: Frontfall als
 sichtbare Kette Bresche → Durchbruch → Fall, Frontfall = gefährlicher statt
-schneller)
+schneller. §3 am 2026-09-09 nach Grill-Runde um „Der Graben-Look" erweitert:
+Tiefe + Verkleidung + Enge, schlankere Front, geschrumpfter Footprint)
 
 Koop-Wave-Survival-Shooter im Grabenkrieg des Ersten Weltkriegs, First-Person.
 Dieses Dokument hält den im Gespräch beschlossenen Konzeptkern fest — als
@@ -168,6 +169,48 @@ Gegner. Grenze: der freie Rückweg Frontlinie → Home-Line soll für einen
 Solo-Spieler in überschaubarer Zeit machbar bleiben; lang wird der Rückzug
 durch Feinddruck, nicht durch bloße Distanz. Konkrete Maße in den Tickets
 (Greybox, im Spieltest justiert).
+
+> **Präzisiert 2026-09-09 (Grill-Runde):** „größer" heißt *tiefer und
+> gewundener*, nicht *weiter*. Der erste handgebaute Sektor wird gegenüber
+> AP6-01b wieder **geschrumpft** (Footprint grob x ±32 / Tiefe ~120 m), dafür
+> **zwei Hauptgräben** (Frontline + Home-Line) mit **wenigen** kleinen
+> Verbindungsgräben statt eines breiten Netzes — eher Grabensystem als
+> Grabenlabyrinth.
+
+### Der Graben-Look — Tiefe, Verkleidung, Enge — `BESCHLOSSEN` (Grill-Runde 2026-09-09)
+
+Nach dem 4. Spieltest und **zwei** fehlgeschlagenen Greybox-Neubauten (AP6-01,
+AP6-01b) stand fest: ein *funktional* korrekter Sektor (Zonen, Nav, gezähnte
+Linien) trägt nicht, wenn er die Fiktion räumlich nicht kommuniziert. Ein
+Graben liest sich über drei Dinge — **alle drei sind Vorgabe für die Map-
+Tickets** (AP6-01c/d) und für den späteren Generator:
+
+1. **Tiefe.** Man steht *unten drin*, die Wände überragen einen. Grabensohle
+   ~2,7 m unter Feld (vorher 1,8). Auf der Sohle sieht man nicht heraus; ein
+   **Feuertritt** hebt einen zum Schießen über die Kimme.
+2. **Verkleidung.** Die Wände sind verschalt: Holz-Stützpfosten + waagerechte
+   Bohlen-Kurse, **Sandsackreihe** auf der Krone, **Wellblech** in den
+   Unterständen, **Laufrost** auf dem Boden. Umsetzung als **flache
+   Materialfarben + Formdetail-Geometrie** (dünne Leisten, Klötze, Pfosten) —
+   **keine Texturen** (die sind ein späterer Schritt, §9.10).
+3. **Enge.** Lichte Weite an der Sohle ~2 m (vorher ~3,2), gewundener Verlauf
+   (gezähnt: Feuernischen + Erd-Traversen; Verbindungsgräben als kurze
+   Dog-Legs). Kein gerader Breitkorridor — Ausnahme: *ein* gerader Express-
+   Laufgraben für den zügigen Runback.
+
+**Die zwei Hauptgräben unterscheiden sich:**
+
+- **Frontline — schlank.** Feuertritt + Brustwehr durchgehend, 2 Bresche-Punkte
+  (Landmark-benannt), ein Nachschubdepot, Parados mit den Verbindungsgraben-
+  Mündungen. *Nicht* jetzt: MG-Stände, Wandkammern (Backlog).
+- **Home-Line — der Bunker.** Tiefer und schwerer verbaut (Beton-Look), 3
+  Feuernischen, und **echte Abstiegs-Unterstände**: Treppe hinab, Raum *unter*
+  der Grabensohle mit Kopffreiheit (Munitionslager, Verbandsplatz,
+  Feldkommandeur-Bunker als Finale-Fixpunkt). Enger als die Front.
+
+**Anzahl der Verbindungsgräben ist ein Parameter** (fest 3 gebaut). Ein
+späterer Schalter — Seed-abgeleitet oder je Schwierigkeitsgrad — steht im
+Backlog.
 
 ### Handgebaut zuerst, Generator später — `BESCHLOSSEN`
 
@@ -524,7 +567,10 @@ Systemdesign. In grober Reihenfolge der Dringlichkeit.
    reicht.
 10. **Art- und Render-Stil in 3D** — Wie die Feldpost/Schlachtplan-Optik als
     stilisierte 3D-Umgebung aussieht (Platzhalter → Zielstil). Nacht-Atmosphäre
-    (Licht, Dunst, Sicht) rückt durch „Nacht zuerst" nach vorn.
+    (Licht, Dunst, Sicht) rückt durch „Nacht zuerst" nach vorn. **Teilweise
+    vorgezogen (Grill-Runde 2026-09-09, AP6-01c/d):** Grabentiefe + Verkleidungs-
+    Formdetail + flache Material­farben (Holz/Sandsack/Wellblech/Laufrost/Beton).
+    **Noch nicht:** echte Texturen, Normal-Maps, PBR, die eigentliche Stilstudie.
 11. **„Krieg"-Modus** — Übergeordnete Struktur (Feldzugskarte, Dauerlauf,
     Kapitel) — später.
 

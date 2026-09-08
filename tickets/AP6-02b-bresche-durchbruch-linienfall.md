@@ -1,6 +1,8 @@
 # AP6-02b — Bresche → Durchbruch → Linienfall (physisch, telegraphiert)
 
-**Status:** offen · nach AP6-02
+**Status:** offen · **Bau-Reihenfolge (Grill-Runde 2026-09-09): nach AP6-01c →
+AP6-01d → Gegner-KI-Design-Runde → AP6-05, dann dieses Ticket.** Setzt auf dem
+neu gebauten Sektor (AP6-01d) + der stabilen Linien-Referenz auf.
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **Referenz:** `KONZEPT.md` §3 („Die Linie fällt", „Parapet als lebendiges
 Ziel") + §6 (neu gefasst 2026-09-08), `SPARRING-ANTWORTEN.md` „Konvergenz
