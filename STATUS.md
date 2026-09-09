@@ -125,8 +125,12 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
    Fokus / Merkposten aus dem AP6-01d-Review: (a) Enge — Laufgang 2,4 m /
    Express 2,0 m, klemmt es beim Ausweichen? (b) läuft man an der Verkleidung
    glatt entlang? (c) Abstieg/Kamera + Kopffreiheit im Unterstand. (d) Runback
-   Express 12,2 s — zu kurz? → Knick in `VG_SLOTS`. (e) klettert eine Kapsel
-   die Brustwehr (0,58) → dann 0,62. (f) Nacht-Helligkeit auf echter GPU.
+   Express 12,2 s — zu kurz? (e) klettert eine Kapsel die Brustwehr (0,58)?
+   (f) Nacht-Helligkeit auf echter GPU.
+   **Justier-Knöpfe** (falls nötig, gebündelt anwenden): Enge → `halb` im
+   `VG_SLOTS`-Eintrag `m` (`sektor.ts`); Runback → ein Knick mehr in `VG_SLOTS`;
+   Brustwehr → `BRUSTWEHR_OBERKANTE` 0,58 → 0,62 (`module.ts`) — **verschiebt
+   die Golden-Anker-Positionen erneut**, also mit anderen Justierungen zusammen.
 2. **Design-Runde „Nacht-Kern + Uhr"** (Planer + Nutzer, wie die Grill-Runde) —
    Input `SPARRING-ANTWORTEN.md` Runde 3 **+ Runde 4**. Klärt gebündelt: Uhr →
    **echte Feindreserve** (statt zonengewichteter Kills) · **Finale-Ort** (dort

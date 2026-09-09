@@ -2817,6 +2817,16 @@ zusammen denken (betrifft AP6-04). (b) **Niemandsland-Scavenging als
 Anti-Camping-Hebel** — ein Grund, die Home-Line-Deckung in Feuerpausen zu
 verlassen; koppelt an die Ruhephasen (#24) und das seltene Depot (#6).
 
+**Beobachtung aus dem AP6-01d-Bau (Worker `ki-game-be`, für die Design-Runde):**
+der neue Feuergraben hat **genau einen** Laufgang zwischen allen 4 Feuernischen —
+die Karte gibt also **von sich aus einen harten Choke** her. Gut fürs Halten
+(man verkeilt die ganze Welle an einer Person), aber genau hier wird das
+AP6-06-Klumpen sichtbar: nach der Ankunft drücken die Gegner gegen den Parados
+(Weg nach hinten zu, solange die Linie hält) und sammeln Watchdog-Stillstand.
+→ Material für die Roam-/Garnison-/Feindreserve-Frage: wie verhält sich ein
+angekommener, blockierter Feind? (Umgruppieren, gegen die Bresche drücken,
+Druck aufbauen statt am Choke idlen.)
+
 ### D — Später (§7–§9, nach AP6). Hier geparkt, Backlog-Eintrag folgt
 
 - Feldanpassungen / In-Run-Waffenoptionen (#5) — die *akzeptable* Form von
