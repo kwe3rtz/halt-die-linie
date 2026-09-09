@@ -136,8 +136,9 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
 - Waffen-Aufsätze und -Varianten in die Tiefe.
 - Grabenschilder mit generierten Namen, Sektor-Lore.
 - **Settings-/Options-UI** — Audio-Lautstärke (Master/SFX/Musik), Maus-
-  Sensitivität, Grafik-Qualität, Fullscreen. Heute nur `T` = Ton an/aus,
-  Sensitivität hartkodiert. HTML-Overlay wie HUD/Kompass.
+  Sensitivität, **Gamma / Helligkeit** (Nutzer-Wunsch aus dem AP6-01d-
+  Spieltest — Nacht-Helligkeit regelbar), Grafik-Qualität, Fullscreen. Heute
+  nur `T` = Ton an/aus, Sensitivität hartkodiert. HTML-Overlay wie HUD/Kompass.
 - **Pause-Menü** — echtes Pausieren (der Loop kann `pause()`/`resume()` schon)
   mit Overlay statt bloßem Tab-Weg. Zusammen mit der Settings-UI + der
   Tab-Sichtbarkeit (`AUFGABEN.md` Infra-Backlog).

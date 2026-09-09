@@ -1,9 +1,10 @@
 # Halt die Linie — Status
 
 **Stand:** 2026-09-09 (AP6-01/01b/02/06 + **AP6-01c + AP6-01d erledigt** —
-Sektor komplett neu im Graben-Look + geschrumpfter „schlanke Front"-Grundriss,
-reviewed, Golden neu / Uhr-Regel bitgleich. **Als Nächstes: Nutzer spielt den
-ganzen Sektor an, dann Design-Runde „Nacht-Kern + Uhr"** — kein Worker-Ticket)
+Sektor komplett neu im Graben-Look, **vom Nutzer angespielt + für ok befunden**
+(„geht in die richtige Richtung"), ein Map-Polish-Merkposten (Unterstand-Münder
+optisch offen). **Als Nächstes: Design-Runde „Nacht-Kern + Uhr"** (Planer +
+Nutzer, kein Worker-Ticket) → AP6-05-Spec)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -121,16 +122,20 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **Nutzer spielt den ganzen Sektor an** (`npm run dev` auf `arbeitspaket-6`).
-   Fokus / Merkposten aus dem AP6-01d-Review: (a) Enge — Laufgang 2,4 m /
-   Express 2,0 m, klemmt es beim Ausweichen? (b) läuft man an der Verkleidung
-   glatt entlang? (c) Abstieg/Kamera + Kopffreiheit im Unterstand. (d) Runback
-   Express 12,2 s — zu kurz? (e) klettert eine Kapsel die Brustwehr (0,58)?
-   (f) Nacht-Helligkeit auf echter GPU.
-   **Justier-Knöpfe** (falls nötig, gebündelt anwenden): Enge → `halb` im
-   `VG_SLOTS`-Eintrag `m` (`sektor.ts`); Runback → ein Knick mehr in `VG_SLOTS`;
-   Brustwehr → `BRUSTWEHR_OBERKANTE` 0,58 → 0,62 (`module.ts`) — **verschiebt
-   die Golden-Anker-Positionen erneut**, also mit anderen Justierungen zusammen.
+1. **Vollsektor-Spieltest erledigt (2026-09-09).** Nutzer: „spielt sich in
+   Ordnung, geht in die richtige Richtung, Verkleidung passt, Abstieg geht."
+   Befunde: **(a)** Die **Home-Unterstand-Münder wirken offen / unfertig** —
+   sichtbare Lücken am Übergang Treppenschacht ↔ Rückwand (Screenshot, Pos
+   ~x 16 / z −41). Kein Durchfallen (Tests grün), aber optisch nicht dicht →
+   kleiner Map-Polish-Fix (mit den anderen Sektor-Justierungen bündeln oder
+   eigener Mini-Pass). **(b)** Runback 12 s bleibt **vorerst so** — justieren
+   wir nach Game-Logik / ggf. Multiplayer. **(c)** Nacht-Helligkeit passt,
+   soll aber per **Gamma/Helligkeit in einer Settings-UI** regelbar sein
+   (Backlog). Enge + Brustwehr-Marge: keine Beanstandung.
+   **Justier-Knöpfe** (falls später nötig, gebündelt): Enge → `halb` im
+   `VG_SLOTS`-`m` (`sektor.ts`); Runback → Knick in `VG_SLOTS`; Brustwehr →
+   `BRUSTWEHR_OBERKANTE` 0,58 → 0,62 (`module.ts`, **verschiebt Golden-
+   Positionen**).
 2. **Design-Runde „Nacht-Kern + Uhr"** (Planer + Nutzer, wie die Grill-Runde) —
    Input `SPARRING-ANTWORTEN.md` Runde 3 **+ Runde 4**. Klärt gebündelt: Uhr →
    **echte Feindreserve** (statt zonengewichteter Kills) · **Finale-Ort** (dort
