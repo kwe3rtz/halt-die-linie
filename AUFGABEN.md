@@ -546,6 +546,10 @@ Kommt nach Arbeitspaket 1, wenn Code da ist, der davon profitiert:
   Collider sichtbar).
 - **Globaler Error-Handler** (`window.onerror` + `unhandledrejection`) — im Dev
   sichtbar melden, später Prod-Reporting.
+- **Browser-Tab-Sichtbarkeit** — `document.visibilitychange` → Loop pausieren,
+  wenn der Tab weg ist (heute nur `blur` auf dem Input, die Sim tickt weiter /
+  clampt Zeit). Papercut beim Anspielen. Klein; Voraussetzung für ein sauberes
+  Pause-Menü (`BACKLOG.md` Politur).
 - **Struktur-Logger** (`src/debug/log.ts`) mit Leveln/Kategorien statt roher
   `console.log` (sim nutzt ihn nicht — Grenze).
 - **Determinismus-/Replay-Harness** — aufgezeichnete Inputs + Seed → State

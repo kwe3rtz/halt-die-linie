@@ -32,6 +32,17 @@ dazukommen können. Kein Wegwurf — nur zurückgestellt. Reihenfolge ohne Bedeu
 - **Flieger / Luftangriff** — braucht eigene Antwort: AA-Stellung an der
   Home-Line oder eine Flak-Klasse.
 - Weitere Elites, Nacht-Boss.
+- **Gegner-KI-Ausbau (deutlich besser).** Der Nahkampf-Stub läuft heute stur
+  auf den Zielknoten und klumpt am Choke (AP6-06/AP6-01d). Die **Nacht-Kern-
+  Design-Runde + AP6-05** sind der nächste Schritt (Roam-Gruppen, Reize,
+  Feindreserve). Darüber hinaus offen: echtes Flankieren über Nebenwege,
+  Deckungsnutzung, Umgruppieren statt am Engpass idlen, situatives Verhalten
+  je Gegnertyp (Verben, `KONZEPT.md` §5), Fernkampf-KI (Tag). Eigenes Paket.
+- **Gegner können kleine Sprünge.** Heute laufen sie nur den Nav-Graphen auf
+  flachem Boden. Nötig: kurze Hüpfer über Draht / niedrige Trümmer, auf den
+  Feuertritt, **in den Graben hinein** (statt nur durch Breschen/Rampen). Kapsel-
+  Physik in `src/sim` + Nav-Kanten mit „Sprung"-Kosten; wirkt v. a. bei den
+  Nacht-Untoten (klettern/fallen in den Graben).
 
 ## Waffen
 
@@ -43,6 +54,16 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
 - Dritte Nation (slawisch / „Zarenreich").
 - Grabenkanone 37 mm, Gewehrgranate / VB-Werfer, Chauchat-Risikowaffe.
 - Gas-Varianten (Maskenbrecher, Senfgas).
+- **Collateral Damage / Flächenschaden.** Explosionen (Granate, Artillerie,
+  Sprengladung), Gaswolken und der Flammenwerfer treffen **mehrere** Gegner /
+  Umgebung in einem Radius, nicht nur den Zielpunkt. Braucht ein AoE-Modell in
+  `src/sim` (Radius, Falloff, Sichtlinie/Deckung dämpft) — passt zum
+  Koloss-Konter (Umgebungsexplosiv) und zu den Grabenwerkzeugen aus Sparring R4.
+- **Bullet Penetration.** WW1-Gewehrgeschosse durchschlagen — ein Treffer geht
+  durch den ersten Gegner (Restschaden) und durch dünne Deckung (Sandsack-
+  Ecke, Bretterwand). Hitscan in `src/sim/weapon.ts` müsste mehrere Treffer je
+  Schuss auflösen + Material-Durchschlagswerte tragen. Belohnt gutes Anstellen
+  in der Grabenflucht.
 
 ## Ökonomie
 
@@ -93,10 +114,20 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
 
 - **Standalone-Desktop-Wrapper** — Tauri oder Electron.
 - **Koop-Netcode + Node-Server** — die headless Sim wandert auf den Server,
-  Clients verbinden. Architektur ist schon darauf ausgelegt.
+  Clients verbinden. Architektur ist schon darauf ausgelegt. (Für LAN mit
+  Kollegen grob ~1,5–2 Wochen: der Sim-Refactor 1 → N Spieler ist der Brocken,
+  WebSocket-Transport auf LAN ist einfach. **Erst nach AP6** + eigene
+  Coop-Design-Runde — Uhr / „eine Krise" / Respawn / geteilter Nachschub
+  ändern sich.)
 - **Backend (Accounts + DB)** statt localStorage — geräteübergreifender
   Fortschritt, Cheat-Schutz.
 - **WebGPU** als Default-Target (statt WebGL2).
+- **Gegner-Rendering: `InstancedMesh` / Thin-Instances + Objekt-Pooling.** Heute
+  eine `MeshBuilder.CreateCapsule` **pro Gegner**, on-demand erzeugt/disposed
+  ([`src/render/index.ts`](src/render/index.ts) `enemyVisuals`). Für große
+  Wellen + die Roam-Gruppen (AP6-05) instanzieren statt einzeln bauen; dasselbe
+  für Projektile / Partikel / Pickups. Nächster Perf-Schritt nach dem statischen
+  Welt-Merge (AP6-01d). Zieht ggf. AP6-05 / das AP7-Perf-Ticket vor.
 
 ## Politur
 
@@ -104,6 +135,19 @@ Vollständige Waffen-Backlog-Liste + die WW1-Rohrecherche stehen in
 - Justierbare Kamera / Zoom-Optionen.
 - Waffen-Aufsätze und -Varianten in die Tiefe.
 - Grabenschilder mit generierten Namen, Sektor-Lore.
+- **Settings-/Options-UI** — Audio-Lautstärke (Master/SFX/Musik), Maus-
+  Sensitivität, Grafik-Qualität, Fullscreen. Heute nur `T` = Ton an/aus,
+  Sensitivität hartkodiert. HTML-Overlay wie HUD/Kompass.
+- **Pause-Menü** — echtes Pausieren (der Loop kann `pause()`/`resume()` schon)
+  mit Overlay statt bloßem Tab-Weg. Zusammen mit der Settings-UI + der
+  Tab-Sichtbarkeit (`AUFGABEN.md` Infra-Backlog).
+- **Richtungs-Damage-Indikator** — woher kam der Treffer (roter Bogen am
+  Screen-Rand). Wir haben Screen-FX + Kompass, aber keinen Richtungshinweis.
+- **Movement-Juice** — der FP-Controller ist funktional, aber ungejuiced:
+  Footsteps (Sohle vs. Laufrost vs. Feld), Sprint-Feel, leichtes Head-Bob,
+  Landungs-Kick. „Satisfying movement" als eigener kleiner Pass.
+- **Gamepad-Support** — der Input-Layer ist rebindbar + serialisierbar, also
+  machbar; niedrige Priorität.
 - **Echtes Petroleum-/Sturmlaternen-Modell** — AP6-01d ersetzt den Licht-Würfel
   nur durch eine 4-Box-Greybox-Laterne; ein echtes Modell + Textur (warmes
   Glas, Ruß, leichtes Flackern) ist Art-Politur.
