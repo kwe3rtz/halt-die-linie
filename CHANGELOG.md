@@ -12,6 +12,30 @@ begehbares WW1-Grabennetz, Feind-Spawn folgt der vordersten gehaltenen Linie,
 „Instand setzen" als Rückeroberung, Nacht zuerst mit roamenden Toten. Branch
 `arbeitspaket-6` von `main`.
 
+- **AP6-01d** · `caa554c` · **Graben-Look: ganzer Sektor + geschrumpfter
+  Grundriss.** `src/data/sektor.ts` **komplett neu** im Graben-Look (Sohle
+  −1,8 → −2,7, verkleidete Wände, Laufrost) + „schlanke Front"-Grundriss:
+  Footprint x ±44/z −60…92 → **x ±32/z −48…72** (−27 %), **4 Feuernischen**
+  (statt 5) + 3 Traversen + Laufgang, **2 Breschen** „Panzerwrack"/„Pumpenstand",
+  **Home-Line als Beton-Bunker** mit **3 echten Abstiegs-Unterständen**
+  (`abstiegUnterstand`, nicht im Nav-Graph — **löst den AP6-01b-Rückstand**),
+  **3 gewundene Verbindungsgräben** (Mitte = gerader Express-Laufgraben),
+  **`VG_ANZAHL` als echter Parameter** (Geometrie/Nav/Mündungen/Lichter
+  abgeleitet; `= 2`-Gegenprobe grün). **Kein Stütz-/Reservegraben.** Nav-Graph
+  65 Knoten / 81 Kanten. Neues `LevelBox.nurRender`-Flag (Mesh ohne Kollider,
+  reine Durchreiche) → 1 324 der 1 701 Boxen sind reine Optik, 391 Kollider.
+  `src/render/index.ts`: **Merge je Material *und* Zonen-Band** (Szenen-Meshes
+  1 782 → 146; „nur je Material" war schlechter — Frustum-Culling), Petroleum-
+  Laterne statt Feuertonnen-Würfel, latenter `tagMeshes`-Bug gefixt (Mehr-Box-
+  Bresche verschwand nur teilweise). **Golden-Anker `Nav` + `Uhr` neu
+  baseliniert** — Begründung am `expect()`, **Uhr-Regel bitgleich** (148/149,
+  `nachschub` 5), nur Positionen wandern; Gegenprobe Determinismus-Doppellauf +
+  Headless Seed 1/2/7 → gewonnen, 5·8·11·14·17, 0 Despawns. `collision-
+  verbindungsgraben.test.ts` läuft jetzt auf 49 m durchgehender Express-Wand.
+  339 Tests (+25, davon 18 `sektor-grabenlook.test.ts`). 5 Worker-Entscheidungen
+  akzeptiert. **Vollsektor-Spieltest durch den Nutzer offen** (Feinjustierung:
+  Enge, Brustwehr-Marge 0,58, Runback-Länge).
+
 - **AP6-01c** · `41635d9` · **Graben-Look: Baukasten + Materialsystem +
   Probe-Ecke.** Spieltest AP6-01b + Grill-Runde 2026-09-09: die Map liest sich
   trotz zwei Neubauten weiter als „Rechtecke mit Wänden" — es fehlen **Tiefe,

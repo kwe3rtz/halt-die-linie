@@ -724,7 +724,7 @@ in `tickets/`.
 | AP6-01 | Neuer Greybox-Sektor: verzweigtes Grabennetz + Nacht-Beleuchtung (Daten + Renderer) | ✅ erledigt/ (c4d21f5) |
 | AP6-01b | Sektor-Neubau: echtes Grabensystem (gezähnter Feuergraben, Traversen, Zickzack-Verbindungsgräben, begehbare Unterstände) + Jank-Pass | ✅ erledigt/ (`e9aaeca`) |
 | AP6-01c | Graben-Look: Baukasten (Tiefe −2,7, Verkleidung Holz/Sandsack/Wellblech, Laufrost, `oberflaeche`-Materialfeld, echter Abstiegs-Unterstand) + isolierte Probe-Ecke (`?probe`) | ✅ erledigt/ (`41635d9`) — Nutzer-Spieltest offen |
-| AP6-01d | Graben-Look: ganzer Sektor im neuen Look + geschrumpfter „schlanke Front"-Grundriss (x ±32 / z ~120) + parametrisierte Verbindungsgraben-Anzahl + Golden-Rebaseline | offen (nach AP6-01c-Spieltest) |
+| AP6-01d | Graben-Look: ganzer Sektor im neuen Look + geschrumpfter „schlanke Front"-Grundriss (x ±32 / z −48…72) + `VG_ANZAHL`-Parameter + `nurRender`-Flag + Renderer-Merge + Golden-Rebaseline | ✅ erledigt/ (`caa554c`) — Vollsektor-Spieltest offen |
 | AP6-02 | Eine Frontlinie, eine Home-Line: A/B/C-Verdrahtung raus (Bereinigung, kein Verhaltenswechsel) | ✅ erledigt/ (f427ef1) |
 | AP6-02b | Bresche → Durchbruch → Linienfall (physisch, telegraphiert) + Uhr-Regel (Golden-Rebaseline hier) | offen (nach AP6-05) |
 | AP6-03 | Dynamische Feind-Spawn-Verlagerung (Linie fällt → Spawn rückt vor) | offen |
@@ -745,17 +745,19 @@ kommt zuerst** — vor der Gegner-KI, vor dem Kern-Bogen.
 
 **Neue Reihenfolge (Grill-Runde 2026-09-09):**
 
-1. **AP6-01c** — Baukasten (Tiefe/Verkleidung/Material/Laufrost/Abstiegs-
-   Unterstand) + isolierte Probe-Ecke. Planer-Zielvorlage → Nutzer ok → Worker
-   baut → **Nutzer-Spieltest der Probe-Ecke**.
-2. **AP6-01d** — ganzer Sektor im neuen Look + geschrumpfter Grundriss
-   („schlanke Front": 4 Nischen, 2 Breschen, Depot, Parados; Home = Bunker mit
-   3 echten Abstiegs-Unterständen; 3 gewundene Verbindungsgräben, Anzahl als
-   Parameter; **kein** Stützgraben). Golden-Anker brechen bewusst (Uhr-Regel
-   bitgleich).
-3. **Gegner-KI-Design-Runde** (wie die Grill-Runde, mit `SPARRING-ANTWORTEN.md`
-   Runde 3: wenige persistente Roam-Gruppen, 4 Zustände, gemeinsames
-   Intensitäts-Budget mit dem Wave-Director) → aktualisierte AP6-05-Spec.
+1. **AP6-01c** ✅ (`41635d9`) — Baukasten + isolierte Probe-Ecke. Nutzer-
+   Spieltest `?probe`: Look abgenommen, 4 Korrekturen → AP6-01d.
+2. **AP6-01d** ✅ (`caa554c`) — ganzer Sektor im neuen Look + geschrumpfter
+   „schlanke Front"-Grundriss (4 Nischen, 2 Breschen, Home = Beton-Bunker mit
+   3 echten Abstiegs-Unterständen, 3 gewundene Verbindungsgräben mit
+   `VG_ANZAHL`-Parameter, **kein** Stützgraben). `nurRender`-Flag,
+   Renderer-Merge, Golden-Rebaseline (Uhr-Regel bitgleich). **Vollsektor-
+   Spieltest durch den Nutzer offen.**
+3. **Design-Runde „Nacht-Kern + Uhr"** (Planer + Nutzer, wie die Grill-Runde) —
+   Input `SPARRING-ANTWORTEN.md` Runde 3 **+ Runde 4**. Gebündelt: Uhr → echte
+   Feindreserve · Finale-Ort (KONZEPT §6) · kleine statische Garnison ·
+   Roam-/Reiz-System (Aufmerksamkeit an *Ort*, Lärm/Licht, echte Ruhephasen,
+   dormant dead). → aktualisierte **AP6-05**-Spec.
 4. **AP6-05** — Roam-Gegner + Perf-Broadphase.
 5. **AP6-02b** — Bresche → Durchbruch → Linienfall + Uhr-Regel.
 6. **AP6-03** (Spawn-Verlagerung) → **AP6-04** („Instand setzen").

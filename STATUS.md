@@ -1,8 +1,9 @@
 # Halt die Linie — Status
 
-**Stand:** 2026-09-09 (AP6-01/01b/02/06 + **AP6-01c erledigt**. Nutzer hat
-`?probe` angespielt: **„genau so kanns sein"** — Look abgenommen, 4 Korrekturen
-in die **AP6-01d**-Spec eingearbeitet. AP6-01d ist kickoff-bereit)
+**Stand:** 2026-09-09 (AP6-01/01b/02/06 + **AP6-01c + AP6-01d erledigt** —
+Sektor komplett neu im Graben-Look + geschrumpfter „schlanke Front"-Grundriss,
+reviewed, Golden neu / Uhr-Regel bitgleich. **Als Nächstes: Nutzer spielt den
+ganzen Sektor an, dann Design-Runde „Nacht-Kern + Uhr"** — kein Worker-Ticket)
 
 Ein-Blick-Übersicht für Menschen und für frische Claude-Sessions. Kurz halten —
 Historie steht in `STATUS-ARCHIV.md`, Bau-Details in `CHANGELOG.md` +
@@ -67,23 +68,33 @@ Abschnitt des laufenden + vorigen Arbeitspakets. Dokumenten-Karte in
     (`src/data/probe-graben.ts`). Echter Sektor unberührt, **Golden bit-
     identisch**, 314 Tests, CI grün. Perf: Probe 164 Boxen → AP6-01d braucht
     Merge je Material. **Nutzer spielt `?probe` an** (visuelle Abnahme).
-  - **AP6-01d** (nach dem Spieltest): ganzer Sektor im neuen Look +
-    geschrumpfter „schlanke Front"-Grundriss (x ±32 / z ~120, 4 Front-Nischen,
-    2 Breschen, Home = Bunker mit 3 echten Abstiegs-Unterständen, 3 gewundene
-    Verbindungsgräben — Anzahl als Parameter, kein Stützgraben). Golden-Anker
-    brechen bewusst (Uhr-Regel bitgleich).
-  - **Dann:** Gegner-KI-Design-Runde (mit `SPARRING-ANTWORTEN.md` Runde 3) →
-    **AP6-05** (Roam + Perf) → **AP6-02b** (Bresche → Durchbruch) → **AP6-03**
-    (Spawn-Verlagerung) → **AP6-04** („Instand setzen").
+  - **AP6-01d erledigt** (`caa554c`): `sektor.ts` **komplett neu** im
+    Graben-Look + geschrumpfter „schlanke Front"-Grundriss (x ±32 / z −48…72,
+    −27 %). 4 Feuernischen, 2 Breschen, **Home-Line als Beton-Bunker** mit
+    3 echten Abstiegs-Unterständen (`abstiegUnterstand`, nicht im Nav-Graph),
+    3 gewundene Verbindungsgräben (Mitte = gerader Express), **`VG_ANZAHL` als
+    echter Parameter**, kein Stütz-/Reservegraben. Nav 65 Knoten. Neues
+    `nurRender`-Flag (Formdetail = Mesh ohne Kollider). Renderer-Merge je
+    Material + Zonen-Band (Meshes 1 782 → 146). **Golden-Anker neu, Uhr-Regel
+    bitgleich** (148/149), Gegenprobe wie AP6-01b. 339 Tests. **Nutzer spielt
+    den ganzen Sektor an** (Feinjustierung: Enge, Brustwehr-Marge 0,58,
+    Runback-Länge 12,2 s — Merkposten im Ticket-Review).
+  - **Dann kein Worker-Ticket, sondern die Design-Runde „Nacht-Kern + Uhr"**
+    (Planer + Nutzer): Uhr → echte Feindreserve · Finale-Ort · kleine Garnison ·
+    Roam-/Reiz-System (Sparring R3 + R4). Ergebnis = die AP6-05-Spec.
+  - **Danach:** **AP6-05** (Roam + Perf) → **AP6-02b** (Bresche → Durchbruch) →
+    **AP6-03** (Spawn-Verlagerung) → **AP6-04** („Instand setzen").
 
 ## Spielbar
 
 `npm run dev`. Auf `main` (bis AP6 gemergt ist) der alte Greybox-Sektor „H"
 mit A/B/C-Front + Verbindungsgraben. Auf `arbeitspaket-6` der neue **Nacht-
-Sektor** (seit AP6-01b ein echtes Grabensystem): gezähnter Feuergraben mit
-Erd-Traversen + Laufgang, begehbare Alt-Frontlinie + Sap-Köpfe im Niemandsland,
-3 Verbindungsgräben (Mitte = Express-Laufgraben) + Stütz-/Reservegraben,
-gezähnte Home-Line mit 3 begehbaren Unterständen; Nacht, enger Dunst, statische
+Sektor** (seit AP6-01d im **Graben-Look**): tiefer verkleideter Feuergraben
+(Sohle −2,7, Holz-Verbau, Sandsack-Krone, Laufrost) mit 4 Feuernischen +
+Traversen + Laufgang, begehbare Alt-Frontlinie im Niemandsland, 3 gewundene
+Verbindungsgräben (Mitte = gerader Express, ~2,0 m eng), **Home-Line als
+Beton-Bunker** mit 3 echten Abstiegs-Unterständen (Treppe hinab); Nacht, enger
+Dunst, Petroleumlaternen, statische
 Leuchtfeuer, FRONT/HOME-Schilder. Start mit der automatischen Sturm-MP 18.
 Gegner folgen dem Nav-Graphen an die Front, reißen Parapet-Breschen auf; fällt
 die Front, öffnet sich der Weg ins Hinterland. Jeder Kill zermürbt die Angriffskraft
@@ -110,25 +121,27 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
 
 ## Als Nächstes
 
-1. **AP6-01d — ganzer Sektor** im neuen Look + geschrumpfter Grundriss
-   („schlanke Front", Home = Bunker, 3 gewundene Verbindungsgräben mit
-   parametrisierter Anzahl, kein Stützgraben). **+ 4 Korrekturen aus dem
-   AP6-01c-Spieltest:** Verkleidung `nurRender` (kein Glitchen), Gänge etwas
-   breiter (~2,4 m), Abstieg flacher (~12 Stufen), mehr Kopffreiheit (~2,3 m),
-   Licht-Würfel → Greybox-Laterne. Golden-Anker brechen bewusst (Uhr-Regel
-   bitgleich, Gegenprobe wie AP6-01b). Merge je Material ist Pflicht. `/clear`
-   vorher. **Kickoff-bereit — wartet nur auf das „los" vom Nutzer.**
-3. **Gegner-KI-Design-Runde** — eigene Runde wie die Grill-Runde, Input
-   `SPARRING-ANTWORTEN.md` Runde 3 (wenige persistente Roam-Gruppen, 4 Zustände,
-   gemeinsames Intensitäts-Budget mit dem Wave-Director). Ergebnis: aktualisierte
-   **AP6-05**-Spec. **„Gegner-KI deutlich besser" (Spieltest)** fällt hierunter:
-   heute laufen alle stur auf `front-front` und klumpen (auch am Laufgraben-
-   Mund, AP6-06-Fund).
-4. **AP6-05** (Roam + Perf-Broadphase, Audit H1/M5/M6) → **AP6-02b** (Bresche →
+1. **Nutzer spielt den ganzen Sektor an** (`npm run dev` auf `arbeitspaket-6`).
+   Fokus / Merkposten aus dem AP6-01d-Review: (a) Enge — Laufgang 2,4 m /
+   Express 2,0 m, klemmt es beim Ausweichen? (b) läuft man an der Verkleidung
+   glatt entlang? (c) Abstieg/Kamera + Kopffreiheit im Unterstand. (d) Runback
+   Express 12,2 s — zu kurz? → Knick in `VG_SLOTS`. (e) klettert eine Kapsel
+   die Brustwehr (0,58) → dann 0,62. (f) Nacht-Helligkeit auf echter GPU.
+2. **Design-Runde „Nacht-Kern + Uhr"** (Planer + Nutzer, wie die Grill-Runde) —
+   Input `SPARRING-ANTWORTEN.md` Runde 3 **+ Runde 4**. Klärt gebündelt: Uhr →
+   **echte Feindreserve** (statt zonengewichteter Kills) · **Finale-Ort** (dort
+   wo die Verteidigung steht, statt immer Home-Line — KONZEPT §6) · **kleine
+   statische Garnison** ja/nein · **Roam-/Reiz-System** (Aufmerksamkeit an
+   *Ort*, nicht Spieler; Lärm/Licht; echte Ruhephasen; dormant dead). Ergebnis
+   = die **AP6-05**-Spec. „Gegner-KI deutlich besser" (Spieltest) + das
+   Laufgang-Klumpen (AP6-01d-Merkposten) fallen hierunter.
+3. **AP6-05** (Roam + Perf-Broadphase, Audit H1/M5/M6) → **AP6-02b** (Bresche →
    Durchbruch → Linienfall + Uhr-Regel; Golden hier bewusst neu + Stub-
-   Gegenprobe; Spec fertig inkl. Copilot-Härtung) → **AP6-03** (Spawn-
-   Verlagerung, Audit H4) → **AP6-04** („Instand setzen").
-5. Ende AP6: PR `arbeitspaket-6` → `main`.
+   Gegenprobe; Spec fertig inkl. Copilot-Härtung + „Kommunikationsknoten hinter
+   der Front" aus Sparring R4) → **AP6-03** (Spawn-Verlagerung, Audit H4) →
+   **AP6-04** („Instand setzen"; eigene Mini-Design-Runde davor — Köder-Werkzeug
+   macht es solo überlebbar, Narben nach Rückeroberung).
+4. Ende AP6: PR `arbeitspaket-6` → `main`.
 
 ## Offene Fäden — nicht vergessen
 
@@ -145,9 +158,14 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   — Variante 1 Seed-abgeleitet, Variante 2 je Schwierigkeitsgrad — plus ein
   **Schwierigkeits-System** (existiert nicht) sind Backlog, Entscheid am
   Generator bzw. Schwierigkeits-System.
-- **Perf: Verkleidungs-Box-Zahl** — AP6-01c/d vervielfachen die Level-Boxen
-  (Formdetail). AP6-01c misst die Probe-Szene, AP6-01d ggf. Merge je Material
-  im Renderer. Im Auge behalten.
+- **Perf: Verkleidungs-Box-Zahl** — AP6-01d hat 1 701 Boxen (1 324 `nurRender`,
+  391 Kollider), Renderer merged je Material + Zonen-Band → 146 Meshes. Auf
+  echter GPU im Spieltest gegenchecken; N-Box-Benchmark steht im Ticket-Bericht.
+- **Doku-Nachzieher aus AP6-01d:** KONZEPT §3 „Parados 1–2 flache Stufen" ist
+  mit der 2,7-m-Tiefe inkonsistent (jetzt 7 Stufen) — Ein-Zeilen-Korrektur beim
+  nächsten §3-Anfassen (Design-Runde „Nacht-Kern"). `wave-eskalation` /
+  `gegner-klassen` messen `festVersuche` jetzt nur auf dem Anmarschweg — das
+  Nachankunfts-Klumpen ist AP6-05-Thema.
 - **Prozeduraler Generator** (KONZEPT §9.6): jetzt fürs *ganze* Grabennetz,
   nach AP6, wenn der handgebaute Nacht-Sektor trägt. Nutzt denselben
   Modul-Baukasten (inkl. Verkleidung ab AP6-01c).
@@ -162,6 +180,27 @@ statt alles lokal nachzustellen; `git diff --stat` vor gezielten Diffs.
   (`AUFGABEN.md`). **CI-Laufzeit** ~5–7 min, im Auge behalten.
 
 ## Entscheidungs-Log (neueste zuerst · ältere in `STATUS-ARCHIV.md`)
+
+- **2026-09-09** — **AP6-01d erledigt** (`caa554c`, reviewed, 339 Tests, CI
+  grün). `sektor.ts` **komplett neu** im Graben-Look + „schlanke Front"-
+  Grundriss: Footprint −27 % (x ±32 / z −48…72), 4 Feuernischen, 2 Breschen,
+  **Home-Line als Beton-Bunker** mit 3 echten Abstiegs-Unterständen (nicht im
+  Nav-Graph — **AP6-01b-Rückstand gelöst**), 3 gewundene Verbindungsgräben
+  (Mitte = gerader Express), **`VG_ANZAHL` echter Parameter** (`= 2`-Gegenprobe
+  grün), **kein Stütz-/Reservegraben**. Neues `LevelBox.nurRender`-Flag
+  (Formdetail = Mesh ohne Kollider, reine Durchreiche → goldene Regel gewahrt).
+  Renderer-Merge je **Material + Zonen-Band** (Meshes 1 782 → 146; „nur je
+  Material" war schlechter — Frustum-Culling); latenter `tagMeshes`-Bug gefixt.
+  **Golden-Anker Nav + Uhr neu baseliniert** — Begründung am `expect()`,
+  **Uhr-Regel bitgleich** (148/149, `nachschub` 5), nur Positionen wandern;
+  Gegenprobe Determinismus-Doppellauf + Headless Seed 1/2/7 → gewonnen, 0
+  Despawns. `collision-verbindungsgraben.test.ts` jetzt auf 49 m gerader
+  Express-Wand (schärfste AP5-01-Gegenprobe). 5 Worker-Entscheidungen akzeptiert
+  (Verkleidung ≤ 7 cm vor Kollider · Parados-Ausstieg als 7-Stufen-Treppe · alte
+  `modul()`-Typen entfernt · Runback 12,2 s < Zielband, nicht nachjustiert ·
+  Brustwehr 0,58 gehalten). **Merkposten Spieltest:** Enge (Express 2,0 m),
+  Brustwehr-Marge 0,58→0,62, Runback-Länge. **Vollsektor-Spieltest durch den
+  Nutzer offen**, dann Design-Runde „Nacht-Kern + Uhr" (kein Worker-Ticket).
 
 - **2026-09-09** — **AP6-01c erledigt** (`41635d9`, reviewed, 314 Tests, CI
   grün). Graben-Look-Baukasten **rein additiv**: `Oberflaeche`-Feld auf

@@ -1,6 +1,7 @@
 # AP6-01d — Graben-Look: ganzer Sektor + geschrumpfter Grundriss
 
-**Status:** review — gebaut, Bericht unten.
+**Status:** ✅ erledigt (`caa554c`, reviewed 2026-09-09). Code grün — der
+**Vollsektor-Spieltest** durch den Nutzer steht noch aus.
 **Arbeitspaket:** 6 · **Branch:** `arbeitspaket-6`
 **`/clear` vor dem Start:** ja (großer Brocken, Golden-Anker, ganzer Sektor).
 
@@ -467,3 +468,111 @@ Ausweichen? (b) Läuft man an der Verkleidung wirklich glatt entlang?
 (c) Abstieg + Unterstand — Kamera beim Treppab, Kopffreiheit. (d) Runback-
 Gefühl (Express kurz, Dog-Leg lang). (e) Klettert eine Kapsel doch die
 Brustwehr hoch (dann `BRUSTWEHR_OBERKANTE` 0,58 → 0,62)?
+
+---
+
+## Review — ki-game-63 (2026-09-09)
+
+**Verdikt: grünes Licht (Code).** `caa554c` auf `arbeitspaket-6`, CI „CI" +
+„Pages Preview" success auf `070cefd`. 339 Tests (+25), Coverage src/sim
+98,59 %/97,48 %. Der **Vollsektor-Spieltest** durch den Nutzer formt danach ggf.
+Feinjustierung (Merkposten unten), ist aber kein Blocker fürs Archivieren.
+
+**Geprüft:**
+
+- **`nurRender`-Flag (goldene Regel):** neues optionales `LevelBox.nurRender` +
+  ein Filter in `createCollisionWorld` (`b.nurRender !== true`). **Keine
+  Sim-Logik liest das Feld** — reine Daten-Durchreiche wie `unsichtbar`, nur
+  invers. Die Kollisionswelt wird schlanker (391 statt ~1 700 Kollider), spart
+  `moveCapsule`/`raycast` jeden Tick Arbeit.
+- **Golden-Anker-Rebaseline (der kritische Teil):** beide positionsabhängigen
+  Anker in `sim.test.ts` neu, Begründung direkt am `expect()`. **Uhr-Regel
+  bitgleich:** `angriffskraftRest` 148 (stehende Front, −2) / 149 (gefallene,
+  −1) / `nachschub` 5 — unverändert; nur die Gegner-Setup-Position wandert
+  (−16·0·19 → −7·−2,3·21, neue Sohle). Nav-Anker: `tick 600`, `welle 1`,
+  `angriffskraftRest 145`, `nachschub 0`, Klassenmix, alle `zielKnoten
+  front-front`, `zustand anmarsch`, `front ["front"]/["stabil"]`, `breschenOffen
+  0`, Einsatzphase — **alles unverändert**, nur `player.pos` + `nach[0].pos`
+  wandern. Gegenprobe: Determinismus-Doppellauf beider Anker (+ `JSON.stringify`
+  per Skript), Uhr-Kill-Probe exakt 148/149, voller Headless-Einsatz Seed 1/2/7
+  → gewonnen, Wellen 5·8·11·14·17, 0 Despawns. Inline-Testlevel-Anker unberührt.
+  Das ist die AP6-01b-Disziplin sauber wiederholt.
+- **Testdatei-Anpassungen (8 Dateien):** alle sind Koordinaten-/Schwellenwerte
+  auf die neue Geometrie, die **Invarianten bleiben**. Besonders:
+  `collision-verbindungsgraben.test.ts` (AP5-01-Teleport-Gegenprobe) läuft jetzt
+  auf **49 m durchgehender gerader Wand** (Express-Laufgraben ohne Ports) — die
+  schärfste Fassung bisher (Bug sprang 16,5 m); die Ursachen-Doku ist als
+  Konstante `AP5_01_WAND = 1,8` festgezurrt, unabhängig von der Sektorbreite.
+  `navgraph-begehbarkeit` + `sektor.test` + `sektor-grabenlook.test` (18 neu):
+  Entlanglaufen ohne Hängenbleiben (`maxDy < 0,05`), Krone nicht begehbar, die
+  3 Abstiegs-Unterstände, durchgehender Boden je Zonengrenze, ganzer Nav-Pfad
+  Front→Home. **`wave-eskalation` + `gegner-klassen`:** `festVersuche` wird
+  jetzt nur noch **auf dem Anmarschweg** gezählt (`=== 0`, vorher ≤1/≤2 über den
+  ganzen Lauf) — Merkposten unten.
+- **`sektor.ts` (Neubau):** `VG_ANZAHL = 3` ist ein echter Parameter — `VG_SLOTS`
+  (Express zuerst) × `VG_ANZAHL` → Geometrie, Parados-Mündungen, Home-Lücken,
+  Feuertritt-Abschnitte, `hintenKanten`, Nav, Lichter alle abgeleitet.
+  `VG_ANZAHL = 2`-Gegenprobe: baut sauber (58 Knoten), Suite 338/339 (der eine
+  Fehlschlag ist die `hintenKanten.length === 3`-Zusage für den 3-Graben-Bau).
+  Front schlank (4 Nischen, 2 Breschen „Panzerwrack"/„Pumpenstand"), Home =
+  Bunker (`verbau: "beton"`, 3 Nischen, 3 `abstiegUnterstand()` — **nicht im
+  Nav-Graph**), **kein Stütz-/Reservegraben**. Rollen-Felder von `SektorMeta`
+  intakt. Nav 65 Knoten / 81 Kanten (Zielspanne 55–70).
+- **Renderer-Merge:** je **Material *und* Zonen-Band** (`meta.zonen`) —
+  Szenen-Meshes 1 782 → 146, aktive Meshes im Express 882 → 73. „Nur je
+  Material" war messbar schlechter (Frustum-Culling greift nicht mehr) — die
+  Bänder lösen das. `tag`-Boxen bleiben Einzel-Meshes. **Latenter AP6-01b-Bug
+  mitgefixt:** `tagMeshes` war `Map<string, Mesh>`, ein Mehr-Box-Tag (Wand +
+  Verkleidung + Sandsäcke) behielt nur die letzte — beim Bresche-Aufreißen
+  verschwand nur ein Stück. Jetzt `Map<string, Mesh[]>`. `meshes[]` hat keine
+  Index-Kopplung an `level.boxes` (nur `dispose`-Liste) — Merge ist safe.
+- **Screenshots 07/10:** Front liest sich als tiefer Holz-verkleideter Graben
+  (Pfosten, Bohlen, Sandsack-Krone), Home klar als **kalter Beton-Bunker**
+  (Material-Kontrast trägt), Unterstand-Schacht sichtbar. Ton headless dunkel/
+  warm — echte GPU im Spieltest.
+
+**Die fünf Worker-Entscheidungen — alle akzeptiert:**
+
+1. **Verkleidung ≤ 7 cm vor dem Kollider** (statt Basiswand bündig nach vorn).
+   Richtig: die Ticket-Variante hätte Z-Fighting im Merge erzeugt und das
+   Formdetail *in* der Erdwand verschwinden lassen. 7 cm = 0,2 Kapselradien,
+   zwei Entlanglauf-Tests pinnen es. Sicht-Clip beim Anpressen ist
+   wahrnehmungsfrei.
+2. **Parados-Ausstieg = 7-Stufen-Treppe in der Wandlücke** (statt `rampe()` —
+   die hätte 3,4 m Laufgang quer zugestellt, der Begehbarkeits-Test fing es).
+   Anstieg 0,386 m < `STEP_HEIGHT`. Steiler als die KONZEPT-§3-Skizze „1–2
+   flache Stufen" — die geht bei 2,7 m Tiefe nicht. (§3 kriegt beim nächsten
+   Anfassen eine Zeile dazu.)
+3. **Alte `modul()`-Typen entfernt** (`grabengerade`/`parapet`/`unterstand`/…).
+   Nach dem globalen Schnitt wären sie toter Parallel-Code. Verifiziert: keine
+   Nicht-Test-Referenz mehr, `ModulTyp` = nur noch `rampe`/`kartengrenze`/
+   `geschuetzstellung`. Sauber.
+4. **Runback 12,2 s (Express) — unter dem Zielband 15–22 s.** Folge des
+   −27 %-Footprints. KONZEPT §3: „lang wird der Rückzug durch Feinddruck, nicht
+   durch bloße Distanz" — die Distanz ist die billigste Spieltest-Stellschraube
+   (ein Knick in `VG_SLOTS`). Dog-Legs sind 23,9 s. **Merkposten Spieltest.**
+5. **`BRUSTWEHR_OBERKANTE` bleibt 0,58** (Marge 0,08 über `STEP_HEIGHT`).
+   `?probe` + alle Tests: keine kletternde Kapsel. 0,62 ist ein Ein-Zeilen-
+   Fallback. **Merkposten Spieltest.**
+
+**Merkposten (kein Blocker):**
+
+- **Spieltest-Feinjustierung:** (a) Enge — Laufgang 2,4 m / Express 2,0 m
+  (0,65 m je Seite), klemmt es beim Ausweichen? (b) Verkleidung glatt
+  entlanglaufen? (c) Abstieg/Kamera + Kopffreiheit. (d) Runback zu kurz? →
+  Knick in `VG_SLOTS`. (e) Brustwehr-Kletter → 0,58 → 0,62.
+- **`festVersuche` nur noch auf dem Anmarschweg getestet:** nach der Ankunft
+  drücken alle Gegner gegen den Parados (Laufgang = einziger Weg zwischen den
+  Nischen) und sammeln zwangsläufig Stillstand. Das ist Absicht (man hält den
+  Graben) und **genau das Thema der Gegner-KI-Design-Runde / AP6-05**. Der
+  Durchsatz bleibt getestet (`despawned === []`), die Nachankunfts-Pfadqualität
+  nicht mehr — bewusst, gehört zu AP6-05.
+- **KONZEPT §3 „Parados 1–2 flache Stufen"** ist mit der 2,7-m-Tiefe
+  inkonsistent (jetzt 7 Stufen) — Ein-Zeilen-Korrektur beim nächsten §3-Anfassen.
+
+**Nächster Schritt:** Nutzer spielt den ganzen Sektor an (`npm run dev`). Danach
+**kein Worker-Ticket**, sondern die Planer-Design-Runde **„Nacht-Kern + Uhr"**
+(Feindreserve · Finale-Ort · Garnison · Roam-/Reiz-System) → daraus die
+AP6-05-Spec.
+
+Folge: Design-Runde „Nacht-Kern + Uhr" (Planer + Nutzer), dann AP6-05.
